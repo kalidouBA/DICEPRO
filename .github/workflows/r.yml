@@ -34,7 +34,7 @@ jobs:
         run: |
           install.packages(c("remotes", "rcmdcheck"))
           BiocManager::install("scater")
-          install.packages("dplyr")
+          install.packages("epiR")
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
       - name: Check
