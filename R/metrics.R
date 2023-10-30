@@ -123,8 +123,7 @@ computPerf <- function(truth, estimated, it_){
     ms2 <- mean(s2)
     mx <- mean(x)
     my <- mean(y)
-    ccc <- epi.ccc(y, x,ci = "z-transform",conf.level = 0.95,
-                         rep.measure = FALSE)[['rho.c']][['est']]
+    ccc <- CCC(y, x,ci = "z-transform",conf.level = 0.95, rep.measure = FALSE)[['rho.c']][['est']]
     dat <- data.frame(x, y)
     temp <- ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
     res_ICC <- temp$results$ICC[3]
