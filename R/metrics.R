@@ -9,7 +9,7 @@
 #'
 #' @export
 #'
-#' @importFrom epiR epi.ccc
+#' @importFrom DescTools CCC
 #' @importFrom psych ICC
 #'
 #' @return A list of distance matrices and a vector of fold comparisons.
@@ -44,7 +44,7 @@ compute_distances <- function(matrix_input) {
       manhattan_dist[i, j] <- sum(abs(col1 - col2))
 
       # Calculate CCC
-      ccc_dist[i, j] <- epi.ccc(col1, col2, ci = "z-transform",conf.level = 0.95,
+      ccc_dist[i, j] <- CCC(col1, col2, ci = "z-transform",conf.level = 0.95,
                                              rep.measure = FALSE)[['rho.c']][['est']]
       # Calculate ICC
       dat <- data.frame(col1, col2)
@@ -84,7 +84,7 @@ compute_distances <- function(matrix_input) {
 #'
 #' @export
 #'
-#' @importFrom epiR epi.ccc
+#' @importFrom DescTools CCC
 #' @importFrom psych ICC
 #' @importFrom Metrics rmse
 #'
@@ -103,9 +103,10 @@ compute_distances <- function(matrix_input) {
 #'}
 #'
 #' @examples
-#' truth_data <- matrix(rnorm(100), ncol = 5)
-#' estimated_data <- matrix(rnorm(100), ncol = 5)
-#' result <- computPerf(truth_data, estimated_data, "Comparison_1")
+#'  truth_data <- matrix(rnorm(50), ncol = 5)
+#'  estimated_data <- matrix(rnorm(50), ncol = 5)
+#'  colnames(truth_data) <- colnames(estimated_data) <- paste0("C_", 1:5)
+#'  result <- computPerf(truth_data, estimated_data, "Comparison_1")
 
 computPerf <- function(truth, estimated, it_){
   colnameIntersect <- intersect(colnames(truth), colnames(estimated))
