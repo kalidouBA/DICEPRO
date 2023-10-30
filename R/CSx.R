@@ -17,9 +17,6 @@
 #'   \item Extracts cell type proportions and returns them as a matrix.
 #'}
 
-
-
-
 run_CSx <- function(cibersortx_email, cibersortx_token){
   verbose <- FALSE
   in_dir <- out_dir <- getwd()
