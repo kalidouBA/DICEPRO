@@ -44,8 +44,7 @@ compute_distances <- function(matrix_input) {
       manhattan_dist[i, j] <- sum(abs(col1 - col2))
 
       # Calculate CCC
-      ccc_dist[i, j] <- CCC(col1, col2, ci = "z-transform",conf.level = 0.95,
-                                             rep.measure = FALSE)[['rho.c']][['est']]
+      ccc_dist[i, j] <- CCC(col1, col2, ci = "z-transform",conf.level = 0.95, na.rm = FALSE)[['rho.c']][['est']]
       # Calculate ICC
       dat <- data.frame(col1, col2)
       temp <- ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
@@ -123,7 +122,7 @@ computPerf <- function(truth, estimated, it_){
     ms2 <- mean(s2)
     mx <- mean(x)
     my <- mean(y)
-    ccc <- CCC(y, x,ci = "z-transform",conf.level = 0.95, rep.measure = FALSE)[['rho.c']][['est']]
+    ccc <- CCC(y, x,ci = "z-transform",conf.level = 0.95, na.rm = FALSE)[['rho.c']][['est']]
     dat <- data.frame(x, y)
     temp <- ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
     res_ICC <- temp$results$ICC[3]
