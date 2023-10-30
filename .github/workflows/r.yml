@@ -32,7 +32,9 @@ jobs:
           r-version: ${{ matrix.r-version }}
       - name: Install dependencies
         run: |
-          install.packages(c("remotes", "rcmdcheck"))
+          install.packages(c("remotes", "rcmdcheck", "BiocManager"))
+          BiocManager::install("scater")
+          install.packages("epiR")
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
       - name: Check
