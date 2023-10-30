@@ -2,19 +2,19 @@
 #' types in biological samples for various scenarios, which can be useful in various data analysis and
 #' modeling tasks in the field of biology and genetics.
 #'
-#'@param n_cell_types The number of different cell types.
-#'@param nSample The number of samples to generate.
-#'@param nCell The total number of cells in each sample.
-#'@param scenario A scenario that determines how the proportions are generated.
+#' @param n_cell_types The number of different cell types.
+#' @param nSample The number of samples to generate.
+#' @param nCell The total number of cells in each sample.
+#' @param scenario A scenario that determines how the proportions are generated.
 #' It can be one of three values: "even," "uniform," or any other value.
 #'
 #'
-#'@return a matrix representing proportions of different cell types in samples
+#' @return a matrix representing proportions of different cell types in samples
 #'
-#'@importFrom stats rnorm
-#'@importFrom rBeta2009 rdirichlet
+#' @importFrom stats rnorm
+#' @importFrom rBeta2009 rdirichlet
 #'
-#'@examples
+#' @examples
 #'if(interactive()){
 #' set.seed(10032)
 #' prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
@@ -92,7 +92,7 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @importFrom dplyr group_by summarise across everything
 #' @importFrom MASS mvrnorm
 #'
-#'@examples
+#' @examples
 #'if(interactive()){
 #'
 #' data(LM22)
@@ -241,10 +241,9 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #' @param mu_bruit Mean value for bias (used when bias = TRUE).
 #' @param sigma_bruit Standard deviation for bias (used when bias = TRUE).
 #'
-#' @importFrom MatrixBase "%*%"
-#' @importFrom splatter mockSCE zinbEstimate zinbSimulate
-#'
-#'@examples
+#' @importFrom splatter zinbEstimate zinbSimulate
+#' @importFrom scater mockSCE
+#' @examples
 #'if(interactive()){
 #'
 #' data(LM22)

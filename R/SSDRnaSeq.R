@@ -29,9 +29,9 @@
 #'
 #' @import base
 #' @import utils
-#' @importFrom readr read.delim2
 #' @importFrom caret createFolds
 #' @importFrom NMF nmf
+#' @importFrom reshape2 melt
 #' @export
 
 SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, cibersortx_token) {
@@ -68,7 +68,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
     errorFrob[[iterate_]] <- normFrob(diff_bulk, bulk)
 
     # Create folds for cross-validation
-    flds <- caret::createFolds(1:ncol(bulk), k = k_folds, list = TRUE, returnTrain = FALSE)
+    flds <- createFolds(1:ncol(bulk), k = k_folds, list = TRUE, returnTrain = FALSE)
 
     # Initialize a matrix to store unknown components
     matUnknown <- matrix(ncol = k_folds, nrow = nrow(reference))
@@ -84,7 +84,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
     resDist <- compute_distances(matrix_ = matUnknown)
 
     # Store distance results
-    resDist <- reshape2::melt(resDist[[1]]) %>% cbind.data.frame(
+    resDist <- melt(resDist[[1]]) %>% cbind.data.frame(
       Folds = as.factor(resDist[[2]]),
       Iterate = iterate_
     )

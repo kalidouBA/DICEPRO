@@ -47,11 +47,11 @@ compute_distances <- function(matrix_input) {
       manhattan_dist[i, j] <- sum(abs(col1 - col2))
 
       # Calculate CCC
-      ccc_dist[i, j] <- epiR::epi.ccc(col1, col2, ci = "z-transform",conf.level = 0.95,
+      ccc_dist[i, j] <- epi.ccc(col1, col2, ci = "z-transform",conf.level = 0.95,
                                              rep.measure = FALSE)[['rho.c']][['est']]
       # Calculate ICC
       dat <- data.frame(col1, col2)
-      temp <- psych::ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
+      temp <- ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
       res_ICC <- temp$results$ICC[3]
       icc_dist[i, j] <- res_ICC
 
@@ -105,6 +105,7 @@ compute_distances <- function(matrix_input) {
 #' @importFrom epiR epi.ccc
 #' @importFrom psych ICC
 #' @importFrom Metrics rmse
+#'
 #' @export
 
 computPerf <- function(truth, estimated, it_){
@@ -122,10 +123,10 @@ computPerf <- function(truth, estimated, it_){
     ms2 <- mean(s2)
     mx <- mean(x)
     my <- mean(y)
-    ccc <- epiR::epi.ccc(y, x,ci = "z-transform",conf.level = 0.95,
+    ccc <- epi.ccc(y, x,ci = "z-transform",conf.level = 0.95,
                          rep.measure = FALSE)[['rho.c']][['est']]
     dat <- data.frame(x, y)
-    temp <- psych::ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
+    temp <- ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
     res_ICC <- temp$results$ICC[3]
     RMSE <- rmse(actual = x, predicted = y)
     RRMSE <- RMSE/sd(x)
@@ -161,8 +162,8 @@ computPerf <- function(truth, estimated, it_){
 #' @export
 
 normFrob <- function(absolute_error_matrix, bulkData){
-  frobenius_norm <- base::norm(as.matrix(absolute_error_matrix), "F")
-  frobenius_norm_bulk <- base::norm(as.matrix(bulkData), "F")
+  frobenius_norm <- norm(as.matrix(absolute_error_matrix), "F")
+  frobenius_norm_bulk <- norm(as.matrix(bulkData), "F")
   frobenius_norm_standard <- frobenius_norm / frobenius_norm_bulk
   return(frobenius_norm_standard)
 }

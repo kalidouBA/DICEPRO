@@ -8,8 +8,6 @@
 #'
 #' @import base
 #' @import utils
-#' @importFrom readr read.delim2
-#' @importFrom reticulate system
 #'
 #' @return A matrix containing the estimated cell type proportions.
 #'
