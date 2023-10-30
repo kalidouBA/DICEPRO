@@ -43,11 +43,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
   write.table(bulkData, file = paste0("bulk.txt"), sep = "\t", row.names = F, quote = F)
 
   # Initialize variables to store results and metrics
-  typeOFabundances <- list()
-  matAbundances <- list()
-  allError <- list()
-  errorFrob <- list()
-  BetweenUnknown <- list()
+  typeOFabundances <- matAbundances <- allError <- errorFrob <- BetweenUnknown <- list()
 
   for (iterate_ in 1:nIteration) {
     # Prepare reference data for CIBERSORTx
