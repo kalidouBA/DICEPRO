@@ -81,7 +81,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
     colnames(matUnknown) <- names(flds)
 
     # Compute distances between unknown components and known cell types
-    resDist <- compute_distances(matrix_ = matUnknown)
+    resDist <- compute_distances(matUnknown)
 
     # Store distance results
     resDist <- melt(resDist[[1]]) %>% cbind.data.frame(
