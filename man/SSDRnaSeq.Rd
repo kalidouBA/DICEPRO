@@ -35,11 +35,11 @@ This function performs semi-supervised deconvolution of bulk RNA-seq data using 
 \details{
 The function performs several steps for semi-supervised deconvolution, including:
 \enumerate{
-  \item Running CIBERSORTx for cell type proportion estimation.
-  \item Calculating and storing performance metrics.
-  \item Estimating unknown components using non-negative matrix factorization (NMF).
-  \item Computing distances between unknown components and known cell types.
-  \item Iteratively refining the reference data with unknown components.
+\item Running CIBERSORTx for cell type proportion estimation.
+\item Calculating and storing performance metrics.
+\item Estimating unknown components using non-negative matrix factorization (NMF).
+\item Computing distances between unknown components and known cell types.
+\item Iteratively refining the reference data with unknown components.
 }
 }
 \examples{

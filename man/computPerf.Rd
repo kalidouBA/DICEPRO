@@ -22,14 +22,14 @@ This function computes performance metrics to compare two data matrices.
 \details{
 The function calculates and returns the following performance metrics for each variable:
 \itemize{
-  \item \code{R2}: R-squared.
-  \item \code{R2_adj}: Adjusted R-squared.
-  \item \code{ccc}: Concordance Correlation Coefficient (CCC).
-  \item \code{icc}: Intra-class Correlation (ICC).
-  \item \code{RRMSE}: Relative Root Mean Square Error (RRMSE).
-  \item \code{RMSE}: Root Mean Square Error (RMSE).
-  \item \code{Variable}: Name of the variable.
-  \item \code{Comparison}: Identifier for the comparison.
+\item \code{R2}: R-squared.
+\item \code{R2_adj}: Adjusted R-squared.
+\item \code{ccc}: Concordance Correlation Coefficient (CCC).
+\item \code{icc}: Intra-class Correlation (ICC).
+\item \code{RRMSE}: Relative Root Mean Square Error (RRMSE).
+\item \code{RMSE}: Root Mean Square Error (RMSE).
+\item \code{Variable}: Name of the variable.
+\item \code{Comparison}: Identifier for the comparison.
 }
 }
 \examples{

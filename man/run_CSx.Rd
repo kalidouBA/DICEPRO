@@ -21,9 +21,9 @@ The method is used to estimate cell type proportions in bulk RNA-seq data.
 \details{
 The function performs the following steps:
 \enumerate{
-  \item Runs CIBERSORTx with the provided email and token.
-  \item Reads the output results from CIBERSORTx.
-  \item Extracts cell type proportions and returns them as a matrix.
+\item Runs CIBERSORTx with the provided email and token.
+\item Reads the output results from CIBERSORTx.
+\item Extracts cell type proportions and returns them as a matrix.
 }
 }
 \examples{

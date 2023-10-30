@@ -80,9 +80,9 @@ This function simulates bulk RNA-seq data using a reference matrix and cell type
 \details{
 The function calculates and returns the simulations:
 \itemize{
-  \item \code{prop}: A matrix representing proportions of different cell types in samples.
-  \item \code{reference}: A reference matrix with cell types as columns and genes as rows.
-  \item \code{bulk}: A bulk RnaSeq simulated
+\item \code{prop}: A matrix representing proportions of different cell types in samples.
+\item \code{reference}: A reference matrix with cell types as columns and genes as rows.
+\item \code{bulk}: A bulk RnaSeq simulated
 }
 }
 \examples{

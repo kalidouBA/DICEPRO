@@ -18,11 +18,11 @@ This function calculates various distance metrics between columns of a matrix.
 \details{
 The function calculates and returns the following distance metrics:
 \itemize{
-  \item \code{Euclidean}: Euclidean distance matrix.
-  \item \code{Manhattan}: Manhattan distance matrix.
-  \item \code{ccc}: Concordance Correlation Coefficient (CCC) matrix.
-  \item \code{icc}: Intra-class Correlation (ICC) matrix.
-  \item \code{CrossProd}: Cross-product matrix.
+\item \code{Euclidean}: Euclidean distance matrix.
+\item \code{Manhattan}: Manhattan distance matrix.
+\item \code{ccc}: Concordance Correlation Coefficient (CCC) matrix.
+\item \code{icc}: Intra-class Correlation (ICC) matrix.
+\item \code{CrossProd}: Cross-product matrix.
 }
 }
 \examples{

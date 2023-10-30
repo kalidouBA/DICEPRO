@@ -1,12 +1,16 @@
 Package: SSDRnaSeq
-Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Semi-Supervise cellular deconvolution of Bulk RnaSeq using NMF and CiberSortx
+Version: 0.0.0.9000
+Authors@R:c(person("Kalidou", "BA", role = c("aut","cre"),
+	                  email = "kalidou.ba@u-bordeaux.fr"),
+	           person("Boris P.", "Hejblum", role = c("aut"),
+	                  email = "boris.hejblum@u-bordeaux.fr"))
+Imports: base,utils,MASS, matrixStats, NMF, caret, dplyr, epiR, psych, rBeta2009, reshape2, scater, splatter, stats
+Description:This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx method. 
+            It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
+            factorization (NMF) for to solve incomplete reference matrix problems..
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
 Encoding: UTF-8
-LazyData: true
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
