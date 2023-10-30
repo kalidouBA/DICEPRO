@@ -6,8 +6,14 @@
 # cross-product.
 #
 #' @param matrix_input The matrix for which distances are to be calculated.
-# @return A list of distance matrices and a vector of fold comparisons.
-# @details The function calculates and returns the following distance metrics:
+#'
+#' @export
+#'
+#' @importFrom epiR epi.ccc
+#' @importFrom psych ICC
+#'
+#' @return A list of distance matrices and a vector of fold comparisons.
+#' @details The function calculates and returns the following distance metrics:
 #' \itemize{
 #'   \item \code{Euclidean}: Euclidean distance matrix.
 #'   \item \code{Manhattan}: Manhattan distance matrix.
@@ -17,13 +23,10 @@
 #'}
 #'
 #' @examples
+#'if(interactive()){
 #' matrixdata <- matrix(rnorm(100), ncol = 5)
 #' result <- compute_distances(matrixdata)
-#'
-#' @importFrom epiR epi.ccc
-#' @importFrom psych ICC
-#'
-#' @export
+#'}
 
 compute_distances <- function(matrix_input) {
   num_cols <- ncol(matrix_input)
@@ -84,7 +87,15 @@ compute_distances <- function(matrix_input) {
 #' @param truth The true data matrix.
 #' @param estimated The estimated data matrix to compare against the true data.
 #' @param it_ An identifier or label for the comparison.
-# @return A data frame containing performance metrics for each variable in the comparison.
+#'
+#' @export
+#'
+#' @importFrom epiR epi.ccc
+#' @importFrom psych ICC
+#' @importFrom Metrics rmse
+#'
+#'
+#' @return A data frame containing performance metrics for each variable in the comparison.
 #' @details The function calculates and returns the following performance metrics for each variable:
 #' \itemize{
 #'   \item \code{R2}: R-squared.
@@ -98,15 +109,11 @@ compute_distances <- function(matrix_input) {
 #'}
 #'
 #' @examples
+#'if(interactive()){
 #' truth_data <- matrix(rnorm(100), ncol = 5)
 #' estimated_data <- matrix(rnorm(100), ncol = 5)
 #' result <- computPerf(truth_data, estimated_data, "Comparison_1")
-#'
-#' @importFrom epiR epi.ccc
-#' @importFrom psych ICC
-#' @importFrom Metrics rmse
-#'
-#' @export
+#' }
 
 computPerf <- function(truth, estimated, it_){
   colnameIntersect <- intersect(colnames(truth), colnames(estimated))
@@ -147,6 +154,11 @@ computPerf <- function(truth, estimated, it_){
 #
 #' @param absolute_error_matrix The absolute error matrix to be normalized.
 #' @param bulkData The reference bulk data matrix.
+#'
+#' @export
+#'
+#' @import base
+#'
 #' @return The normalized Frobenius norm of the absolute error matrix.
 #'
 #' @details The function calculates the Frobenius norm of the absolute error matrix and
@@ -154,12 +166,11 @@ computPerf <- function(truth, estimated, it_){
 #' The result is a measure of the error relative to the magnitude of the reference data.
 #'
 #' @examples
+#'if(interactive()){
 #' error_matrix <- matrix(rnorm(100), ncol = 5)
 #' reference_data <- matrix(rnorm(100), ncol = 5)
 #' norm_result <- normFrob(error_matrix, reference_data)
-#'
-#' @import base
-#' @export
+#'}
 
 normFrob <- function(absolute_error_matrix, bulkData){
   frobenius_norm <- norm(as.matrix(absolute_error_matrix), "F")

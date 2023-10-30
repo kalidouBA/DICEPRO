@@ -27,7 +27,9 @@ The function performs the following steps:
 }
 }
 \examples{
+if(interactive()){
 cibersortx_email <- "your_email@example.com"
 cibersortx_token <- "your_token"
 estimated_proportions <- run_methods_deconv(cibersortx_email, cibersortx_token)
+}
 }

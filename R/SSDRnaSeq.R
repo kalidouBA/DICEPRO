@@ -20,19 +20,22 @@
 #'   \item Iteratively refining the reference data with unknown components.
 #'}
 #'
-#' @examples
-#' reference_data <- matrix(rnorm(100), ncol = 5)
-#' bulk_data <- matrix(rnorm(100), ncol = 5)
-#' cibersortx_email <- "your_email@example.com"
-#' cibersortx_token <- "your_token"
-#' results <- SSDRnaSeq(reference_data, bulk_data, 5, 50, cibersortx_email, cibersortx_token)
+#' @export
 #'
 #' @import base
 #' @import utils
 #' @importFrom caret createFolds
 #' @importFrom NMF nmf
 #' @importFrom reshape2 melt
-#' @export
+#'
+#' @examples
+#' reference_data <- matrix(rnorm(100), ncol = 5)
+#' bulk_data <- matrix(rnorm(100), ncol = 5)
+#' cibersortx_email <- "your_email@example.com"
+#' cibersortx_token <- "your_token"
+#' results <- SSDRnaSeq(reference_data, bulk_data, 5, 50, cibersortx_email, cibersortx_token)
+
+
 
 SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, cibersortx_token) {
   # Prepare bulk data for CIBERSORTx

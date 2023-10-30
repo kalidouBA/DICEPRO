@@ -13,6 +13,9 @@ computPerf(truth, estimated, it_)
 
 \item{it_}{An identifier or label for the comparison.}
 }
+\value{
+A data frame containing performance metrics for each variable in the comparison.
+}
 \description{
 This function computes performance metrics to compare two data matrices.
 }
@@ -30,8 +33,9 @@ The function calculates and returns the following performance metrics for each v
 }
 }
 \examples{
+if(interactive()){
 truth_data <- matrix(rnorm(100), ncol = 5)
 estimated_data <- matrix(rnorm(100), ncol = 5)
 result <- computPerf(truth_data, estimated_data, "Comparison_1")
-
+}
 }

@@ -8,11 +8,12 @@
 #' @param scenario A scenario that determines how the proportions are generated.
 #' It can be one of three values: "even," "uniform," or any other value.
 #'
-#'
-#' @return a matrix representing proportions of different cell types in samples
+#' @export
 #'
 #' @importFrom stats rnorm
 #' @importFrom rBeta2009 rdirichlet
+#'
+#' @return a matrix representing proportions of different cell types in samples
 #'
 #' @examples
 #'if(interactive()){
@@ -20,7 +21,6 @@
 #' prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
 #'
 #'}
-#' @export
 
 generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
   if(scenario == "even"){
@@ -82,15 +82,17 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @param prob_sparse Probability of sparsity (used when sparse = TRUE).
 #'
 #'
-#' @return A reference matrix with cell types as columns and genes as rows.
-#'
-#' @seealso \code{\link{zinbEstimate}}, \code{\link{zinbSimulate}}, \code{\link{rcorrvar2}},
-#' \code{\link{mvrnorm}}
+#' @export
 #'
 #' @import splatter
 #' @importFrom matrixStats rowVars
 #' @importFrom dplyr group_by summarise across everything
 #' @importFrom MASS mvrnorm
+#'
+#' @return A reference matrix with cell types as columns and genes as rows.
+#'
+#' @seealso \code{\link{zinbEstimate}}, \code{\link{zinbSimulate}}, \code{\link{rcorrvar2}},
+#' \code{\link{mvrnorm}}
 #'
 #' @examples
 #'if(interactive()){
@@ -122,7 +124,6 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' W_gauss <- generate_ref_matrix(loi = "gauss", nCellsType = nCellsType, nGenes = nGenes, corr = corr)
 #'
 #'}
-#' @export
 
 generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesByCellType=50,
                                 nCell = 500,nCellsType = 10, nGenes = 500,lam = NULL,
@@ -241,8 +242,20 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #' @param mu_bruit Mean value for bias (used when bias = TRUE).
 #' @param sigma_bruit Standard deviation for bias (used when bias = TRUE).
 #'
+#' @export
+#'
 #' @importFrom splatter zinbEstimate zinbSimulate
 #' @importFrom scater mockSCE
+#'
+#' @return A list data simulated.
+#' @details The function calculates and returns the simulations:
+#' \itemize{
+#'   \item \code{prop}: A matrix representing proportions of different cell types in samples.
+#'   \item \code{reference}: A reference matrix with cell types as columns and genes as rows.
+#'   \item \code{bulk}: A bulk RnaSeq simulated
+#'}
+#'
+#'
 #' @examples
 #'if(interactive()){
 #'
@@ -274,7 +287,6 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #'                      nSample = nSample, prop = NULL, nGenes = nGenes, nCellsType = nCellsType, corr = corr)
 #'
 #'}
-#' @export
 
 simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsType = 50,
                         nGenes = 500, lam = NULL, pois_eps = NULL, corr = NULL,
