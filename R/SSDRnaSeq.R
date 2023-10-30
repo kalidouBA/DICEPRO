@@ -1,8 +1,9 @@
 #' Semi-Supervised Deconvolution of Bulk RNA-Seq Data
 #'
 #' This function performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx method.
-# It iteratively estimates cell type proportions and refines reference data using non-negative matrix factorization (NMF).
-#
+#' It iteratively estimates cell type proportions and refines reference data using non-negative matrix
+#' factorization (NMF).
+#'
 #' @param reference The reference data matrix containing cell type gene expression profiles.
 #' @param bulk The bulk RNA-seq data matrix.
 #' @param k_folds The number of cross-validation folds.
@@ -34,8 +35,6 @@
 #' cibersortx_email <- "your_email_example.com"
 #' cibersortx_token <- "your_token"
 #' results <- SSDRnaSeq(reference_data, bulk_data, 5, 50, cibersortx_email, cibersortx_token)
-
-
 
 SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, cibersortx_token) {
   # Prepare bulk data for CIBERSORTx

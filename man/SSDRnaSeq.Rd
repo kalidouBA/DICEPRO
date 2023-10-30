@@ -31,6 +31,8 @@ abundances of cell types estimated.
 }
 \description{
 This function performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx method.
+It iteratively estimates cell type proportions and refines reference data using non-negative matrix
+factorization (NMF).
 }
 \details{
 The function performs several steps for semi-supervised deconvolution, including:

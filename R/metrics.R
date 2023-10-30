@@ -1,10 +1,10 @@
 #' Compute Distances Between Columns of a Matrix
 #'
 #' This function calculates various distance metrics between columns of a matrix.
-# The supported distance metrics include Euclidean distance, Manhattan distance,
-# Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), and
-# cross-product.
-#
+#' The supported distance metrics include Euclidean distance, Manhattan distance,
+#' Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), and
+#' cross-product.
+#'
 #' @param matrix_input The matrix for which distances are to be calculated.
 #'
 #' @export
@@ -74,10 +74,10 @@ compute_distances <- function(matrix_input) {
 #' Compute Performance Metrics for Comparing Two Data Matrices of abundances
 #'
 #' This function computes performance metrics to compare two data matrices.
-# The function calculates various performance metrics, including R-squared, adjusted R-squared,
-# Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), Root Mean Square Error (RMSE),
-# Relative RMSE (RRMSE), and the name of the variable being compared.
-#
+#' The function calculates various performance metrics, including R-squared, adjusted R-squared,
+#' Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), Root Mean Square Error (RMSE),
+#' Relative RMSE (RRMSE), and the name of the variable being compared.
+#'
 #' @param truth The true data matrix.
 #' @param estimated The estimated data matrix to compare against the true data.
 #' @param it_ An identifier or label for the comparison.
@@ -142,8 +142,8 @@ computPerf <- function(truth, estimated, it_){
 #' Compute Normalized Frobenius Norm of Absolute Error Matrix
 #'
 #' This function calculates the normalized Frobenius norm of the absolute error matrix
-# with respect to a reference bulk data matrix.
-#
+#' with respect to a reference bulk data matrix.
+#'
 #' @param absolute_error_matrix The absolute error matrix to be normalized.
 #' @param bulkData The reference bulk data matrix.
 #'

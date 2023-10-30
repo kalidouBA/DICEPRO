@@ -14,6 +14,9 @@ A list of distance matrices and a vector of fold comparisons.
 }
 \description{
 This function calculates various distance metrics between columns of a matrix.
+The supported distance metrics include Euclidean distance, Manhattan distance,
+Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), and
+cross-product.
 }
 \details{
 The function calculates and returns the following distance metrics:

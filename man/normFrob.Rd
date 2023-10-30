@@ -16,6 +16,7 @@ The normalized Frobenius norm of the absolute error matrix.
 }
 \description{
 This function calculates the normalized Frobenius norm of the absolute error matrix
+with respect to a reference bulk data matrix.
 }
 \details{
 The function calculates the Frobenius norm of the absolute error matrix and

@@ -18,6 +18,9 @@ A data frame containing performance metrics for each variable in the comparison.
 }
 \description{
 This function computes performance metrics to compare two data matrices.
+The function calculates various performance metrics, including R-squared, adjusted R-squared,
+Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), Root Mean Square Error (RMSE),
+Relative RMSE (RRMSE), and the name of the variable being compared.
 }
 \details{
 The function calculates and returns the following performance metrics for each variable:
