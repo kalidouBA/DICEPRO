@@ -81,7 +81,6 @@ corr[lower.tri(corr,diag = FALSE)] <- y
 V <- cov(corr)
 corr <- cov2cor(V)
 W_gauss <- generate_ref_matrix(loi = "gauss", nCellsType = nCellsType, nGenes = nGenes, corr = corr)
-
 }
 }
 \seealso{

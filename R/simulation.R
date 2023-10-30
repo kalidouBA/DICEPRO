@@ -83,7 +83,7 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #'
 #' @export
 #'
-#' @import splatter
+#' @importFrom splatter zinbEstimate zinbSimulate
 #' @importFrom matrixStats rowVars
 #' @importFrom dplyr group_by summarise across everything
 #' @importFrom MASS mvrnorm

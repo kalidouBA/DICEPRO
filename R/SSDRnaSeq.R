@@ -96,7 +96,5 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
     colnames(unknownMat) <- paste0("Unknown_", iterate_)
     reference <- cbind(reference, unknownMat)
   }
-
-  # Return the final CIBERSORTx results
   return(out_Dec)
 }

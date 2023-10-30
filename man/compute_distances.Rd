@@ -26,8 +26,6 @@ The function calculates and returns the following distance metrics:
 }
 }
 \examples{
-if(interactive()){
 matrixdata <- matrix(rnorm(100), ncol = 5)
 result <- compute_distances(matrixdata)
-}
 }

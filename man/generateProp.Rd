@@ -30,6 +30,5 @@ modeling tasks in the field of biology and genetics.
 if(interactive()){
 set.seed(10032)
 prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
-
 }
 }
