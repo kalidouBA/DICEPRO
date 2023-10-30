@@ -51,7 +51,7 @@ simulation(
 
 \item{scenario}{The scenario for generating cell type proportions: "even," "uniform," or other.}
 
-\item{loi}{The law of integration to use: "rpois" for Poisson, "splatter" for splatter-based simulation.}
+\item{loi}{The law of integration to use: "rpois" for Poisson.}
 
 \item{tpm}{Logical indicating whether to convert the counts to transcripts per million (TPM).}
 
@@ -83,37 +83,5 @@ The function calculates and returns the simulations:
 \item \code{prop}: A matrix representing proportions of different cell types in samples.
 \item \code{reference}: A reference matrix with cell types as columns and genes as rows.
 \item \code{bulk}: A bulk RnaSeq simulated
-}
-}
-\examples{
-if(interactive()){
-
-data(LM22)
-
-set.seed(10032)
-nCellsType <- 22
-nGenes <- 500
-nSample <- 20
-lam <- runif(nCellsType, min = 5, max = 30)
-pois_eps <- rep(0.000001,nCellsType)
-
-corLm22 <- unname(cor(LM22))
-
-sizeVal <- (nCellsType*nCellsType-nCellsType)/2
-val <- corLm22[lower.tri(corLm22,diag = FALSE)]
-y <- c()
-for (m in 1:nCellsType\%/\%22+1) {
-  y <- c(y,simcor(val,mean(val),sd(val),sample(seq(.7,.8,by=.01),1)))
-}
-y <- y[1:sizeVal]
-corr <- matrix(1,ncol = nCellsType,nrow = nCellsType)
-corr[lower.tri(corr,diag = FALSE)] <- y
-corr <- t(corr)
-corr[lower.tri(corr,diag = FALSE)] <- y
-V <- cov(corr)
-corr <- cov2cor(V)
-resSim <- simulation(loi = "gauss", scenario = " ", bias = TRUE,
-                     nSample = nSample, prop = NULL, nGenes = nGenes, nCellsType = nCellsType, corr = corr)
-
 }
 }

@@ -8,9 +8,6 @@
 #'
 #' @export
 #'
-#' @import base
-#' @import utils
-#'
 #' @return A matrix containing the estimated cell type proportions.
 #'
 #' @details The function performs the following steps:
@@ -19,11 +16,7 @@
 #'   \item Reads the output results from CIBERSORTx.
 #'   \item Extracts cell type proportions and returns them as a matrix.
 #'}
-#'
-#' @examples
-#' cibersortx_email <- "your_email_example.com"
-#' cibersortx_token <- "your_token"
-#' estimated_proportions <- run_methods_deconv(cibersortx_email, cibersortx_token)
+
 
 
 

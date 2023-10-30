@@ -12,6 +12,7 @@
 #' @param cibersortx_token The CIBERSORTx account token.
 #'
 #' @return abundances of cell types estimated.
+#'
 #' @details The function performs several steps for semi-supervised deconvolution, including:
 #' \enumerate{
 #'   \item Running CIBERSORTx for cell type proportion estimation.
@@ -22,19 +23,10 @@
 #'}
 #'
 #' @export
-#'
-#' @import base
-#' @import utils
 #' @importFrom caret createFolds
-#' @importFrom NMF nmf
+#' @importFrom NMF nmf basis
 #' @importFrom reshape2 melt
-#'
-#' @examples
-#' reference_data <- matrix(rnorm(100), ncol = 5)
-#' bulk_data <- matrix(rnorm(100), ncol = 5)
-#' cibersortx_email <- "your_email_example.com"
-#' cibersortx_token <- "your_token"
-#' results <- SSDRnaSeq(reference_data, bulk_data, 5, 50, cibersortx_email, cibersortx_token)
+#' @import dplyr
 
 SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, cibersortx_token) {
   # Prepare bulk data for CIBERSORTx
@@ -42,8 +34,8 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
   write.table(bulkData, file = paste0("bulk.txt"), sep = "\t", row.names = F, quote = F)
 
   # Initialize variables to store results and metrics
-  typeOFabundances <- matAbundances <- allError <- errorFrob <- BetweenUnknown <- list()
-
+  errorFrob <- list()
+  BetweenUnknown <- NULL
   for (iterate_ in 1:nIteration) {
     # Prepare reference data for CIBERSORTx
     sc_ref <- cbind.data.frame(GeneSymbol = rownames(reference), reference)
@@ -51,14 +43,6 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, cibersortx_email, ci
 
     # Run CIBERSORTx for cell type proportion estimation
     out_Dec <- run_CSx(cibersortx_email, cibersortx_token)
-
-    # Store iteration-specific results
-    typeOFabundances[[iterate_]] <- rep(paste0("it_", iterate_), nrow(truthAbUse))
-    matAbundances[[iterate_]] <- t(out_Dec)[, colnames(truthAbUse)]
-
-    # Calculate and store performance metrics
-    resPerf <- computPerf(truth = truthAbUse, estimated = t(out_Dec), it_ = iterate_)
-    allError[[iterate_]] <- resPerf
 
     # Calculate error norms
     bulkCSx <- as.matrix(reference) %*% out_Dec

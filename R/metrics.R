@@ -149,8 +149,6 @@ computPerf <- function(truth, estimated, it_){
 #'
 #' @export
 #'
-#' @import base
-#'
 #' @return The normalized Frobenius norm of the absolute error matrix.
 #'
 #' @details The function calculates the Frobenius norm of the absolute error matrix and

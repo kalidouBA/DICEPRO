@@ -10,7 +10,6 @@
 #'
 #' @export
 #'
-#' @importFrom stats rnorm
 #' @importFrom rBeta2009 rdirichlet
 #'
 #' @return a matrix representing proportions of different cell types in samples
@@ -66,7 +65,7 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #'
 #' This function generates a reference matrix for use in simulating single-cell RNA-seq data.
 #'
-#' @param loi The law of integration to use: "rpois" for Poisson, "splatter" for splatter-based simulation.
+#' @param loi The law of integration to use: "rpois" for Poisson
 #' @param tpm Logical indicating whether to convert the counts to transcripts per million (TPM).
 #' @param bloc Logical indicating whether to introduce block sparsity.
 #' @param nGenesByCellType Number of genes per cell type (used for block sparsity).
@@ -83,85 +82,23 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #'
 #' @export
 #'
-#' @importFrom splatter zinbEstimate zinbSimulate
 #' @importFrom matrixStats rowVars
 #' @importFrom dplyr group_by summarise across everything
+#' @importFrom SimMultiCorrData rcorrvar2
+#' @importFrom SimMultiCorrData calc_theory
 #' @importFrom MASS mvrnorm
+#' @import dplyr
 #'
 #' @return A reference matrix with cell types as columns and genes as rows.
 #'
-#' @seealso \code{\link{zinbEstimate}}, \code{\link{zinbSimulate}}, \code{\link{rcorrvar2}},
-#' \code{\link{mvrnorm}}
-#'
-#' @examples
-#'if(interactive()){
-#'
-#' data(LM22)
-#'
-#' set.seed(10032)
-#' nCellsType <- 22
-#' nGenes <- 500
-#' nSample <- 20
-#' lam <- runif(nCellsType, min = 5, max = 30)
-#' pois_eps <- rep(0.000001,nCellsType)
-#'
-#' corLm22 <- unname(cor(LM22))
-#'
-#' sizeVal <- (nCellsType*nCellsType-nCellsType)/2
-#' val <- corLm22[lower.tri(corLm22,diag = FALSE)]
-#' y <- c()
-#' for (m in 1:nCellsType%/%22+1) {
-#'   y <- c(y,simcor(val,mean(val),sd(val),sample(seq(.7,.8,by=.01),1)))
-#' }
-#' y <- y[1:sizeVal]
-#' corr <- matrix(1,ncol = nCellsType,nrow = nCellsType)
-#' corr[lower.tri(corr,diag = FALSE)] <- y
-#' corr <- t(corr)
-#' corr[lower.tri(corr,diag = FALSE)] <- y
-#' V <- cov(corr)
-#' corr <- cov2cor(V)
-#' W_gauss <- generate_ref_matrix(loi = "gauss", nCellsType = nCellsType, nGenes = nGenes, corr = corr)
-#'}
+#' @seealso \code{\link{rcorrvar2}}, \code{\link{mvrnorm}}
 
 generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesByCellType=50,
-                                nCell = 500,nCellsType = 10, nGenes = 500,lam = NULL,
+                                nCell = 500, nCellsType = 10, nGenes = 500, lam = NULL,
                                 pois_eps = NULL,corr = NULL, method = "Polynomial",
                                 sparse = FALSE, prob_sparse=NULL){
-  # splatter
-  if (loi == "splatter"){
-    sce <- mockSCE(ncells = nCell, ngenes = nGenes)
-    params <- zinbEstimate(sce)
-    sim <- zinbSimulate(params)
-    cts <- as.data.frame(counts(sim))
-    if(min(rowSums(cts)) == 0){cts <- cts[-which(rowSums(cts)==0),]}
-
-    if(min(rowVars(as.matrix(cts)))==0){
-      cts <- cts[-which(rowVars(as.matrix(cts))==0),]
-    }
-
-    cts <- cts[which((rowSums(cts!=0)/ncol(cts))*100>5),]
-
-    cts <- as.data.frame(t(cts))
-
-
-    dataInput <- cbind.data.frame(cellType=phenoDataSimu$cellType,cts)
-    cellTypes <- paste0("cell_type_", 1:n_CellType)
-
-    cellTypeRetenaid <- names(table(dataInput$cellType))[which(table(dataInput$cellType)>10)]
-    scRNASeq <- dataInput[dataInput$cellType %in% cellTypeRetenaid,]
-
-    scRNASeq$cellType <- as.factor(scRNASeq$cellType)
-
-    Ref_mat <- as.data.frame(scRNASeq %>%
-                               group_by(cellType) %>%
-                               summarise(across(everything(), mean)))
-    nameCellType <- Ref_mat$cellType
-    counts <- as.data.frame(t(Ref_mat)[-1,])
-    colnames(counts) <- nameCellType
-  }
-
   # rpois
-  else if(loi == "rpois"){
+ if(loi == "rpois"){
     Dist <- c("Logistic", "Weibull")
     Params <- list(c(0, 1), c(3, 5))
     Stcum1 <- calc_theory(Dist[1], Params[[1]])
@@ -229,7 +166,7 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #' @param corr The correlation matrix for generating gene expressions (used when loi = "rpois" is FALSE).
 #' @param method The method for generating data: "Polynomial" or other.
 #' @param scenario The scenario for generating cell type proportions: "even," "uniform," or other.
-#' @param loi The law of integration to use: "rpois" for Poisson, "splatter" for splatter-based simulation.
+#' @param loi The law of integration to use: "rpois" for Poisson.
 #' @param tpm Logical indicating whether to convert the counts to transcripts per million (TPM).
 #' @param bloc Logical indicating whether to introduce block sparsity.
 #' @param nGenesByCellType Number of genes per cell type (used for block sparsity).
@@ -242,7 +179,6 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #'
 #' @export
 #'
-#' @importFrom splatter zinbEstimate zinbSimulate
 #' @importFrom scater mockSCE
 #'
 #' @return A list data simulated.
@@ -251,39 +187,6 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #'   \item \code{prop}: A matrix representing proportions of different cell types in samples.
 #'   \item \code{reference}: A reference matrix with cell types as columns and genes as rows.
 #'   \item \code{bulk}: A bulk RnaSeq simulated
-#'}
-#'
-#'
-#' @examples
-#'if(interactive()){
-#'
-#' data(LM22)
-#'
-#' set.seed(10032)
-#' nCellsType <- 22
-#' nGenes <- 500
-#' nSample <- 20
-#' lam <- runif(nCellsType, min = 5, max = 30)
-#' pois_eps <- rep(0.000001,nCellsType)
-#'
-#' corLm22 <- unname(cor(LM22))
-#'
-#' sizeVal <- (nCellsType*nCellsType-nCellsType)/2
-#' val <- corLm22[lower.tri(corLm22,diag = FALSE)]
-#' y <- c()
-#' for (m in 1:nCellsType%/%22+1) {
-#'   y <- c(y,simcor(val,mean(val),sd(val),sample(seq(.7,.8,by=.01),1)))
-#' }
-#' y <- y[1:sizeVal]
-#' corr <- matrix(1,ncol = nCellsType,nrow = nCellsType)
-#' corr[lower.tri(corr,diag = FALSE)] <- y
-#' corr <- t(corr)
-#' corr[lower.tri(corr,diag = FALSE)] <- y
-#' V <- cov(corr)
-#' corr <- cov2cor(V)
-#' resSim <- simulation(loi = "gauss", scenario = " ", bias = TRUE,
-#'                      nSample = nSample, prop = NULL, nGenes = nGenes, nCellsType = nCellsType, corr = corr)
-#'
 #'}
 
 simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsType = 50,

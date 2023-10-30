@@ -21,7 +21,7 @@ generate_ref_matrix(
 )
 }
 \arguments{
-\item{loi}{The law of integration to use: "rpois" for Poisson, "splatter" for splatter-based simulation.}
+\item{loi}{The law of integration to use: "rpois" for Poisson}
 
 \item{tpm}{Logical indicating whether to convert the counts to transcripts per million (TPM).}
 
@@ -53,37 +53,6 @@ A reference matrix with cell types as columns and genes as rows.
 \description{
 This function generates a reference matrix for use in simulating single-cell RNA-seq data.
 }
-\examples{
-if(interactive()){
-
-data(LM22)
-
-set.seed(10032)
-nCellsType <- 22
-nGenes <- 500
-nSample <- 20
-lam <- runif(nCellsType, min = 5, max = 30)
-pois_eps <- rep(0.000001,nCellsType)
-
-corLm22 <- unname(cor(LM22))
-
-sizeVal <- (nCellsType*nCellsType-nCellsType)/2
-val <- corLm22[lower.tri(corLm22,diag = FALSE)]
-y <- c()
-for (m in 1:nCellsType\%/\%22+1) {
-  y <- c(y,simcor(val,mean(val),sd(val),sample(seq(.7,.8,by=.01),1)))
-}
-y <- y[1:sizeVal]
-corr <- matrix(1,ncol = nCellsType,nrow = nCellsType)
-corr[lower.tri(corr,diag = FALSE)] <- y
-corr <- t(corr)
-corr[lower.tri(corr,diag = FALSE)] <- y
-V <- cov(corr)
-corr <- cov2cor(V)
-W_gauss <- generate_ref_matrix(loi = "gauss", nCellsType = nCellsType, nGenes = nGenes, corr = corr)
-}
-}
 \seealso{
-\code{\link{zinbEstimate}}, \code{\link{zinbSimulate}}, \code{\link{rcorrvar2}},
-\code{\link{mvrnorm}}
+\code{\link{rcorrvar2}}, \code{\link{mvrnorm}}
 }

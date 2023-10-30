@@ -26,8 +26,3 @@ The function performs the following steps:
 \item Extracts cell type proportions and returns them as a matrix.
 }
 }
-\examples{
-cibersortx_email <- "your_email_example.com"
-cibersortx_token <- "your_token"
-estimated_proportions <- run_methods_deconv(cibersortx_email, cibersortx_token)
-}

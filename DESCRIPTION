@@ -1,16 +1,16 @@
 Package: SSDRnaSeq
 Title: Semi-Supervise cellular deconvolution of Bulk RnaSeq using NMF and CiberSortx
-Version: 0.0.0.9000
+Version: 0.0.0.1
 Authors@R:c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
-Imports: base,utils,MASS, matrixStats, NMF, caret, dplyr, epiR, psych, rBeta2009, reshape2, scater, splatter, stats
+Imports: matrixStats, NMF, caret, dplyr, epiR, psych, rBeta2009, reshape2, scater, Metrics, SimMultiCorrData, MASS
 Description:This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx method. 
             It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
             factorization (NMF) for to solve incomplete reference matrix problems..
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: GPL (>= 3)
+Depends: R (>= 3.6)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
