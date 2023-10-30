@@ -32,11 +32,7 @@ compute_distances <- function(matrix_input) {
   num_cols <- ncol(matrix_input)
   foldName <- colnames(matrix_input)
 
-  euclidean_dist <- matrix(0, nrow = num_cols, ncol = num_cols)
-  manhattan_dist <- matrix(0, nrow = num_cols, ncol = num_cols)
-  ccc_dist <- matrix(0, nrow = num_cols, ncol = num_cols)
-  icc_dist <- matrix(0, nrow = num_cols, ncol = num_cols)
-  cp_dist <- matrix(0, nrow = num_cols, ncol = num_cols)
+  euclidean_dist <- manhattan_dist <- ccc_dist <- icc_dist <- cp_dist <- matrix(0, nrow = num_cols, ncol = num_cols)
   alComparisionFold <- c()
   for (i in 1:(num_cols-1)) {
     for (j in (i+1):num_cols) {
