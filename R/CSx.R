@@ -21,11 +21,10 @@
 #'}
 #'
 #' @examples
-#'if(interactive()){
-#' cibersortx_email <- "your_email@example.com"
+#' cibersortx_email <- "your_email_example.com"
 #' cibersortx_token <- "your_token"
 #' estimated_proportions <- run_methods_deconv(cibersortx_email, cibersortx_token)
-#' }
+
 
 
 run_CSx <- function(cibersortx_email, cibersortx_token){

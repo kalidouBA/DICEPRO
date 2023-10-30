@@ -19,7 +19,6 @@
 #'if(interactive()){
 #' set.seed(10032)
 #' prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
-#'
 #'}
 
 generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
@@ -122,7 +121,6 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' V <- cov(corr)
 #' corr <- cov2cor(V)
 #' W_gauss <- generate_ref_matrix(loi = "gauss", nCellsType = nCellsType, nGenes = nGenes, corr = corr)
-#'
 #'}
 
 generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesByCellType=50,

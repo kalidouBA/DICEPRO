@@ -31,7 +31,7 @@
 #' @examples
 #' reference_data <- matrix(rnorm(100), ncol = 5)
 #' bulk_data <- matrix(rnorm(100), ncol = 5)
-#' cibersortx_email <- "your_email@example.com"
+#' cibersortx_email <- "your_email_example.com"
 #' cibersortx_token <- "your_token"
 #' results <- SSDRnaSeq(reference_data, bulk_data, 5, 50, cibersortx_email, cibersortx_token)
 

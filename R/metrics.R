@@ -23,10 +23,8 @@
 #'}
 #'
 #' @examples
-#'if(interactive()){
 #' matrixdata <- matrix(rnorm(100), ncol = 5)
 #' result <- compute_distances(matrixdata)
-#'}
 
 compute_distances <- function(matrix_input) {
   num_cols <- ncol(matrix_input)
@@ -105,11 +103,9 @@ compute_distances <- function(matrix_input) {
 #'}
 #'
 #' @examples
-#'if(interactive()){
 #' truth_data <- matrix(rnorm(100), ncol = 5)
 #' estimated_data <- matrix(rnorm(100), ncol = 5)
 #' result <- computPerf(truth_data, estimated_data, "Comparison_1")
-#' }
 
 computPerf <- function(truth, estimated, it_){
   colnameIntersect <- intersect(colnames(truth), colnames(estimated))
@@ -162,11 +158,9 @@ computPerf <- function(truth, estimated, it_){
 #' The result is a measure of the error relative to the magnitude of the reference data.
 #'
 #' @examples
-#'if(interactive()){
 #' error_matrix <- matrix(rnorm(100), ncol = 5)
 #' reference_data <- matrix(rnorm(100), ncol = 5)
 #' norm_result <- normFrob(error_matrix, reference_data)
-#'}
 
 normFrob <- function(absolute_error_matrix, bulkData){
   frobenius_norm <- norm(as.matrix(absolute_error_matrix), "F")
