@@ -124,8 +124,6 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 
     colnames(counts) <- paste0("CellType_",rep(1:nCellsType))
     rownames(counts) <- paste0("Gene_",rep(1:nGenes))
-    if(tpm)
-      counts <- t(1e6*t(counts)/colSums(counts))
   }
   else{
     counts <- matrix(NA,nGenes,nCellsType)
@@ -136,17 +134,19 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
     rownames(counts) <- paste0("Gene_", 1:nGenes)
   }
 
-  if(sparse){
+  if(sparse)
     counts <- apply(counts, 2, FUN = function(x) {
       x*rbinom(n=nGenes, size=1, prob=prob_sparse)
     })
-  }else
-    if(bloc){
+
+  if(bloc){
       listNGE <- seq(1,nGenes+1,nGenesByCellType)
       for (ind in seq(nCellsType)){
         counts[-(listNGE[ind]:(listNGE[ind+1]-1)),ind] <- 0
       }
-    }
+  }
+  if(tpm)
+    counts <- t(1e6*t(counts)/colSums(counts))
   return(as.matrix(counts))
 }
 
