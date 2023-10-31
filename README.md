@@ -31,3 +31,8 @@ Once you have pulled the CIBERSORTx executable from Docker, and you have
 obtained a token from the CIBERSORTx website, you now have access to the
 CIBERSORTx Fractions executable and can run it following the
 instructions below.
+
+Once the configuration is complete and docker is running, you can run
+`SSDRnaSeq` with the token from the CIBERSORTx website
+`cibersortx_email` and `cibersortx_token` using the main function
+`SSDRnaSeq()`.
