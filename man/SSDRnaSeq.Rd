@@ -9,8 +9,9 @@ SSDRnaSeq(
   bulk,
   k_folds,
   nIteration,
-  cibersortx_email,
-  cibersortx_token
+  methodDeconv = c("DCQ", "CSx"),
+  cibersortx_email = NULL,
+  cibersortx_token = NULL
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ SSDRnaSeq(
 
 \item{nIteration}{The number of iterations to perform for refining the reference data.}
 
+\item{methodDeconv}{A character vector specifying the deconvolution method.
+Supported values are "CSx" or "DCQ".}
+
 \item{cibersortx_email}{The CIBERSORTx account email.}
 
 \item{cibersortx_token}{The CIBERSORTx account token.}
@@ -30,14 +34,19 @@ SSDRnaSeq(
 abundances of cell types estimated.
 }
 \description{
-This function performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx method.
-It iteratively estimates cell type proportions and refines reference data using non-negative matrix
-factorization (NMF).
+This function performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or
+Digital Cell Quantification method. It iteratively estimates cell type proportions and refines
+reference data using non-negative matrix factorization (NMF).
 }
 \details{
+This function performs deconvolution of bulk RNA-Seq data using either
+the CSx or DCQ method. It first prepares the data and runs the selected method
+for cell type proportion estimation. The function then calculates error norms,
+performs cross-validation, and estimates unknown components using NMF.
+
 The function performs several steps for semi-supervised deconvolution, including:
 \enumerate{
-\item Running CIBERSORTx for cell type proportion estimation.
+\item Running CIBERSORTx or Digital Cell Quantification for cell type proportion estimation.
 \item Calculating and storing performance metrics.
 \item Estimating unknown components using non-negative matrix factorization (NMF).
 \item Computing distances between unknown components and known cell types.
