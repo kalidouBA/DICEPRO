@@ -113,9 +113,7 @@ computPerf <- function(truth, estimated, it_){
   truth <- sweep(truth[,colnameIntersect], 1, rowSums(truth[,colnameIntersect]), FUN = "/")
   estimated <- sweep(estimated[,colnameIntersect], 1, rowSums(estimated[,colnameIntersect]), FUN = "/")
 
-  perfAll <- data.frame(matrix(ncol=8,nrow=0,
-                               dimnames=list(NULL,
-                                             c("R2", "R2_adj", "CCC", "ICC", "RRMSE", "RMSE", "CellType", "Iteration"))))
+  perfAll <- NULL
   for (v_ in colnameIntersect) {
     x <- truth[,v_]
     y <- as.vector(estimated[,v_])
@@ -134,6 +132,8 @@ computPerf <- function(truth, estimated, it_){
     R2_adj <- summary(model)$adj.r.squared
     perfAll <- rbind(perfAll, c(R2, R2_adj, ccc, res_ICC, RRMSE, RMSE, v_, it_))
   }
+  perfAll <- as.data.frame(perfAll)
+  colnames(perfAll) <- c("R2", "R2_adj", "CCC", "ICC", "RRMSE", "RMSE", "CellType", "Iteration")
   return(perfAll)
 }
 
