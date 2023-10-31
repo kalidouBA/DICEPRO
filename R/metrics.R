@@ -113,7 +113,9 @@ computPerf <- function(truth, estimated, it_){
   truth <- sweep(truth[,colnameIntersect], 1, rowSums(truth[,colnameIntersect]), FUN = "/")
   estimated <- sweep(estimated[,colnameIntersect], 1, rowSums(estimated[,colnameIntersect]), FUN = "/")
 
-  perfAll <- NULL
+  perfAll <- data.frame(matrix(ncol=8,nrow=0,
+                               dimnames=list(NULL,
+                                             c("R2", "R2_adj", "CCC", "ICC", "RRMSE", "RMSE", "CellType", "Iteration"))))
   for (v_ in colnameIntersect) {
     x <- truth[,v_]
     y <- as.vector(estimated[,v_])
@@ -123,8 +125,7 @@ computPerf <- function(truth, estimated, it_){
     mx <- mean(x)
     my <- mean(y)
     ccc <- CCC(y, x,ci = "z-transform",conf.level = 0.95, na.rm = FALSE)[['rho.c']][['est']]
-    dat <- data.frame(x, y)
-    temp <- ICC(dat, missing=FALSE, alpha=.05, lmer=FALSE)
+    temp <- ICC(data.frame(x, y), missing=FALSE, alpha=.05, lmer=FALSE)
     res_ICC <- temp$results$ICC[3]
     RMSE <- rmse(actual = x, predicted = y)
     RRMSE <- RMSE/sd(x)
