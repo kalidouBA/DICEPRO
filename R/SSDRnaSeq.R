@@ -71,7 +71,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds, nIteration, methodDeconv = c("DC
 
     # Calculate error norms
     bulkDeconv <- as.matrix(reference) %*% out_Dec
-    diff_bulk <- bulk - bulkCSx
+    diff_bulk <- bulk - bulkDeconv
     errorFrob[[iterate_]] <- normFrob(diff_bulk, bulk)
 
     # Create folds for cross-validation
