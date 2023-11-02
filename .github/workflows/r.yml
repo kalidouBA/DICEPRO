@@ -32,9 +32,9 @@ jobs:
           r-version: ${{ matrix.r-version }}
       - name: Install dependencies
         run: |
-          install.packages(c("devtools","remotes", "rcmdcheck", "BiocManager", "recipes"))
+          install.packages(c("devtools","remotes", "rcmdcheck", "BiocManager", "recipes","utils"))
           BiocManager::install(c("scater", "DeconRNASeq"))
-          remotes::install_deps(dependencies = TRUE)
+          utils::install.packages(c("omnideconv/CDSeq", "omnideconv/BayesPrism"))
         shell: Rscript {0}
       - name: Check
         run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
