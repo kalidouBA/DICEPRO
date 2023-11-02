@@ -10,18 +10,16 @@
 #'
 #' @return A matrix containing the estimated cell proportions for each cell type.
 #'
-#' @details This function allows you to run cell deconvolution using different methods, including CSx, DCQ, CDSeq, DeconRNASeq, FARDEEP, and BayesPrism.
+#' @details This function allows you to run cell deconvolution using different methods, including CSx, DCQ, DeconRNASeq, FARDEEP...
 #' The choice of method should be specified using the `methodDeconv` parameter.
 #'
-#' @seealso Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{CDSeq}}, \code{\link{DeconRNASeq}},
-#' \code{\link{fardeep}}, \code{\link{new.prism}}, \code{\link{run.prism}}, \code{\link{get.fraction}}.
+#' @seealso Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{DeconRNASeq}},
+#' \code{\link{fardeep}}.
 #'
 #' @importFrom ComICS dcq
-#' @importFrom CDSeq CDSeq
 #' @importFrom DeconRNASeq DeconRNASeq
 #' @importFrom FARDEEP fardeep
 #' @importFrom parallel detectCores
-#' @importFrom BayesPrism new.prism run.prism get.fraction
 
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email, cibersortx_token){
   nCellType <- ncol(reference)
