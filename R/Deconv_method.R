@@ -44,11 +44,6 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
              out_Dec = apply(out_Dec, 2, function(x) ifelse(x < 0, 0, x))
              break
            },
-         CDSeq={
-           out_Dec <- CDSeq(bulk_data = bulk, mcmc_iterations = 2000, cell_type_number = ncol(reference),
-                            gene_length = as.vector(1:geneLenght), reference_gep = reference)$estProp
-           break
-           },
          DeconRNASeq = {
            out_Dec = DeconRNASeq(datasets = bulk, signatures = reference, proportions = NULL, checksig = FALSE,
                                  known.prop = FALSE, use.scale = FALSE, fig = FALSE)$out.all
