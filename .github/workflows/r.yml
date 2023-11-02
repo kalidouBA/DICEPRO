@@ -34,8 +34,6 @@ jobs:
         run: |
           install.packages(c("devtools","remotes", "rcmdcheck", "BiocManager", "recipes"))
           BiocManager::install(c("scater", "DeconRNASeq"))
-          devtools::install_github("Danko-Lab/BayesPrism/BayesPrism")
-          devtools::install_github("kkang7/CDSeq_R_Package")
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
       - name: Check
