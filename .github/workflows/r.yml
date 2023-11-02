@@ -32,7 +32,7 @@ jobs:
           r-version: ${{ matrix.r-version }}
       - name: Install dependencies
         run: |
-          install.packages(c("remotes", "rcmdcheck", "BiocManager", "recipes"))
+          install.packages(c("devtools","remotes", "rcmdcheck", "BiocManager", "recipes"))
           BiocManager::install(c("scater", "DeconRNASeq"))
           devtools::install_github("Danko-Lab/BayesPrism/BayesPrism")
           devtools::install_github("kkang7/CDSeq_R_Package")
