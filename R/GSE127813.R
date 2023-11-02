@@ -1,0 +1,38 @@
+#'@title GSE127813 dataset
+#'
+#'@description High-throughput tissue dissection and cell purification with digital cytometry
+#'
+#'@docType data
+#
+#'@keywords data
+#'
+#'@name GSE127813
+#'
+#'@usage data(GSE127813)
+#'
+#'@details Whole blood samples were collected from 12 healthy adult subjects and immediately processed to enumerate leukocyte composition by FACS
+#'using an FDA-approved in vitro diagnostic test (IVD Multitest 6-color TBNK, Becton Dickinson) and automated hematology analyzer for blood leukocyte
+#'differential counts (Sysmex XE-2100) in a CLIA hematology lab setting (Stanford Clinical Laboratories). Aliquots from the same whole blood samples
+#'were stored in PAXgene blood RNA tubes (Qiagen) for subsequent RNA extraction and RNA-Seq library preparation.
+#'
+#'@details Tissue composition is a major determinant of phenotypic variation and a key factor influencing disease outcomes. Although scRNA-Seq
+#'has emerged as a powerful technique for characterizing cellular heterogeneity, it is currently impractical for large sample cohorts and cannot
+#'be applied to fixed specimens collected as part of routine clinical care. To overcome these challenges, we extended Cell type Identification
+#'By Estimating Relative Subsets Of RNA Transcripts (CIBERSORT) into a new platform for in silico cytometry. Our approach enables the simultaneous
+#'inference of cell type abundance and cell type-specific gene expression profiles (GEPs) from bulk tissue transcriptomes. The utility of this
+#'integrated framework, called CIBERSORTx, is demonstrated in multiple tumor types, including melanoma, where single cell reference profiles are
+#'used to dissect primary clinical specimens, revealing cell type-specific signatures of driver mutations and immunotherapy response. We anticipate
+#'that digital cytometry will augment single cell profiling efforts, enabling cost-effective, high throughput tissue characterization without the
+#'need for antibodies, disaggregation, or viable cells.
+#'Flow cytometry measurements of 8 cell populations:
+#'\enumerate{
+#' \item{B cells}
+#' \item{T cells CD4}
+#' \item{T cells CD8}
+#' \item{T cells}
+#' \item{Neutrophils}
+#' \item{NK cells}
+#' \item{Lymphocytes}
+#' \item{Monocytes}
+#'}
+NULL
