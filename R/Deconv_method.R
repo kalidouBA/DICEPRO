@@ -53,15 +53,6 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
          FARDEEP = {
            out_Dec <- fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta
            break
-           },
-         BayesPrism = {
-           refPrism <- t(reference)
-           bulkPrism <- t(bulk)
-           Prism <- new.prism(reference = t(refPrism), mixture = t(bulkPrism), input.type = "GEP", cell.type.labels = rownames(t(refPrism)),
-                                          cell.state.labels = rownames(refPrism), outlier.fraction=0, key = NULL)
-           bp.res <- run.prism(prism = Prism, n.cores=detectCores()-1)
-           out_Dec <- get.fraction (bp=bp.res, which.theta="final", state.or.type="type")
-           break
            }
          )
   return(out_Dec)
