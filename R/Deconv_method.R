@@ -10,16 +10,18 @@
 #'
 #' @return A matrix containing the estimated cell proportions for each cell type.
 #'
-#' @details This function allows you to run cell deconvolution using different methods, including CSx, DCQ, DeconRNASeq, FARDEEP...
+#' @details This function allows you to run cell deconvolution using different methods, including CSx, DCQ, CDSeq, DeconRNASeq, FARDEEP, and BayesPrism.
 #' The choice of method should be specified using the `methodDeconv` parameter.
 #'
-#' @seealso Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{DeconRNASeq}},
-#' \code{\link{fardeep}}.
+#' @seealso Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{CDSeq}}, \code{\link{DeconRNASeq}},
+#' \code{\link{fardeep}}, \code{\link{new.prism}}, \code{\link{run.prism}}, \code{\link{get.fraction}}.
 #'
 #' @importFrom ComICS dcq
+#' @importFrom CDSeq CDSeq
 #' @importFrom DeconRNASeq DeconRNASeq
 #' @importFrom FARDEEP fardeep
 #' @importFrom parallel detectCores
+#' @importFrom BayesPrism new.prism run.prism get.fraction
 
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email, cibersortx_token){
   nCellType <- ncol(reference)
@@ -42,6 +44,11 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
              out_Dec = apply(out_Dec, 2, function(x) ifelse(x < 0, 0, x))
              break
            },
+         CDSeq={
+           out_Dec <- CDSeq(bulk_data = bulk, mcmc_iterations = 2000, cell_type_number = ncol(reference),
+                            gene_length = as.vector(1:geneLenght), reference_gep = reference)$estProp
+           break
+           },
          DeconRNASeq = {
            out_Dec = DeconRNASeq(datasets = bulk, signatures = reference, proportions = NULL, checksig = FALSE,
                                  known.prop = FALSE, use.scale = FALSE, fig = FALSE)$out.all
@@ -50,6 +57,15 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
            },
          FARDEEP = {
            out_Dec <- fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta
+           break
+           },
+         BayesPrism = {
+           refPrism <- t(reference)
+           bulkPrism <- t(bulk)
+           Prism <- new.prism(reference = t(refPrism), mixture = t(bulkPrism), input.type = "GEP", cell.type.labels = rownames(t(refPrism)),
+                                          cell.state.labels = rownames(refPrism), outlier.fraction=0, key = NULL)
+           bp.res <- run.prism(prism = Prism, n.cores=detectCores()-1)
+           out_Dec <- get.fraction (bp=bp.res, which.theta="final", state.or.type="type")
            break
            }
          )
