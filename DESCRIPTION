@@ -6,7 +6,7 @@ Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
 Imports: matrixStats, NMF, caret, DescTools, psych, dplyr, rBeta2009, reshape2, scater, 
-         Metrics, SimMultiCorrData, MASS, ComICS, CDSeq, DeconRNASeq, FARDEEP, BayesPrism, parallel
+         Metrics, SimMultiCorrData, MASS, ComICS, DeconRNASeq, FARDEEP, parallel
 Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx method. 
             It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
             factorization (NMF) for to solve incomplete reference matrix problems..

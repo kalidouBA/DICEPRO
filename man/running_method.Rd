@@ -30,10 +30,10 @@ A matrix containing the estimated cell proportions for each cell type.
 This function performs cell deconvolution using various methods.
 }
 \details{
-This function allows you to run cell deconvolution using different methods, including CSx, DCQ, CDSeq, DeconRNASeq, FARDEEP, and BayesPrism.
+This function allows you to run cell deconvolution using different methods, including CSx, DCQ, DeconRNASeq, FARDEEP...
 The choice of method should be specified using the \code{methodDeconv} parameter.
 }
 \seealso{
-Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{CDSeq}}, \code{\link{DeconRNASeq}},
-\code{\link{fardeep}}, \code{\link{new.prism}}, \code{\link{run.prism}}, \code{\link{get.fraction}}.
+Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{DeconRNASeq}},
+\code{\link{fardeep}}.
 }
