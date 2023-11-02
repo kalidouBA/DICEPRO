@@ -4,9 +4,13 @@
 \alias{run_CSx}
 \title{Run CIBERSORTx Deconvolution Method}
 \usage{
-run_CSx(cibersortx_email, cibersortx_token)
+run_CSx(bulk, reference, cibersortx_email, cibersortx_token)
 }
 \arguments{
+\item{bulk}{A matrix of bulk RNA-seq data.}
+
+\item{reference}{A matrix of reference cell type gene expression profiles.}
+
 \item{cibersortx_email}{The CIBERSORTx account email.}
 
 \item{cibersortx_token}{The CIBERSORTx account token.}

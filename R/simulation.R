@@ -246,5 +246,5 @@ simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsT
   }
   GEO <- as.data.frame(apply(GEO, 2, as.numeric))
   rownames(GEO) <- paste0("Gene_", 1:nGenes)
-  return(list("prop" = prop, "reference" = W, "bulk" = GEO))
+  return(list("prop" = prop, "reference" = as.data.frame(W), "bulk" = GEO))
 }

@@ -1,0 +1,88 @@
+---
+title: "Test with simulation dataset"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test_simulation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r knitrsetup, include = FALSE}
+library(SSDRnaSeq)
+library(ADAPTS)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+```{r}
+simcor <- function (x, ymean=0, ysd=1, correlation=0) {
+  n <- length(x)
+  y <- rnorm(n)
+  z <- correlation * scale(x)[,1] + sqrt(1 - correlation^2) * 
+    scale(resid(lm(y ~ x)))[,1]
+  yresult <- ymean + ysd * z
+  as.vector(yresult)
+}
+```
+
+
+```{r}
+set.seed(2101)
+nCellsType <- 22
+nGenes <- 250
+nSample <- 10
+```
+
+
+```{r}
+data(LM22)
+
+corLm22 <- unname(cor(LM22))
+
+sizeVal <- (nCellsType*nCellsType-nCellsType)/2
+val <- corLm22[lower.tri(corLm22,diag = FALSE)]
+y <- c()
+for (m in 1:nCellsType%/%22+1) {
+  y <- c(y,simcor(val,mean(val),sd(val),sample(seq(.7,.8,by=.01),1)))
+}
+y <- y[1:sizeVal]
+corr <- matrix(1,ncol = nCellsType,nrow = nCellsType)
+corr[lower.tri(corr,diag = FALSE)] <- y
+corr <- t(corr)
+corr[lower.tri(corr,diag = FALSE)] <- y
+V <- cov(corr)
+corr <- cov2cor(V)
+```
+
+
+
+```{r}
+simulation <- SSDRnaSeq::simulation(loi = "gauss", scenario = " ", bias = TRUE, 
+                                    corr = corr, nSample = nSample, prop = NULL, 
+                                    nGenes = nGenes, nCellsType = nCellsType)
+
+dim(simulation$prop)
+dim(simulation$reference)
+dim(simulation$bulk)
+```
+
+```{r}
+k <- 5
+nIteration <- 20
+percs <- seq(.1, .5, .1)
+```
+
+Let's consider five populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
+
+```{r}
+set.seed(2101)
+cellTypeOut <- sample(1:ncol(simulation$reference), 5)
+refDataIncomplet <- simulation$reference[,-cellTypeOut]
+colnames(refDataIncomplet)
+```
+

@@ -7,9 +7,9 @@
 SSDRnaSeq(
   reference,
   bulk,
-  k_folds,
-  nIteration,
-  methodDeconv = c("DCQ", "CSx"),
+  k_folds = 5,
+  nIteration = 1,
+  methodDeconv = "CSx",
   cibersortx_email = NULL,
   cibersortx_token = NULL
 )
@@ -24,32 +24,45 @@ SSDRnaSeq(
 \item{nIteration}{The number of iterations to perform for refining the reference data.}
 
 \item{methodDeconv}{A character vector specifying the deconvolution method.
-Supported values are "CSx" or "DCQ".}
+Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
+\code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.}
 
 \item{cibersortx_email}{The CIBERSORTx account email.}
 
 \item{cibersortx_token}{The CIBERSORTx account token.}
 }
 \value{
-abundances of cell types estimated.
+A list data simulated.
 }
 \description{
 This function performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or
-Digital Cell Quantification method. It iteratively estimates cell type proportions and refines
+Digital Cell Quantification method or others. It iteratively estimates cell type proportions and refines
 reference data using non-negative matrix factorization (NMF).
 }
 \details{
+The function calculates and returns the simulations:
+\itemize{
+\item \code{Prediction}: A matrix or data frame containing the estimated cell type proportions for each sample in the bulk RNA-Seq data.
+\item \code{Matrix_prediction}: A matrix or data frame containing the cell type proportions for each sample in the bulk RNA-Seq data, with iteration information.
+}
+
 This function performs deconvolution of bulk RNA-Seq data using either
 the CSx or DCQ method. It first prepares the data and runs the selected method
 for cell type proportion estimation. The function then calculates error norms,
-performs cross-validation, and estimates unknown components using NMF.
+performs cross-validation.
+It estimates unknown components using Non-Negative Matrix Factorization (NMF)
+and calculates distances between unknown components and known cell types.
+The function returns the estimated cell type proportions and their associated matrices.
 
 The function performs several steps for semi-supervised deconvolution, including:
 \enumerate{
-\item Running CIBERSORTx or Digital Cell Quantification for cell type proportion estimation.
+\item Running CIBERSORTx or Digital Cell Quantification or others for cell type proportion estimation.
 \item Calculating and storing performance metrics.
 \item Estimating unknown components using non-negative matrix factorization (NMF).
 \item Computing distances between unknown components and known cell types.
 \item Iteratively refining the reference data with unknown components.
 }
+}
+\seealso{
+Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{createFolds}}, \code{\link{nmf}}, \code{\link{compute_distances}}.
 }
