@@ -1,56 +1,101 @@
-#'@title REAL_DATASET dataset
+#'@title GSE107011 dataset
 #'
-#'@description
-#'\code{GSE107011} : RNA-Seq profiling of 29 immune cell types and peripheral blood mononuclear cells.
-#'\code{GSE107572} : Blood-derived immune-cell mixtures from 9 healthy donors
-#'\code{GSE127813} : High-throughput tissue dissection and cell purification with digital cytometry
+#'@description RNA-Seq profiling of 29 immune cell types and peripheral blood mononuclear cells
 #'
 #'@docType data
 #
 #'@keywords data
 #'
-#'@name REAL_DATASET
-#'@aliases GSE107011 GSE107572 GSE127813
+#'@name GSE107011
 #'
-#'@usage data(REAL_DATASET)
+#'@usage data(GSE107011)
 #'
+#'@details Total RNA of 29 immune cell types (from 4 individuals) and peripheral blood mononuclear cells (PBMCs, from 13 individuals)
+#'was extracted for gene expression profiling. The 13 PBMCs samples were processed with both microarray and RNA-Seq platforms.
 #'
-#'@details We tested the methods on a set consisting of four different real-world bulk RNA-seq samples obtained using RNA-Seq technology available on GEO with accessions \code{GSE107011}, \code{GSE107572} and \code{GSE127813}.
-#'\code{GSE107011} is a bulk RNA-Seq dataset from 127 total samples of which 12 PBMC samples were selected for this analysis. It contains expression profiles of 29 blood cell subtypes, of which are mainly analyzed
-#'B, CD4+ T, CD8+ T, NK and Monocytes.
-#'\code{GSE107572} contains preprocessed RNA-seq data in Transcripts Per Million (TPM) units from nine colorectal cancer patients. These data also has flow cytometry estimates for the
-#'immune subpopulation corresponding to cells B, CD4+ T, CD8+ T, NK, Monocyte, Dendritic, Neutrophils and Tregs.
-#'\code{GSE127813} dataset were collected from 12 healthy adult subjects to enumerate leukocyte composition by FACS using an in vitro diagnostic test and automated hematology analyzer for
-#' blood leukocyte differential counts. The fractions of ground truth of  Neutrophils, Lymphocytes and Monocytes  are compared with the corresponding estimated fractions obtained using methods.
+#'@details We performed RNA-Seq transcriptome profiling on 29 immune cell types consituting peripheral blood mononuclear cells (PBMCs)
+#'sorted from 4 Singaporean-Chinese individuals (S4 cohort). We also performed RNA-Seq and microarray transcriptome profiling of PBMCs
+#'from an extended cohort of 13 individuals (S13 cohort). The data was used first to characterize the transcriptomic signatures and
+#'relationships among the 29 immune cell types. Then we explored the difference in mRNA composition in terms of transcripts proportions
+#'and abundance. Lastly, we performed deep deconvolution for both microarray and RNA-Seq technologies.
+#'Flow cytometry measurements of 6 cell populations:
+#'\enumerate{
+#' \item{Monocytes}
+#' \item{CD4Tcells}
+#' \item{Bcells}
+#' \item{CD8Tcells}
+#' \item{NK}
+#' \item{Unknown}
+#'}
+"GSE107011"
+
+#'@title GSE107572 dataset
 #'
-#'Flow cytometry measurements of 5, 8, and 8 cell populations for \code{GSE107011}, \code{GSE107572}, \code{GSE127813} datasets respectively:
+#'@description Blood-derived immune-cell mixtures from 9 healthy donors
+#'
+#'@docType data
+#
+#'@keywords data
+#'
+#'@name GSE107572
+#'
+#'@usage data(GSE107572)
+#'
+#'@details Total RNA of 29 immune cell types (from 4 individuals) and peripheral blood mononuclear cells (PBMCs, from 13 individuals)
+#'was extracted for gene expression profiling. The 13 PBMCs samples were processed with both microarray and RNA-Seq platforms.
+#'
+#'@details We introduce quanTIseq, a method to quantify the tumor immune contexture, determined by the type and density of tumor-infiltrating
+#'immune cells. quanTIseq is based on a novel deconvolution algorithm for RNA sequencing data that was validated with independent data sets.
+#'Complementing the deconvolution output with image data from tissue slides enables in silico multiplexed immunodetection and provides an
+#'efficient method for the immunophenotyping of a large number of tumor samples.
+#'Flow cytometry measurements of 8 cell populations:
+#'\enumerate{
+#' \item{B.cells}
+#' \item{T.cells.CD4}
+#' \item{T.cells.CD8}
+#' \item{Tregs}
+#' \item{Neutrophils}
+#' \item{NK.cells}
+#' \item{Dendritic.cells}
+#' \item{Monocytes}
+#'}
+"GSE107572"
+
+#'@title GSE127813 dataset
+#'
+#'@description High-throughput tissue dissection and cell purification with digital cytometry
+#'
+#'@docType data
+#
+#'@keywords data
+#'
+#'@name GSE127813
+#'
+#'@usage data(GSE127813)
+#'
+#'@details Whole blood samples were collected from 12 healthy adult subjects and immediately processed to enumerate leukocyte composition by FACS
+#'using an FDA-approved in vitro diagnostic test (IVD Multitest 6-color TBNK, Becton Dickinson) and automated hematology analyzer for blood leukocyte
+#'differential counts (Sysmex XE-2100) in a CLIA hematology lab setting (Stanford Clinical Laboratories). Aliquots from the same whole blood samples
+#'were stored in PAXgene blood RNA tubes (Qiagen) for subsequent RNA extraction and RNA-Seq library preparation.
+#'
+#'@details Tissue composition is a major determinant of phenotypic variation and a key factor influencing disease outcomes. Although scRNA-Seq
+#'has emerged as a powerful technique for characterizing cellular heterogeneity, it is currently impractical for large sample cohorts and cannot
+#'be applied to fixed specimens collected as part of routine clinical care. To overcome these challenges, we extended Cell type Identification
+#'By Estimating Relative Subsets Of RNA Transcripts (CIBERSORT) into a new platform for in silico cytometry. Our approach enables the simultaneous
+#'inference of cell type abundance and cell type-specific gene expression profiles (GEPs) from bulk tissue transcriptomes. The utility of this
+#'integrated framework, called CIBERSORTx, is demonstrated in multiple tumor types, including melanoma, where single cell reference profiles are
+#'used to dissect primary clinical specimens, revealing cell type-specific signatures of driver mutations and immunotherapy response. We anticipate
+#'that digital cytometry will augment single cell profiling efforts, enabling cost-effective, high throughput tissue characterization without the
+#'need for antibodies, disaggregation, or viable cells.
+#'Flow cytometry measurements of 8 cell populations:
 #'\enumerate{
 #' \item{B cells}
 #' \item{T cells CD4}
 #' \item{T cells CD8}
-#' \item{Tregs}
+#' \item{T cells}
 #' \item{Neutrophils}
 #' \item{NK cells}
-#' \item{Dendritic cells}
-#' \item{Monocytes}
 #' \item{Lymphocytes}
+#' \item{Monocytes}
 #'}
-#
-
-#'@format The data are composed of 3 objects:
-#'\describe{
-#'  \item{\code{GSE107011}: }{a \code{list} Total RNA of 29 immune cell types (from 4 individuals) and peripheral blood mononuclear cells (PBMCs, from 13 individuals) was extracted for gene expression profiling.}
-#'  \item{\code{GSE107572}: }{a \code{list} Blood-derived immune-cell mixtures from 9 healthy donors}
-#'  \item{\code{GSE127813}: }{a \code{list} Whole blood samples were collected from 12 healthy adult subjects and immediately processed to enumerate leukocyte composition by FACS using an FDA-approved in vitro diagnostic test.}
-#'}
-#'
-#'
-#'@references {
-#' \code{GSE107011}: Xu W, Monaco G, Wong EH, Tan WLW et al. Mapping of γ/δ T cells reveals Vδ2+ T cells resistance to senescence. EBioMedicine 2019 Jan;39:44-58. PMID: 30528453
-#' \code{GSE107572}: Finotello, F., Mayer, C., Plattner, C. et al. Molecular and pharmacological modulators of the tumor immune contexture revealed by deconvolution of RNA-seq data. Genome Med 11, 34 (2019). https://doi.org/10.1186/s13073-019-0638-6
-#' \code{GSE127813}: Newman AM, Steen CB, Liu CL, Gentles AJ et al. Determining cell type abundance and expression from bulk tissues with digital cytometry. Nat Biotechnol 2019 Jul;37(7):773-782. PMID: 31061481
-#'}
-
-"GSE107011"
-"GSE107572"
 "GSE127813"

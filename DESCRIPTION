@@ -20,3 +20,4 @@ Suggests:
     rmarkdown,
     ADAPTS
 VignetteBuilder: knitr
+LazyData: true
