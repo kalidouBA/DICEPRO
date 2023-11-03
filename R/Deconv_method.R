@@ -30,28 +30,21 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
   geneLenght <- nrow(bulk)
   row.names(bulkIntersect) <- row.names(refIntersect) <- common
 
-  switch(methodDeconv,
-         CSx={
-             out_Dec <- run_CSx(bulk, reference, cibersortx_email, cibersortx_token)
-             break
-           },
-         DCQ={
-             out_Dec = t(dcq(reference_data = refIntersect, mix_data = bulkIntersect,
-                                     marker_set = as.data.frame(row.names(refIntersect)),
-                             alpha_used = 0.05, lambda_min = 0.2, number_of_repeats = 30)$average)
-             out_Dec = apply(out_Dec, 2, function(x) ifelse(x < 0, 0, x))
-             break
-           },
-         DeconRNASeq = {
-           out_Dec = DeconRNASeq(datasets = bulk, signatures = reference, proportions = NULL, checksig = FALSE,
-                                 known.prop = FALSE, use.scale = FALSE, fig = FALSE)$out.all
-           rownames(out_Dec) = colnames(bulk)
-           break
-           },
-         FARDEEP = {
-           out_Dec <- fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta
-           break
-           }
-         )
+  if (methodDeconv == "CSx")
+    out_Dec <- run_CSx(bulk, reference, cibersortx_email, cibersortx_token)
+  else if(methodDeconv == "DCQ"){
+    out_Dec = t(dcq(reference_data = refIntersect, mix_data = bulkIntersect,
+                    marker_set = as.data.frame(row.names(refIntersect)),
+                    alpha_used = 0.05, lambda_min = 0.2, number_of_repeats = 30)$average)
+    out_Dec = apply(out_Dec, 2, function(x) ifelse(x < 0, 0, x))
+  }
+  else if(methodDeconv == "DeconRNASeq"){
+    out_Dec = DeconRNASeq(datasets = bulk, signatures = reference, proportions = NULL, checksig = FALSE,
+                          known.prop = FALSE, use.scale = FALSE, fig = FALSE)$out.all
+    rownames(out_Dec) = colnames(bulk)
+  }
+  else if(methodDeconv == "FARDEEP")
+    out_Dec <- fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta
+
   return(out_Dec)
 }
