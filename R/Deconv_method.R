@@ -20,8 +20,18 @@
 #' @importFrom DeconRNASeq DeconRNASeq
 #' @importFrom FARDEEP fardeep
 #' @importFrom parallel detectCores
+#' @importFrom pcaMethods prep
+#' @export
 
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email, cibersortx_token){
+  dimname_ <- dimnames(reference)
+  reference <- apply(reference, 2, as.numeric)
+  dimnames(reference) <- dimname_
+
+  dimname_ <- dimnames(bulk)
+  bulk <- apply(bulk, 2, as.numeric)
+  dimnames(bulk) <- dimname_
+
   nCellType <- ncol(reference)
   common <- intersect(row.names(bulk), row.names(reference))
 
@@ -39,12 +49,14 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
     out_Dec = apply(out_Dec, 2, function(x) ifelse(x < 0, 0, x))
   }
   else if(methodDeconv == "DeconRNASeq"){
-    out_Dec = DeconRNASeq(datasets = bulk, signatures = reference, proportions = NULL, checksig = FALSE,
-                          known.prop = FALSE, use.scale = FALSE, fig = FALSE)$out.all
+    out_Dec = DeconRNASeq(datasets = as.data.frame(bulk), signatures = as.data.frame(reference),
+                          proportions = NULL, checksig = FALSE, known.prop = FALSE, use.scale = FALSE,
+                          fig = FALSE)$out.all
     rownames(out_Dec) = colnames(bulk)
+    out_Dec <- t(out_Dec)
   }
   else if(methodDeconv == "FARDEEP")
-    out_Dec <- fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta
+    out_Dec <- t(fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta)
 
   return(out_Dec)
 }
