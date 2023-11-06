@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## **SSDRnaSeq (Semi-Supervive Deconvolution of RnaSeq)**
+## **SSDRnaSeq (Semi-Supervise Deconvolution of RnaSeq data)**
 
 Is a software package that has been meticulously designed to address the
 persistent challenges that cellular deconvolution methods have faced for
