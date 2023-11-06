@@ -44,9 +44,10 @@ Once you have pulled the CIBERSORTx executable from Docker, and you have obtaine
 
 ## Installation
 
-```{r GitHub-install, eval=FALSE}
-remotes::install_github("kalidouBA/SSDRnaSeq")
+
+```{r setup}
 library(SSDRnaSeq)
+library(NMF)
 ```
 
 
@@ -55,26 +56,24 @@ library(SSDRnaSeq)
 ### Data import
 
 ```{r}
-simulation <- simulation(loi = "gauss", scenario = " ", nGenes = 100)
+simulation <- SSDRnaSeq::simulation(loi = "gauss", scenario = " ", nGenes = 100, nCellsType = 15)
 ref <- simulation$reference
 bulk <- simulation$bulk
 prop <- simulation$prop
 ```
 
-### Let's consider 10 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
+### Let's consider 3 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
 
 ```{r}
 set.seed(2101)
-cellTypeOut <- sample(1:ncol(simulation$reference), 10)
-refDataIncomplet <- simulation$reference[,-cellTypeOut]
+cellTypeOut <- sample(1:ncol(ref), 3)
+refDataIncomplet <- ref[,-cellTypeOut]
 ```
 
-### Proportion estimates using *k=5* cross-validation folds and *20* iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix *W* and abundances *P*. Each iteration typically involves running the *DCQ* deconvolution algorithm.
+### Proportion estimates using *k=5* cross-validation folds and *10* iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix *W* and abundances *P*. Each iteration typically involves running the *DCQ* deconvolution algorithm.
 
 ```{r, message=FALSE}
-k <- 5
-nIteration <- 20
-res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 20,methodDeconv ="DCQ")
+res <- SSDRnaSeq::SSDRnaSeq(reference = refDataIncomplet, bulk = bulk, k_folds = 5, nIteration = 5, methodDeconv ="DCQ")
 ```
 
 

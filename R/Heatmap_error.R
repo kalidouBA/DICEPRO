@@ -20,7 +20,7 @@ heatmap_abundances <- function(res2plot){
   colnames(data2plot) <- c("Iteration",  "Cell_Type", "Abundances")
 
   # Create a heatmap using ggplot2
-  ggplot(data2plot, aes(Iteration,Cell_Type, fill=Abundances)) +
+  p <- ggplot(data2plot, aes(Iteration,Cell_Type, fill=Abundances)) +
     geom_raster() +
     scale_fill_viridis_c(direction=-1) +
     theme_bw(base_size = 9, base_family = "Helvetica") %+replace%
@@ -45,6 +45,7 @@ heatmap_abundances <- function(res2plot){
       legend.text = element_text(size=9),
       legend.key.size = unit(0.5, 'cm')
     )
+  return(p)
 }
 
 #' Create an Error Plot
@@ -61,7 +62,6 @@ heatmap_abundances <- function(res2plot){
 #'
 #' @export
 #'
-#' @importFrom reshape2 melt
 #' @import ggplot2
 
 error_plot <- function(error2plot){
@@ -78,7 +78,7 @@ error_plot <- function(error2plot){
            CI_upper = mean - qt((1 - 0.95) / 2, n - 1) * sem)
 
   # Create the error plot using ggplot2
-  ggplot(error2plot_mean, aes(x=Iterate, y=mean)) +
+  p <- ggplot(error2plot_mean, aes(x=Iterate, y=mean)) +
     geom_line(aes(x=Iterate, y=mean)) +
     geom_ribbon(aes(ymin=CI_lower,ymax=CI_upper),color="grey70",alpha=0.4)+
     labs(x = "Iteration", y = "Error between folds") +
@@ -105,6 +105,7 @@ error_plot <- function(error2plot){
       legend.text = element_text(size=9),
       legend.key.size = unit(0.5, 'cm')
     )
+  return(p)
 }
 
 

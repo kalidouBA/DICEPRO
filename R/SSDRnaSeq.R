@@ -95,7 +95,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
       matUnknown <- matrix(ncol = k_folds, nrow = nrow(reference))
 
       for (indFld in 1:k_folds) {
-        resNMF <- NMF::nmf(as.matrix(abs(diff_bulk)[, flds[[indFld]]]), rank = 1)
+        resNMF <- nmf(as.matrix(abs(diff_bulk)[, flds[[indFld]]]), rank = 1)
         matUnknown[, indFld] <- as.vector(basis(resNMF))
       }
 
@@ -115,7 +115,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
                                 cbind.data.frame(t(out_Dec)[,cellTypeName],
                                                  "Iterate" = iterate_))
       # Estimate unknown components using NMF
-      resNMF <- NMF::nmf(x = abs(diff_bulk), rank = 1)
+      resNMF <- nmf(x = abs(diff_bulk), rank = 1)
       unknownMat <- as.data.frame(basis(resNMF))
       colnames(unknownMat) <- paste0("Unknown_", iterate_)
       reference <- cbind(reference, unknownMat)

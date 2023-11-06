@@ -9,6 +9,9 @@
 #'
 #' @return A combined plot showing the cell abundance heatmap and error plot.
 #'
+#'@method plot SSDRnaSeq
+#'@import patchwork
+#'
 #' @seealso Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{error_plot}}.
 #'
 #' @export
@@ -17,11 +20,10 @@ plot.SSDRnaSeq <- function(x, ...){
 
   if(length(unique(x$Matrix_prediction$Iterate)) > 1){
     # Combine the heatmap and error between folds
-    combined_plot <- heatmap_abundances(x$Matrix_prediction) / error_plot(x$Error_folds)
-    return(combined_plot)
+    heatmap_abundances(x$Matrix_prediction) /
+      error_plot(x$Error_folds)
   } else {
     warning("Only one unique iteration found. No plot generated.")
-    return(NULL)
   }
 
 }
