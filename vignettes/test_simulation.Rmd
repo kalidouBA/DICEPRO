@@ -8,14 +8,16 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r knitrsetup, include = FALSE}
-library(SSDRnaSeq)
-library(ADAPTS)
-
+```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+```
+
+```{r setup}
+library(SSDRnaSeq)
+library(NMF)
 ```
 
 
@@ -75,7 +77,6 @@ dim(simulation$bulk)
 ```{r}
 k <- 5
 nIteration <- 20
-percs <- seq(.1, .5, .1)
 ```
 
 Let's consider five populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
