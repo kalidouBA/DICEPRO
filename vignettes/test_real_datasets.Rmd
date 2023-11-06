@@ -29,21 +29,22 @@ head(LM22)
 ```
 
 
+
 ```{r}
-bulk <- SSDRnaSeq::GSE107011$gene_expression
-res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+bulk <- GSE107011$gene_expression
+res <- SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
 ```
  
  
  
 ```{r}
-bulk <- SSDRnaSeq::GSE107572$gene_expression
-res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+bulk <- GSE107572$gene_expression
+res <- SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
 ```
 
 
 ```{r}
-bulk <- SSDRnaSeq::GSE127813$gene_expression
-res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+bulk <- GSE127813$gene_expression
+res <- SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
 ```
 
