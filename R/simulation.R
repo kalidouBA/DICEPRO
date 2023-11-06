@@ -180,6 +180,7 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #' @export
 #'
 #' @importFrom scater mockSCE
+#' @importFrom clusterGeneration rcorrmatrix
 #'
 #' @return A list data simulated.
 #' @details The function calculates and returns the simulations:
@@ -197,6 +198,8 @@ simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsT
                         sparse=FALSE, prob_sparse=0.5,
                         bias = FALSE, mu_bruit = 0, sigma_bruit = .025){
 
+  if(is.null(corr))
+    corr <- rcorrmatrix(nCellsType)
   # Generate ref
   if(is.null(W)){
     W <- generate_ref_matrix(loi = loi, nCellsType = nCellsType,nGenes = nGenes,
