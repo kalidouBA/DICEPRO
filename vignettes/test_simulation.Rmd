@@ -1,5 +1,6 @@
 ---
 title: "Test with simulation dataset"
+author: "Kalidou BA"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{test_simulation}
@@ -85,4 +86,11 @@ cellTypeOut <- sample(1:ncol(simulation$reference), 5)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
 colnames(refDataIncomplet)
 ```
+```{r}
+res <- SSDRnaSeq::SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 2,                             methodDeconv = "DCQ")
+```
+
+
+
+
 

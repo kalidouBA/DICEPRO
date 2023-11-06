@@ -1,0 +1,48 @@
+---
+title: "test_real_datasets"
+author: "Kalidou BA"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test_real_datasets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+```{r setup}
+library(SSDRnaSeq)
+library(ADAPTS)
+```
+
+
+```{r}
+data(LM22)
+head(LM22)
+```
+
+
+```{r}
+bulk <- SSDRnaSeq::GSE107011$gene_expression
+res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+```
+ 
+ 
+ 
+```{r}
+bulk <- SSDRnaSeq::GSE107572$gene_expression
+res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+```
+
+
+```{r}
+bulk <- SSDRnaSeq::GSE127813$gene_expression
+res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+```
+

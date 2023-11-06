@@ -61,6 +61,12 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
     methodDeconv <- methodDeconv[1]
 
   cellTypeName <- colnames(reference)
+  geneIntersect <- intersect(rownames(reference), rownames(bulk))
+
+  reference <- apply(reference[geneIntersect, ], 2, as.numeric)
+  bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
+  rownames(reference) <- rownames(bulk) <- geneIntersect
+
   # Initialize variables to store results and metrics
   errorFrob <- list()
   matrixAbundances <- BetweenUnknown <- NULL
@@ -80,7 +86,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
       matUnknown <- matrix(ncol = k_folds, nrow = nrow(reference))
 
       for (indFld in 1:k_folds) {
-        resNMF <- nmf(x = as.matrix(abs(diff_bulk)[, flds[[indFld]]], rank = 1))
+        resNMF <- nmf(as.matrix(abs(diff_bulk)[, flds[[indFld]]]), rank = 1)
         matUnknown[, indFld] <- as.vector(basis(resNMF))
       }
 
@@ -96,8 +102,9 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
       )
 
       BetweenUnknown <- rbind(BetweenUnknown, resDist)
-      matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(out_Dec[,cellTypeName],
-                                                                   "Iterate" = iterate_))
+      matrixAbundances <- rbind(matrixAbundances,
+                                cbind.data.frame(t(out_Dec)[,cellTypeName],
+                                                 "Iterate" = iterate_))
       # Estimate unknown components using NMF
       resNMF <- nmf(x = abs(diff_bulk), rank = 1)
       unknownMat <- as.data.frame(basis(resNMF))
@@ -106,5 +113,6 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
     }
   }
 
-  return(list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances))
+  return(list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
+              "Error_folds" = BetweenUnknown))
 }
