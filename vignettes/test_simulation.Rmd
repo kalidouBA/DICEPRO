@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(SSDRnaSeq)
+library(ADAPTS)
 library(NMF)
 ```
 
@@ -74,15 +75,12 @@ dim(simulation$reference)
 dim(simulation$bulk)
 ```
 
-```{r}
-k <- 5
-nIteration <- 20
-```
-
 Let's consider five populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
 
 ```{r}
 set.seed(2101)
+k <- 5
+nIteration <- 20
 cellTypeOut <- sample(1:ncol(simulation$reference), 5)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
 colnames(refDataIncomplet)
