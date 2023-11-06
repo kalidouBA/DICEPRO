@@ -49,6 +49,15 @@
 #' @importFrom reshape2 melt
 #' @importFrom ComICS dcq
 #' @import dplyr
+#'
+#' @examples
+#' if(interactive()){
+#' data(LM22)
+#' results <- SSDRnaSeq(reference = LM22, bulk = GSE127813$gene_expression,
+#'                      k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+#' print(results)
+#'
+#'}
 
 SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv = "CSx",
                       cibersortx_email=NULL, cibersortx_token = NULL) {
@@ -112,7 +121,10 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
       reference <- cbind(reference, unknownMat)
     }
   }
+  results <- list("Prediction" = out_Dec,
+                  "Matrix_prediction" = matrixAbundances,
+                  "Error_folds" = BetweenUnknown)
 
-  return(list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
-              "Error_folds" = BetweenUnknown))
+  class(results) <- "SSDRnaSeq"
+  return(results)
 }

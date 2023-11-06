@@ -63,6 +63,15 @@ The function performs several steps for semi-supervised deconvolution, including
 \item Iteratively refining the reference data with unknown components.
 }
 }
+\examples{
+if(interactive()){
+data(LM22)
+results <- SSDRnaSeq(reference = LM22, bulk = GSE127813$gene_expression,
+                     k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
+print(results)
+
+}
+}
 \seealso{
 Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{createFolds}}, \code{\link{nmf}}, \code{\link{compute_distances}}.
 }
