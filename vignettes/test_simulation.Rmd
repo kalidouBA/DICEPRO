@@ -85,7 +85,7 @@ cellTypeOut <- sample(1:ncol(simulation$reference), 5)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
 colnames(refDataIncomplet)
 
-res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 5,                             methodDeconv = "DCQ")
+res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 5,methodDeconv ="DCQ")
 ```
 
 

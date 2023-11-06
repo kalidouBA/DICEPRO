@@ -30,4 +30,42 @@ Please note that each token is uniquely tied to your user account, and tokens ar
 
 Once you have pulled the CIBERSORTx executable from Docker, and you have obtained a token from the CIBERSORTx website, you now have access to the CIBERSORTx Fractions executable and can run it following the instructions below.
 
-##### Once the configuration is complete and docker is running, you can run `SSDRnaSeq` with the token from the CIBERSORTx website `cibersortx_email` and `cibersortx_token` using the main function `SSDRnaSeq()`.
+### Once the configuration is complete and docker is running, you can run `SSDRnaSeq` with the token from the CIBERSORTx website `cibersortx_email` and `cibersortx_token` using the main function `SSDRnaSeq()`.
+
+## Installation
+
+``` r
+remotes::install_github("kalidouBA/SSDRnaSeq")
+library(SSDRnaSeq)
+```
+
+## Example
+
+### Data import
+
+``` r
+simulation <- simulation(loi = "gauss", scenario = " ", nGenes = 100)
+ref <- simulation$reference
+bulk <- simulation$bulk
+prop <- simulation$prop
+```
+
+### Let's consider 10 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
+
+``` r
+set.seed(2101)
+cellTypeOut <- sample(1:ncol(simulation$reference), 10)
+refDataIncomplet <- simulation$reference[,-cellTypeOut]
+```
+
+### Proportion estimates using *k=5* cross-validation folds and *20* iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix *W* and abundances *P*. Each iteration typically involves running the *DCQ* deconvolution algorithm.
+
+``` r
+k <- 5
+nIteration <- 20
+res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 20,methodDeconv ="DCQ")
+```
+
+``` r
+plot(res)
+```
