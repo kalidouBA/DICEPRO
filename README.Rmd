@@ -4,6 +4,16 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+
 ## **SSDRnaSeq (Semi-Supervive Deconvolution of RnaSeq)**
 
 Is a software package that has been meticulously designed to address the persistent challenges that cellular deconvolution methods have faced for years. One of its key features is its ability to overcome the limitations posed by incomplete reference arrays, which have hampered the accuracy and efficiency of many existing methodologies. In doing so, SSDRnaSeq hopes to contribute to the advancement of RNA-seq analysis, offering a more complete and reliable solution for better elucidating the complexities of cell composition and gene expression.
@@ -34,16 +44,17 @@ Once you have pulled the CIBERSORTx executable from Docker, and you have obtaine
 
 ## Installation
 
-``` r
+```{r GitHub-install, eval=FALSE}
 remotes::install_github("kalidouBA/SSDRnaSeq")
 library(SSDRnaSeq)
 ```
+
 
 ## Example
 
 ### Data import
 
-``` r
+```{r}
 simulation <- simulation(loi = "gauss", scenario = " ", nGenes = 100)
 ref <- simulation$reference
 bulk <- simulation$bulk
@@ -52,7 +63,7 @@ prop <- simulation$prop
 
 ### Let's consider 10 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
 
-``` r
+```{r}
 set.seed(2101)
 cellTypeOut <- sample(1:ncol(simulation$reference), 10)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
@@ -60,12 +71,14 @@ refDataIncomplet <- simulation$reference[,-cellTypeOut]
 
 ### Proportion estimates using *k=5* cross-validation folds and *20* iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix *W* and abundances *P*. Each iteration typically involves running the *DCQ* deconvolution algorithm.
 
-``` r
+```{r, message=FALSE}
 k <- 5
 nIteration <- 20
 res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 20,methodDeconv ="DCQ")
 ```
 
-``` r
+
+
+``` {r}
 plot(res)
 ```
