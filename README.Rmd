@@ -44,6 +44,10 @@ Once you have pulled the CIBERSORTx executable from Docker, and you have obtaine
 
 ## Installation
 
+```{r GitHub-install, eval=FALSE}
+remotes::install_github("kalidouBA/SSDRnaSeq")
+```
+
 
 ```{r setup}
 library(SSDRnaSeq)

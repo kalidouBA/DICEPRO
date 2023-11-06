@@ -59,6 +59,10 @@ instructions below.
 ## Installation
 
 ``` r
+remotes::install_github("kalidouBA/SSDRnaSeq")
+```
+
+``` r
 library(SSDRnaSeq)
 #> Registered S3 methods overwritten by 'registry':
 #>   method               from 
