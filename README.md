@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## **SSDRnaSeq (Semi-Supervive Deconvolution of RnaSeq)**
+## **SSDRnaSeq (Semi-Supervise Deconvolution of RnaSeq)**
 
 Is a software package that has been meticulously designed to address the
 persistent challenges that cellular deconvolution methods have faced for
@@ -80,7 +80,7 @@ library(NMF)
 
 ## Example
 
-### Data simulation
+### Data import
 
 ``` r
 simulation <- SSDRnaSeq::simulation(loi = "gauss", scenario = " ", nGenes = 100, nCellsType = 15)
@@ -89,7 +89,7 @@ bulk <- simulation$bulk
 prop <- simulation$prop
 ```
 
-#### Let’s consider 3 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
+### Let’s consider 3 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
 
 ``` r
 set.seed(2101)
@@ -97,7 +97,7 @@ cellTypeOut <- sample(1:ncol(ref), 3)
 refDataIncomplet <- ref[,-cellTypeOut]
 ```
 
-#### Proportion estimates using *k=5* cross-validation folds and *10* iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix *W* and abundances *P*. Each iteration typically involves running the *DCQ* deconvolution algorithm.
+### Proportion estimates using *k=5* cross-validation folds and *10* iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix *W* and abundances *P*. Each iteration typically involves running the *DCQ* deconvolution algorithm.
 
 ``` r
 res <- SSDRnaSeq::SSDRnaSeq(reference = refDataIncomplet, bulk = bulk, k_folds = 5, nIteration = 5, methodDeconv ="DCQ")

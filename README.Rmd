@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 ```
 
 
-## **SSDRnaSeq (Semi-Supervive Deconvolution of RnaSeq)**
+## **SSDRnaSeq (Semi-Supervise Deconvolution of RnaSeq)**
 
 Is a software package that has been meticulously designed to address the persistent challenges that cellular deconvolution methods have faced for years. One of its key features is its ability to overcome the limitations posed by incomplete reference arrays, which have hampered the accuracy and efficiency of many existing methodologies. In doing so, SSDRnaSeq hopes to contribute to the advancement of RNA-seq analysis, offering a more complete and reliable solution for better elucidating the complexities of cell composition and gene expression.
 
