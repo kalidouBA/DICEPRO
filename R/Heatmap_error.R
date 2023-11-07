@@ -81,7 +81,7 @@ error_plot <- function(error2plot){
 
   # Create the error plot using ggplot2
   p <- ggplot(error2plot_mean, aes(x=Iterate, y=mean)) +
-    geom_line(aes(x=Iterate, y=mean)) +
+    geom_line() +
     geom_ribbon(aes(ymin=CI_lower,ymax=CI_upper),color="grey70",alpha=0.4)+
     labs(x = "Iteration", y = "Error between folds") +
     facet_wrap(~L1, scales = "free", ncol = 3)+
