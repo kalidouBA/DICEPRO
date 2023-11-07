@@ -80,7 +80,7 @@ library(NMF)
 
 ## Example
 
-### Data import
+### Data simulation
 
 ``` r
 simulation <- SSDRnaSeq::simulation(loi = "gauss", scenario = " ", nGenes = 100, nCellsType = 15)

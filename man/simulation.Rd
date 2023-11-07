@@ -85,3 +85,10 @@ The function calculates and returns the simulations:
 \item \code{bulk}: A bulk RnaSeq simulated
 }
 }
+\examples{
+if(interactive()){
+set.seed(2101)
+simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
+                         nGenes = 50, nCellsType = 5)
+}
+}

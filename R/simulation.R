@@ -15,17 +15,15 @@
 #' @return a matrix representing proportions of different cell types in samples
 #'
 #' @examples
-#'if(interactive()){
-#' set.seed(10032)
+#' if(interactive()){
+#' set.seed(2101)
 #' prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
-#'}
+#' }
 
 generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
-  if(scenario == "even"){
+  if(scenario == "even")
     m <- round(matrix(abs(rnorm(n_cell_types, mean = 1 / n_cell_types,
-                                       sd = 0.01)),
-                      ncol = n_cell_types), 3)
-  }
+                                       sd = 0.01)),  ncol = n_cell_types), 3)
   else if(scenario == "uniform"){
     min.percentage = 1
     max.percentage = 99
@@ -53,9 +51,9 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
     m <- matrix(aggregate(P_all$expected, list(P_all$CT), FUN=mean)$x,
                 ncol = n_cell_types)
   }
-  else{
+  else
     m <- rdirichlet(n=nSample, shape = 1:n_cell_types)
-  }
+
   dimnames(m) <- list(paste0("Sample_",1:nrow(m)),paste0("CellType_",1:ncol(m)))
   return(m)
 }
@@ -92,6 +90,12 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @return A reference matrix with cell types as columns and genes as rows.
 #'
 #' @seealso \code{\link{rcorrvar2}}, \code{\link{mvrnorm}}
+#'
+#' @examples
+#' if(interactive()){
+#' set.seed(2101)
+#' ref <- generate_ref_matrix(loi = "gauss", bias = TRUE, nGenes = 50, nCellsType = 5)
+#' }
 
 generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesByCellType=50,
                                 nCell = 500, nCellsType = 10, nGenes = 500, lam = NULL,
@@ -189,6 +193,13 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #'   \item \code{reference}: A reference matrix with cell types as columns and genes as rows.
 #'   \item \code{bulk}: A bulk RnaSeq simulated
 #'}
+#'
+#' @examples
+#' if(interactive()){
+#' set.seed(2101)
+#' simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
+#'                          nGenes = 50, nCellsType = 5)
+#'}
 
 simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsType = 50,
                         nGenes = 500, lam = NULL, pois_eps = NULL, corr = NULL,
@@ -200,6 +211,7 @@ simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsT
 
   if(is.null(corr))
     corr <- rcorrmatrix(nCellsType)
+
   # Generate ref
   if(is.null(W)){
     W <- generate_ref_matrix(loi = loi, nCellsType = nCellsType,nGenes = nGenes,

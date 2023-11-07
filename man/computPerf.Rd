@@ -36,8 +36,10 @@ The function calculates and returns the following performance metrics for each v
 }
 }
 \examples{
+if(interactive()){
  truth_data <- matrix(rnorm(50), ncol = 5)
  estimated_data <- matrix(rnorm(50), ncol = 5)
  colnames(truth_data) <- colnames(estimated_data) <- paste0("C_", 1:5)
  result <- computPerf(truth_data, estimated_data, "Comparison_1")
+ }
 }

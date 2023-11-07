@@ -53,6 +53,12 @@ A reference matrix with cell types as columns and genes as rows.
 \description{
 This function generates a reference matrix for use in simulating single-cell RNA-seq data.
 }
+\examples{
+if(interactive()){
+set.seed(2101)
+ref <- generate_ref_matrix(loi = "gauss", bias = TRUE, nGenes = 50, nCellsType = 5)
+}
+}
 \seealso{
 \code{\link{rcorrvar2}}, \code{\link{mvrnorm}}
 }

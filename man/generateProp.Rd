@@ -28,7 +28,7 @@ modeling tasks in the field of biology and genetics.
 }
 \examples{
 if(interactive()){
-set.seed(10032)
+set.seed(2101)
 prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
 }
 }

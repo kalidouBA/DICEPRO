@@ -24,7 +24,9 @@ normalizes it by dividing it by the Frobenius norm of the reference bulk data ma
 The result is a measure of the error relative to the magnitude of the reference data.
 }
 \examples{
+if(interactive()){
 error_matrix <- matrix(rnorm(100), ncol = 5)
 reference_data <- matrix(rnorm(100), ncol = 5)
 norm_result <- normFrob(error_matrix, reference_data)
+}
 }

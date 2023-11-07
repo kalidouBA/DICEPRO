@@ -16,6 +16,7 @@
 #' @import ggplot2
 
 heatmap_abundances <- function(res2plot){
+  value <- L1 <- Iterate <- sem <- CI_lower <- CI_upper <- Iteration <- Cell_Type <- Abundances <- NULL
   data2plot <- reshape2::melt(res2plot, id.vars = "Iterate")
   colnames(data2plot) <- c("Iteration",  "Cell_Type", "Abundances")
 
@@ -65,6 +66,7 @@ heatmap_abundances <- function(res2plot){
 #' @import ggplot2
 
 error_plot <- function(error2plot){
+  CI_lower <- CI_upper <- Iterate <- L1 <- sem <- value <- NULL
   # Calculate mean and confidence intervals of error values
   error2plot_mean <- error2plot %>%
     filter(!is.na(value)) %>%
