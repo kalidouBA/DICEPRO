@@ -20,6 +20,12 @@ Is a software package that has been meticulously designed to address the persist
 
 `SSDRnaSeq`’s core functionality lies in its iterative deconvolution process, which continues until convergence is reached. This approach involves joint updates of the reference matrix, which may contain missing cell populations, and the cell population abundance matrix, which contains newly discovered populations. Like other deconvolution methods, `SSDRnaSeq` starts by fundamentally modelling the deconvolution problem. It relies on established techniques such as `CiberSortX`, `DCQ` or others for the supervised aspect, while using `non-negative matrix factorization (NMF)` decomposition for the unsupervised component. This hybrid approach enables `SSDRnaSeq` to provide a robust and versatile solution for unravelling complex RNA-seq data.
 
+## Installation
+
+```{r GitHub-install, eval=FALSE}
+BiocManager::install("kalidouBA/SSDRnaSeq")
+```
+
 #### Running cibersortx to deduce the fractions of the different cell populations requires convigurations following the steps below:
 
 `Step 1:`
@@ -43,45 +49,3 @@ Once you have pulled the CIBERSORTx executable from Docker, and you have obtaine
 ##### Once the configuration is complete and docker is running, you can run `SSDRnaSeq` with the token from the CIBERSORTx website `cibersortx_email` and `cibersortx_token` using the main function `SSDRnaSeq()`.
 
 ##### Other cell deconvolution methods are available to see with the help of the function `running_method()`.
-
-## Installation
-
-```{r GitHub-install, eval=FALSE}
-remotes::install_github("kalidouBA/SSDRnaSeq")
-```
-
-
-```{r setup}
-library(SSDRnaSeq)
-library(NMF)
-```
-
-
-## Example
-
-#### Data simulation
-
-```{r}
-simulation <- SSDRnaSeq::simulation(loi = "gauss", scenario = " ", nGenes = 100, nCellsType = 15)
-ref <- simulation$reference
-bulk <- simulation$bulk
-prop <- simulation$prop
-```
-
-##### Let's consider 3 random populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
-
-```{r}
-set.seed(2101)
-cellTypeOut <- sample(1:ncol(ref), 3)
-refDataIncomplet <- ref[,-cellTypeOut]
-```
-
-##### Proportion estimates using `k=5` cross-validation folds and `10` iterations to be performed during the cell deconvolution process with joint estimation of the reference matrix `W` and abundances `P`. Each iteration typically involves running the `DCQ` deconvolution algorithm.
-
-```{r, message=FALSE}
-res <- SSDRnaSeq::SSDRnaSeq(reference = refDataIncomplet, bulk = bulk, k_folds = 5, nIteration = 5, methodDeconv ="DCQ")
-```
-
-``` {r}
-plot(res)
-```

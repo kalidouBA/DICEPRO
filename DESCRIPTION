@@ -1,5 +1,5 @@
 Package: SSDRnaSeq
-Title: Semi-Supervise cellular deconvolution of Bulk RnaSeq using NMF and CiberSortx, Scaden or others
+Title: Semi-Supervise cellular deconvolution of Bulk RnaSeq using NMF and CiberSortx, DCQ or others
 Version: 0.0.0.1
 Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
