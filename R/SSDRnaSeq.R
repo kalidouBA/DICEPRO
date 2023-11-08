@@ -86,7 +86,7 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
 
   if(nIteration > 0){
     for (iterate_ in 1:nIteration) {
-      out_Dec <- running_method(bulk, reference, methodDeconv)
+      out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
       # Calculate error norms
       bulkDeconv <- as.matrix(reference) %*% out_Dec
       diff_bulk <- bulk - bulkDeconv
