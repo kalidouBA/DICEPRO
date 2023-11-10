@@ -83,6 +83,7 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @importFrom matrixStats rowVars
 #' @importFrom dplyr group_by summarise across everything
 #' @importFrom SimMultiCorrData rcorrvar2
+#' @importFrom clusterGeneration rcorrmatrix
 #' @importFrom SimMultiCorrData calc_theory
 #' @importFrom MASS mvrnorm
 #' @import dplyr
@@ -187,7 +188,6 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #' @export
 #'
 #' @importFrom scater mockSCE
-#' @importFrom clusterGeneration rcorrmatrix
 #'
 #' @return A list data simulated.
 #' @details The function calculates and returns the simulations:
