@@ -94,13 +94,16 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @examples
 #' if(interactive()){
 #' set.seed(2101)
-#' ref <- generate_ref_matrix(loi = "gauss", bias = TRUE, nGenes = 50, nCellsType = 5)
+#' ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
 #' }
 
 generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesByCellType=50,
                                 nCell = 500, nCellsType = 10, nGenes = 500, lam = NULL,
                                 pois_eps = NULL,corr = NULL, method = "Polynomial",
                                 sparse = FALSE, prob_sparse=NULL){
+ if(is.null(corr))
+    corr <- rcorrmatrix(nCellsType)
+
   # rpois
  if(loi == "rpois"){
     Dist <- c("Logistic", "Weibull")
@@ -208,9 +211,6 @@ simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsT
                         nGenesByCellType = 50, missCellTypes = NA,
                         sparse=FALSE, prob_sparse=0.5,
                         bias = FALSE, mu_bruit = 0, sigma_bruit = .025){
-
-  if(is.null(corr))
-    corr <- rcorrmatrix(nCellsType)
 
   # Generate ref
   if(is.null(W)){

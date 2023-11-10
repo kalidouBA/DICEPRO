@@ -56,7 +56,7 @@ This function generates a reference matrix for use in simulating single-cell RNA
 \examples{
 if(interactive()){
 set.seed(2101)
-ref <- generate_ref_matrix(loi = "gauss", bias = TRUE, nGenes = 50, nCellsType = 5)
+ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
 }
 }
 \seealso{
