@@ -12,7 +12,7 @@
 #'@method plot SSDRnaSeq
 #'@import patchwork
 #'
-#' @seealso Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{error_plot}}.
+#' @seealso Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{metric_plot}}.
 #'
 #' @export
 
@@ -21,7 +21,7 @@ plot.SSDRnaSeq <- function(x, ...){
   if(length(unique(x$Matrix_prediction$Iterate)) > 1){
     # Combine the heatmap and error between folds
     heatmap_abundances(x$Matrix_prediction) /
-      error_plot(x$Error_folds)
+      metric_plot(x$performs2plot)
   } else {
     warning("Only one unique iteration found. No plot generated.")
   }

@@ -50,6 +50,7 @@ The function calculates and returns the simulations:
 \item \code{Matrix_prediction}: A matrix or data frame containing the cell type proportions for each sample in the bulk RNA-Seq data, with iteration information.
 \item \code{New_signature}: The refined reference data matrix with unknown components.
 \item \code{Optimal_iteration}: The optimal iteration at which the convergence criteria were met.
+\item \code{performs2plot}: The variation performance between iteration.
 }
 
 This function performs deconvolution of bulk RNA-Seq data using either

@@ -49,15 +49,16 @@ heatmap_abundances <- function(res2plot){
   return(p)
 }
 
-#' Create an Error Plot
+#' Create an Error/performance Plot
 #'
-#' This function generates an error plot to visualize error values between folds across different iterations.
+#' This function generates an metric plot to visualize metric values between folds across different iterations.
 #'
-#' @param error2plot A data frame containing the error values to be plotted, including L1, Iterate, and value.
+#' @param perf2plot A data frame containing the metric values to be plotted, including Iterate, and metric
 #'
-#' @return An error plot showing the mean error values with confidence intervals.
+#' @return An metric plot showing the mean metric values with confidence intervals.
 #'
-#' @details This function calculates the mean and confidence intervals of error values between folds and creates a line plot with shaded confidence intervals. It is useful for visualizing the variation in errors across iterations and L1 categories.
+#' @details This function calculates the mean and confidence intervals of metric values between folds and creates a line plot with shaded confidence intervals.
+#' It is useful for visualizing the variation in metric across iterations.
 #'
 #' @seealso Other functions for data visualization: \code{\link{ggplot}}, \code{\link{geom_line}}, \code{\link{geom_ribbon}}, \code{\link{facet_wrap}}.
 #'
@@ -65,26 +66,25 @@ heatmap_abundances <- function(res2plot){
 #'
 #' @import ggplot2
 
-error_plot <- function(error2plot){
-  CI_lower <- CI_upper <- Iterate <- L1 <- sem <- value <- NULL
-  # Calculate mean and confidence intervals of error values
-  error2plot_mean <- error2plot %>%
-    filter(!is.na(value)) %>%
-    group_by(L1, Iterate) %>%
+metric_plot <- function(perf2plot){
+  metric <- It <- CI_lower <- CI_upper <- sem <- NULL
+  # Calculate mean and confidence intervals of metric values
+  perf2plot_mean <- perf2plot %>%
+    filter(!is.na(metric)) %>%
+    group_by(It) %>%
     summarise(n = n(),
-              mean = mean(value),
-              median = median(value),
-              sd = sd(value)) %>%
+              mean = mean(metric),
+              median = median(metric),
+              sd = sd(metric)) %>%
     mutate(sem = sd / sqrt(n - 1),
            CI_lower = mean + qt((1 - 0.95) / 2, n - 1) * sem,
            CI_upper = mean - qt((1 - 0.95) / 2, n - 1) * sem)
 
-  # Create the error plot using ggplot2
-  p <- ggplot(error2plot_mean, aes(x=Iterate, y=mean)) +
+  # Create the metric plot using ggplot2
+  p <- ggplot(perf2plot_mean, aes(x=It, y=mean)) +
     geom_line() +
     geom_ribbon(aes(ymin=CI_lower,ymax=CI_upper),color="grey70",alpha=0.4)+
     labs(x = "Iteration", y = "Error between folds") +
-    facet_wrap(~L1, scales = "free", ncol = 3)+
     theme_bw(base_size = 9, base_family = "Helvetica") %+replace%
     theme(
       strip.text.x = element_text(size = 9),
