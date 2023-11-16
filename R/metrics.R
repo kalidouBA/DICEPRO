@@ -28,20 +28,20 @@
 #'}
 
 computPerf <- function(outDec_1, outDec_2, metric) {
-  colnameIntersect <- intersect(colnames(outDec_1), colnames(outDec_2))
 
   # Normalize outDec_1 and outDec_2 matrices to sum to 1 along each row
-  outDec_1 <- sweep(outDec_1[, colnameIntersect], 1, rowSums(outDec_1[, colnameIntersect]), FUN = "/")
-  outDec_2 <- sweep(outDec_2[, colnameIntersect], 1, rowSums(outDec_2[, colnameIntersect]), FUN = "/")
+  outDec_1 <- sweep(outDec_1, 1, rowSums(outDec_1), FUN = "/")
+  outDec_2 <- sweep(outDec_2, 1, rowSums(outDec_2), FUN = "/")
 
+  CellType <- colnames(outDec_1)
   # Initialize a data frame to store performance metrics
   perfAll <- NULL
 
   # Iterate over each cell type
-  for (v_ in colnameIntersect) {
+  for (ct in CellType) {
     perf <- c()
-    x <- as.vector(outDec_1[, v_])
-    y <- as.vector(outDec_2[, v_])
+    x <- as.vector(outDec_1[, ct])
+    y <- as.vector(outDec_2[, ct])
 
 
     # Calculate Root Mean Squared Error Relative RMSE (RRMSE)
@@ -62,10 +62,10 @@ computPerf <- function(outDec_1, outDec_2, metric) {
       perf <- append(perf, R2_adj)
     }
 
-    perfAll <- rbind(perfAll, colMeans(perf))
+    perfAll <- rbind(perfAll,perf)
   }
 
-  perfAll <- cbind(perfAll, colnameIntersect)
+  perfAll <- cbind.data.frame(metric = perfAll, CellType = as.factor(CellType))
 
   return(perfAll)
 }

@@ -85,7 +85,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
   # Initialize variables to store results and metrics
-  matrixAbundances <- performs <- opt <- NULL
+  matrixAbundances <- performs <- performs2plot <- opt <- NULL
 
   for (iterate_ in 0:nIteration) {
     message("Current iteration ++++++++++++++++++++++++++++++++ ", iterate_)
@@ -97,26 +97,27 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
 
     matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
 
-    # Estimate one unknown component using NMF
-    resNMF <- nmf(x = abs(diff_bulk), rank = 1)
-    unknownMat <- as.data.frame(basis(resNMF))
-    colnames(unknownMat) <- paste0("Unknown_", iterate_)
-    reference <- cbind(reference, unknownMat)
-
     if(iterate_ > 0){
-      perform_it <- computPerf(matrixAbundances[matrixAbundances$Iterate == iterate_-1, ],
-                               matrixAbundances[matrixAbundances$Iterate == iterate_, ], metric)
-      performs <- c(performs, perform_it)
 
+      perform_it <- computPerf(outDec_1 = matrixAbundances[matrixAbundances$Iterate == iterate_-1, cellTypeName],
+                               outDec_2 = matrixAbundances[matrixAbundances$Iterate == iterate_, cellTypeName], metric)
+      performs <- c(performs, mean(perform_it$metric))
+      performs2plot <- rbind.data.frame(performs2plot, perform_it)
       if (length(performs) > 1 &&
-          ((metric == "R2_adj" && (perform_it > 0.99 || iterate_ == nIteration)) ||
-           (metric == "RRMSE" && (perform_it - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
+          ((metric == "R2_adj" && (performs[iterate_-1] > 0.99 || iterate_ == nIteration)) ||
+           (metric == "RRMSE" && (performs[iterate_-1] - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
         opt <- iterate_
         message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
 
         break
       }
     }
+
+    # Estimate one unknown component using NMF
+    resNMF <- nmf(x = abs(diff_bulk), rank = 1)
+    unknownMat <- as.data.frame(basis(resNMF))
+    colnames(unknownMat) <- paste0("Unknown_", iterate_)
+    reference <- cbind(reference, unknownMat)
   }
 
   results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
