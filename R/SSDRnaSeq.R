@@ -111,8 +111,9 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
       if (length(performs) > 1 &&
           ((metric == "R2_adj" && (perform_it > 0.99 || iterate_ == nIteration)) ||
            (metric == "RRMSE" && (perform_it - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
-        message("Convergence criteria met. Breaking the loop.")
         opt <- iterate_
+        message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
+
         break
       }
     }
