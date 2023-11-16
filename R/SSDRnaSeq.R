@@ -86,7 +86,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
   # Initialize variables to store results and metrics
   matrixAbundances <- performs <- performs2plot <- opt <- NULL
 
-  for (iterate_ in 0:nIteration) {
+  for (iterate_ in 0:(nIteration+1)) {
     message("Current iteration ++++++++++++++++++++++++++++++++ ", iterate_)
 
     out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
@@ -107,7 +107,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
           ((metric == "R2_adj" && performs[iterate_] > 0.99) ||
            (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0 ) ||
            iterate_ == nIteration)) {
-        opt <- iterate_
+        opt <- iterate_ - 1
         message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
 
         break
