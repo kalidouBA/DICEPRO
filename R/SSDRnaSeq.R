@@ -51,9 +51,7 @@
 #'
 #' @export
 #'
-#' @importFrom caret createFolds
 #' @importFrom NMF nmf basis
-#' @importFrom reshape2 melt
 #' @importFrom ComICS dcq
 #' @import dplyr
 #'
