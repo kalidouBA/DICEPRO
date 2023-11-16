@@ -4,42 +4,35 @@
 \alias{computPerf}
 \title{Compute Performance Metrics for Comparing Two Data Matrices of abundances}
 \usage{
-computPerf(truth, estimated, it_)
+computPerf(outDec_1, outDec_2, metric)
 }
 \arguments{
-\item{truth}{The true data matrix.}
+\item{outDec_1}{A matrix of cell type proportions from the i iteration}
 
-\item{estimated}{The estimated data matrix to compare against the true data.}
+\item{outDec_2}{A matrix of cell type proportions from the i+1 iteration.}
 
-\item{it_}{An identifier or label for the comparison.}
+\item{metric}{A metric select between adjusted R-squared (R2_adj), Root Mean Square Error Relative RMSE (RRMSE).}
 }
 \value{
 A data frame containing performance metrics for each variable in the comparison.
 }
 \description{
 This function computes performance metrics to compare two data matrices.
-The function calculates various performance metrics, including R-squared, adjusted R-squared,
-Concordance Correlation Coefficient (CCC), Intra-class Correlation (ICC), Root Mean Square Error (RMSE),
-Relative RMSE (RRMSE), and the name of the variable being compared.
+The function calculates various performance metrics, including adjusted R-squared (R2_adj),
+Root Mean Square Error Relative RMSE (RRMSE).
 }
 \details{
 The function calculates and returns the following performance metrics for each variable:
 \itemize{
-\item \code{R2}: R-squared.
 \item \code{R2_adj}: Adjusted R-squared.
-\item \code{ccc}: Concordance Correlation Coefficient (CCC).
-\item \code{icc}: Intra-class Correlation (ICC).
 \item \code{RRMSE}: Relative Root Mean Square Error (RRMSE).
-\item \code{RMSE}: Root Mean Square Error (RMSE).
-\item \code{Variable}: Name of the variable.
-\item \code{Comparison}: Identifier for the comparison.
 }
 }
 \examples{
 if(interactive()){
- truth_data <- matrix(rnorm(50), ncol = 5)
- estimated_data <- matrix(rnorm(50), ncol = 5)
- colnames(truth_data) <- colnames(estimated_data) <- paste0("C_", 1:5)
- result <- computPerf(truth_data, estimated_data, "Comparison_1")
- }
+ outDec_1 <- matrix(rnorm(50), ncol = 5)
+ outDec_2 <- matrix(rnorm(50), ncol = 5)
+ colnames(outDec_1) <- colnames(outDec_2) <- paste0("C_", 1:5)
+ result <- computPerf(outDec_1, outDec_2)
+}
 }

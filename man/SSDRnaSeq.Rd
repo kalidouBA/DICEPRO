@@ -7,9 +7,9 @@
 SSDRnaSeq(
   reference,
   bulk,
-  k_folds = 5,
-  nIteration = 1,
+  nIteration = 50,
   methodDeconv = "CSx",
+  metric = "RRMSE",
   cibersortx_email = NULL,
   cibersortx_token = NULL
 )
@@ -19,13 +19,17 @@ SSDRnaSeq(
 
 \item{bulk}{The bulk RNA-seq data matrix.}
 
-\item{k_folds}{The number of cross-validation folds.}
-
 \item{nIteration}{The number of iterations to perform for refining the reference data.}
 
 \item{methodDeconv}{A character vector specifying the deconvolution method.
 Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
 \code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.}
+
+\item{metric}{A metric used to detect the convergence method.
+Supported values are "R2_adj", "ICC", "RRMSE", "simRatio".
+Choose the metric to evaluate the convergence method. Options include \code{R2_adj},
+which represents Adjusted R-squared and \code{RRMSE} for Relative Root Mean Squared Error.
+The convergence method will be determined based on the selected metric.}
 
 \item{cibersortx_email}{The CIBERSORTx account email.}
 
@@ -44,6 +48,8 @@ The function calculates and returns the simulations:
 \itemize{
 \item \code{Prediction}: A matrix or data frame containing the estimated cell type proportions for each sample in the bulk RNA-Seq data.
 \item \code{Matrix_prediction}: A matrix or data frame containing the cell type proportions for each sample in the bulk RNA-Seq data, with iteration information.
+\item \code{New_signature}: The refined reference data matrix with unknown components.
+\item \code{Optimal_iteration}: The optimal iteration at which the convergence criteria were met.
 }
 
 This function performs deconvolution of bulk RNA-Seq data using either
@@ -68,14 +74,13 @@ if(interactive()){
 
 simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
                          nGenes = 50, nCellsType = 5)
-cellTypeOut <- sample(1:ncol(simulation$reference), 1)
+cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
-results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 2,
-                     nIteration = 2, methodDeconv = "DCQ")
+results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk,
+                     nIteration = 5, methodDeconv = "DCQ")
 print(results)
-
 }
 }
 \seealso{
-Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{createFolds}}, \code{\link{nmf}}, \code{\link{compute_distances}}.
+Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{nmf}}.
 }

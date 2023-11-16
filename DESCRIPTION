@@ -5,7 +5,7 @@ Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
-Imports: matrixStats, NMF, caret, DescTools, psych, dplyr, rBeta2009, reshape2, scater, ggplot2, patchwork,
+Imports: matrixStats, NMF, caret, dplyr, rBeta2009, reshape2, scater, ggplot2, patchwork,
          Metrics, SimMultiCorrData, MASS, ComICS, DeconRNASeq, FARDEEP, parallel, pcaMethods, clusterGeneration
 Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
             It iteratively estimates cell type proportions and refines reference data using non-negative matrix 

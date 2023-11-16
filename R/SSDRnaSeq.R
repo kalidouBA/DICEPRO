@@ -6,15 +6,20 @@
 #'
 #' @param reference The reference data matrix containing cell type gene expression profiles.
 #' @param bulk The bulk RNA-seq data matrix.
-#' @param k_folds The number of cross-validation folds.
 #' @param nIteration The number of iterations to perform for refining the reference data.
 #' @param methodDeconv A character vector specifying the deconvolution method.
 #'        Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
 #'        \code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.
+#' @param metric A metric used to detect the convergence method.
+#'        Supported values are "R2_adj", "ICC", "RRMSE", "simRatio".
+#'        Choose the metric to evaluate the convergence method. Options include \code{R2_adj},
+#'        which represents Adjusted R-squared and \code{RRMSE} for Relative Root Mean Squared Error.
+#'        The convergence method will be determined based on the selected metric.
+#'
 #' @param cibersortx_email The CIBERSORTx account email.
 #' @param cibersortx_token The CIBERSORTx account token.
 #'
-#' @seealso Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{createFolds}}, \code{\link{nmf}}, \code{\link{compute_distances}}.
+#' @seealso Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{nmf}}.
 #'
 #' @return A list data simulated.
 #'
@@ -22,7 +27,9 @@
 #' \itemize{
 #'   \item \code{Prediction}: A matrix or data frame containing the estimated cell type proportions for each sample in the bulk RNA-Seq data.
 #'   \item \code{Matrix_prediction}: A matrix or data frame containing the cell type proportions for each sample in the bulk RNA-Seq data, with iteration information.
-#'}
+#'   \item \code{New_signature}: The refined reference data matrix with unknown components.
+#'   \item \code{Optimal_iteration}: The optimal iteration at which the convergence criteria were met.
+#' }
 #'
 #' @details This function performs deconvolution of bulk RNA-Seq data using either
 #' the CSx or DCQ method. It first prepares the data and runs the selected method
@@ -55,20 +62,19 @@
 #'
 #' simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
 #'                          nGenes = 50, nCellsType = 5)
-#' cellTypeOut <- sample(1:ncol(simulation$reference), 1)
+#' cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 #' refDataIncomplet <- simulation$reference[,-cellTypeOut]
-#' results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 2,
-#'                      nIteration = 2, methodDeconv = "DCQ")
+#' results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk,
+#'                      nIteration = 5, methodDeconv = "DCQ")
 #' print(results)
-#'
 #'}
 
-SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv = "CSx",
-                      cibersortx_email=NULL, cibersortx_token = NULL) {
+SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metric = "RRMSE",
+                      cibersortx_email = NULL, cibersortx_token = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
+  stopifnot(metric %in% c("RRMSE", "R2_adj"))
   stopifnot(nIteration > 0)
-  stopifnot(ncol(reference) > k_folds)
 
   if(length(methodDeconv) > 1)
     methodDeconv <- methodDeconv[1]
@@ -81,53 +87,38 @@ SSDRnaSeq <- function(reference, bulk, k_folds = 5, nIteration = 1, methodDeconv
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
   # Initialize variables to store results and metrics
-  errorFrob <- list()
-  matrixAbundances <- BetweenUnknown <- NULL
+  matrixAbundances <- performs <- opt <- NULL
 
-  if(nIteration > 0){
-    for (iterate_ in 1:nIteration) {
-      out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
-      # Calculate error norms
-      bulkDeconv <- as.matrix(reference) %*% out_Dec
-      diff_bulk <- bulk - bulkDeconv
-      errorFrob[[iterate_]] <- normFrob(diff_bulk, bulk)
+  for (iterate_ in 0:nIteration) {
+    message("Current iteration ++++++++++++++++++++++++++++++++ ", iterate_)
 
-      # Create folds for cross-validation
-      flds <- createFolds(1:ncol(bulk), k = k_folds, list = TRUE, returnTrain = FALSE)
+    out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
 
-      # Initialize a matrix to store unknown components
-      matUnknown <- matrix(ncol = k_folds, nrow = nrow(reference))
+    bulkDeconv <- as.matrix(reference) %*% out_Dec
+    diff_bulk <- bulk - bulkDeconv
 
-      for (indFld in 1:k_folds) {
-        resNMF <- nmf(as.matrix(abs(diff_bulk)[, flds[[indFld]]]), rank = 1)
-        matUnknown[, indFld] <- as.vector(basis(resNMF))
-      }
+    matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
 
-      colnames(matUnknown) <- names(flds)
+    # Estimate one unknown components using NMF
+    resNMF <- nmf(x = abs(diff_bulk), rank = 1)
+    unknownMat <- as.data.frame(basis(resNMF))
+    colnames(unknownMat) <- paste0("Unknown_", iterate_)
+    reference <- cbind(reference, unknownMat)
 
-      # Compute distances between unknown components and known cell types
-      resDist <- compute_distances(matUnknown)
+    perform_it <- computPerf(matrixAbundances[matrixAbundances$Iterate == iterate_-1, ],
+                             matrixAbundances[matrixAbundances$Iterate == iterate_, ], metric)
 
-      # Store distance results
-      resDist <- melt(resDist[[1]]) %>% cbind.data.frame(
-        Folds = as.factor(resDist[[2]]),
-        Iterate = iterate_
-      )
-
-      BetweenUnknown <- rbind(BetweenUnknown, resDist)
-      matrixAbundances <- rbind(matrixAbundances,
-                                cbind.data.frame(t(out_Dec)[,cellTypeName],
-                                                 "Iterate" = iterate_))
-      # Estimate unknown components using NMF
-      resNMF <- nmf(x = abs(diff_bulk), rank = 1)
-      unknownMat <- as.data.frame(basis(resNMF))
-      colnames(unknownMat) <- paste0("Unknown_", iterate_)
-      reference <- cbind(reference, unknownMat)
+    if (length(performs) > 1 &&
+        ((metric == "R2_adj" && (perform_it > 0.99 || iterate_ == nIteration)) ||
+         (metric == "RRMSE" && (perform_it - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
+      message("Convergence criteria met. Breaking the loop.")
+      opt <- iterate_
+      break
     }
   }
-  results <- list("Prediction" = out_Dec,
-                  "Matrix_prediction" = matrixAbundances,
-                  "Error_folds" = BetweenUnknown)
+
+  results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
+                  "New_signature" = reference, Optimal_iteration = opt)
 
   class(results) <- "SSDRnaSeq"
   return(results)

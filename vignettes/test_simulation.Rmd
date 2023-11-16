@@ -1,5 +1,5 @@
 ---
-title: "Test with simulation dataset"
+title: "test_simulation"
 author: "Kalidou BA"
 output: rmarkdown::html_vignette
 vignette: >
@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 ```{r setup}
 library(SSDRnaSeq)
 library(ADAPTS)
@@ -27,7 +28,7 @@ library(NMF)
 simcor <- function (x, ymean=0, ysd=1, correlation=0) {
   n <- length(x)
   y <- rnorm(n)
-  z <- correlation * scale(x)[,1] + sqrt(1 - correlation^2) * 
+  z <- correlation * scale(x)[,1] + sqrt(1 - correlation^2) *
     scale(resid(lm(y ~ x)))[,1]
   yresult <- ymean + ysd * z
   as.vector(yresult)
@@ -35,19 +36,11 @@ simcor <- function (x, ymean=0, ysd=1, correlation=0) {
 ```
 
 
+
 ```{r}
-set.seed(2101)
 nCellsType <- 22
-nGenes <- 250
-nSample <- 10
-```
-
-
-```{r}
 data(LM22)
-
 corLm22 <- unname(cor(LM22))
-
 sizeVal <- (nCellsType*nCellsType-nCellsType)/2
 val <- corLm22[lower.tri(corLm22,diag = FALSE)]
 y <- c()
@@ -66,30 +59,48 @@ corr <- cov2cor(V)
 
 
 ```{r}
-simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, 
-                                    corr = corr, nSample = nSample, prop = NULL, 
-                                    nGenes = nGenes, nCellsType = nCellsType)
+nGenes = 500
+nSample <- 20
+simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, corr = corr,
+                         nSample = nSample, prop = NULL,
+                         nGenes = nGenes, nCellsType = nCellsType)
 
-dim(simulation$prop)
-dim(simulation$reference)
-dim(simulation$bulk)
+prop <- simulation$prop
+reference <- simulation$reference
+bulk <- simulation$bulk
 ```
 
-Let's consider five populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
+Let's consider as unknown populations of cells of `10%, 20%, 30%, 40% and 50%`, populations of cells, chosen at random from the reference matrix, as unknown and first analyse the significant impact on the accuracy and reliability of cell deconvolution methods.
 
-```{r, message=FALSE}
+```{r}
 set.seed(2101)
-k <- 5
-nIteration <- 20
-cellTypeOut <- sample(1:ncol(simulation$reference), 5)
-refDataIncomplet <- simulation$reference[,-cellTypeOut]
-colnames(refDataIncomplet)
-
-res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, k_folds = 5, nIteration = 5,methodDeconv ="DCQ")
+percs <- seq(0.1, 0.5, 0.1)
+cellTypeOut <- list()
+for (p in percs) {
+  num_samples <- round(ncol(reference) * p)
+  sample_indices <- sample(1:ncol(reference), num_samples)
+  cellTypeOut[[as.character(num_samples)]] <- sample_indices
+}
+names(cellTypeOut) <- paste0(as.character(percs * 100), "%")
 ```
 
 
 
-
-
-
+# ```{r, message=FALSE}
+# set.seed(2101)
+# k <- 5
+# nIteration <- 15
+# listAllResult <- listErrorPred <- list()
+# 
+# for (i in names(cellTypeOut)) {
+#  refDataIncomplet <- reference[,-cellTypeOut[[i]]]
+#  listAllResult[[i]] <- SSDRnaSeq(reference = refDataIncomplet,
+#                                  bulk = simulation$bulk,
+#                                  nIteration = nIteration,
+#                                  methodDeconv = "DCQ",
+#                                  cibersortx_email = "ba.kalidou@u-bordeaux.fr",
+#                                  cibersortx_token = "64e6182579ab593171f815a48875e963")
+#  }
+# 
+# save(listAllResult, file = "ResultsDCQ.rda")
+# ```

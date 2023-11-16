@@ -23,27 +23,27 @@ library(NMF)
 ```
 
 
-```{r}
-data(LM22)
-head(LM22)
-```
-
-
-```{r}
-bulk <- SSDRnaSeq::GSE107011$gene_expression
-res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
-```
- 
- 
- 
-```{r}
-bulk <- SSDRnaSeq::GSE107572$gene_expression
-res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
-```
-
-
-```{r}
-bulk <- SSDRnaSeq::GSE127813$gene_expression
-res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, k_folds = 2, nIteration = 2,  methodDeconv = "DCQ")
-```
+# ```{r}
+# data(LM22)
+# head(LM22)
+# ```
+# 
+# 
+# ```{r}
+# bulk <- SSDRnaSeq::GSE107011$gene_expression
+# res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, nIteration = 2,  methodDeconv = "DCQ")
+# ```
+#  
+#  
+#  
+# ```{r}
+# bulk <- SSDRnaSeq::GSE107572$gene_expression
+# res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk,  nIteration = 2,  methodDeconv = "DCQ")
+# ```
+# 
+# 
+# ```{r}
+# bulk <- SSDRnaSeq::GSE127813$gene_expression
+# res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, nIteration = 2,  methodDeconv = "DCQ")
+# ```
 
