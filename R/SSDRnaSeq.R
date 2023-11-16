@@ -103,15 +103,18 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
     colnames(unknownMat) <- paste0("Unknown_", iterate_)
     reference <- cbind(reference, unknownMat)
 
-    perform_it <- computPerf(matrixAbundances[matrixAbundances$Iterate == iterate_-1, ],
-                             matrixAbundances[matrixAbundances$Iterate == iterate_, ], metric)
+    if(iterate_ > 0){
+      perform_it <- computPerf(matrixAbundances[matrixAbundances$Iterate == iterate_-1, ],
+                               matrixAbundances[matrixAbundances$Iterate == iterate_, ], metric)
+      performs <- c(performs, perform_it)
 
-    if (length(performs) > 1 &&
-        ((metric == "R2_adj" && (perform_it > 0.99 || iterate_ == nIteration)) ||
-         (metric == "RRMSE" && (perform_it - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
-      message("Convergence criteria met. Breaking the loop.")
-      opt <- iterate_
-      break
+      if (length(performs) > 1 &&
+          ((metric == "R2_adj" && (perform_it > 0.99 || iterate_ == nIteration)) ||
+           (metric == "RRMSE" && (perform_it - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
+        message("Convergence criteria met. Breaking the loop.")
+        opt <- iterate_
+        break
+      }
     }
   }
 
