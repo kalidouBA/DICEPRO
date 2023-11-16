@@ -97,7 +97,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
 
     matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
 
-    # Estimate one unknown components using NMF
+    # Estimate one unknown component using NMF
     resNMF <- nmf(x = abs(diff_bulk), rank = 1)
     unknownMat <- as.data.frame(basis(resNMF))
     colnames(unknownMat) <- paste0("Unknown_", iterate_)
