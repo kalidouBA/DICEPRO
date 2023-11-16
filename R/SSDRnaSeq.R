@@ -59,14 +59,12 @@
 #' @examples
 #' if(interactive()){
 #'
-#' simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
-#'                          nGenes = 50, nCellsType = 5)
+#' simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
 #' cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 #' refDataIncomplet <- simulation$reference[,-cellTypeOut]
-#' results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk,
-#'                      nIteration = 5, methodDeconv = "DCQ")
+#' results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, nIteration = 5, methodDeconv = "DCQ")
 #' print(results)
-#'}
+#' }
 
 SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metric = "RRMSE",
                       cibersortx_email = NULL, cibersortx_token = NULL) {
@@ -99,7 +97,6 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
     matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
 
     if(iterate_ > 0){
-
       perform_it <- computPerf(outDec_1 = matrixAbundances[matrixAbundances$Iterate == iterate_-1, cellTypeName],
                                outDec_2 = matrixAbundances[matrixAbundances$Iterate == iterate_, cellTypeName], metric)
 
@@ -107,8 +104,9 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
       performs2plot <- rbind.data.frame(performs2plot, cbind(perform_it, It = iterate_))
 
       if (length(performs) > 1 &&
-          ((metric == "R2_adj" && (performs[iterate_-1] > 0.99 || iterate_ == nIteration)) ||
-           (metric == "RRMSE" && (performs[iterate_-1] - performs[iterate_-1] > 0 || iterate_ == nIteration)))) {
+          ((metric == "R2_adj" && performs[iterate_] > 0.99) ||
+           (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0 ) ||
+           iterate_ == nIteration)) {
         opt <- iterate_
         message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
 
@@ -122,6 +120,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
     colnames(unknownMat) <- paste0("Unknown_", iterate_)
     reference <- cbind(reference, unknownMat)
   }
+
   rownames(performs2plot) <- NULL
   results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
                   "New_signature" = reference, "Optimal_iteration" = opt, "performs2plot" = performs2plot)
