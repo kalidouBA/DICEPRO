@@ -73,10 +73,12 @@ The function performs several steps for semi-supervised deconvolution, including
 \examples{
 if(interactive()){
 
-simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
+simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE,
+nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
 cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
-results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, nIteration = 5, methodDeconv = "DCQ")
+results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk,
+nIteration = 5, methodDeconv = "DCQ")
 print(results)
 }
 }
