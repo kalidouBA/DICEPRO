@@ -102,8 +102,8 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
       perform_it <- computPerf(outDec_1 = matrixAbundances[matrixAbundances$Iterate == iterate_-1, cellTypeName],
                                outDec_2 = matrixAbundances[matrixAbundances$Iterate == iterate_, cellTypeName], metric)
 
-      performs <- c(performs, perform_it$metric)
-      performs2plot <- rbind.data.frame(performs2plot, cbind(perform_it, It = iterate_))
+      performs <- c(performs, perform_it)
+      performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = iterate_))
 
       if (length(performs) > 1 &&
           ((metric == "R2_adj" && performs[iterate_] > 0.99) ||

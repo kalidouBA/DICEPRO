@@ -16,12 +16,12 @@
 #' @import ggplot2
 
 heatmap_abundances <- function(res2plot){
-  value <- L1 <- Iterate <- sem <- CI_lower <- CI_upper <- Iteration <- Cell_Type <- Abundances <- NULL
+  Iterate <- Cell_Type <- Abundances <- NULL
   data2plot <- reshape2::melt(res2plot, id.vars = "Iterate")
-  colnames(data2plot) <- c("Iteration",  "Cell_Type", "Abundances")
+  colnames(data2plot) <- c("Iterate",  "Cell_Type", "Abundances")
 
   # Create a heatmap using ggplot2
-  p <- ggplot(data2plot, aes(Iteration,Cell_Type, fill=Abundances)) +
+  p <- ggplot(data2plot, aes(Iterate,Cell_Type, fill=Abundances)) +
     geom_raster() +
     scale_fill_viridis_c(direction=-1) +
     theme_bw(base_size = 9, base_family = "Helvetica") %+replace%
@@ -67,23 +67,23 @@ heatmap_abundances <- function(res2plot){
 #' @import ggplot2
 
 metric_plot <- function(perf2plot){
-  metric <- It <- CI_lower <- CI_upper <- sem <- NULL
+  metric <- Iterate <- NULL
   # Calculate mean and confidence intervals of metric values
-  perf2plot_mean <- perf2plot %>%
-    filter(!is.na(metric)) %>%
-    group_by(It) %>%
-    summarise(n = n(),
-              mean = mean(metric),
-              median = median(metric),
-              sd = sd(metric)) %>%
-    mutate(sem = sd / sqrt(n - 1),
-           CI_lower = mean + qt((1 - 0.95) / 2, n - 1) * sem,
-           CI_upper = mean - qt((1 - 0.95) / 2, n - 1) * sem)
+  # perf2plot_mean <- perf2plot %>%
+  #   filter(!is.na(metric)) %>%
+  #   group_by(Iterate) %>%
+  #   summarise(n = n(),
+  #             mean = mean(metric),
+  #             median = median(metric),
+  #             sd = sd(metric)) %>%
+  #   mutate(sem = sd / sqrt(n - 1),
+  #          CI_lower = mean + qt((1 - 0.95) / 2, n - 1) * sem,
+  #          CI_upper = mean - qt((1 - 0.95) / 2, n - 1) * sem)
 
   # Create the metric plot using ggplot2
-  p <- ggplot(perf2plot_mean, aes(x=It, y=mean)) +
+  p <- ggplot(perf2plot, aes(x=Iterate, y=metric)) +
     geom_line() +
-    geom_ribbon(aes(ymin=CI_lower,ymax=CI_upper),color="grey70",alpha=0.4)+
+    # geom_ribbon(aes(ymin=CI_lower,ymax=CI_upper),color="grey70",alpha=0.4)+
     labs(x = "Iteration", y = "Error between folds") +
     theme_bw(base_size = 9, base_family = "Helvetica") %+replace%
     theme(

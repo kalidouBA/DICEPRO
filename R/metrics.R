@@ -54,6 +54,6 @@ computPerf <- function(outDec_1, outDec_2, metric) {
     perf <- R2_adj
   }
 
-  return(data.frame(metric = perf))
+  return(perf)
 }
 
