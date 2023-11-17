@@ -33,6 +33,6 @@ if(interactive()){
  outDec_1 <- matrix(rnorm(50), ncol = 5)
  outDec_2 <- matrix(rnorm(50), ncol = 5)
  colnames(outDec_1) <- colnames(outDec_2) <- paste0("C_", 1:5)
- result <- computPerf(outDec_1, outDec_2)
+ result <- computPerf(outDec_1, outDec_2, "RRMSE")
 }
 }
