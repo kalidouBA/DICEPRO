@@ -15,9 +15,9 @@ SSDRnaSeq(
 )
 }
 \arguments{
-\item{reference}{The reference data matrix containing cell type gene expression profiles.}
+\item{reference}{The reference data matrix containing cell type (column) gene expression (row) profiles.}
 
-\item{bulk}{The bulk RNA-seq data matrix.}
+\item{bulk}{The bulk RNA-seq data matrix. In the columns we have the samples and in the rows the genes.}
 
 \item{nIteration}{The number of iterations to perform for refining the reference data.}
 
@@ -73,12 +73,10 @@ The function performs several steps for semi-supervised deconvolution, including
 \examples{
 if(interactive()){
 
-simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
-                         nGenes = 50, nCellsType = 5)
+simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
 cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
-results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk,
-                     nIteration = 5, methodDeconv = "DCQ")
+results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, nIteration = 5, methodDeconv = "DCQ")
 print(results)
 }
 }

@@ -45,7 +45,7 @@ computPerf <- function(outDec_1, outDec_2, metric) {
 
 
     # Calculate Root Mean Squared Error Relative RMSE (RRMSE)
-    if(metric %in% c("RRMSE", "ALL")){
+    if(metric == "RRMSE"){
       num = sum((x - y)^2)
       den = sum(y^2)
       squared_error = num/den
@@ -55,13 +55,12 @@ computPerf <- function(outDec_1, outDec_2, metric) {
     }
 
     # Fit a linear model to calculate R-squared and Adjusted R-squared
-    if(metric %in% c("R2_adj", "ALL")){
+    else{
       model <- lm(y ~ x)
       R2 <- summary(model)$r.squared
       R2_adj <- summary(model)$adj.r.squared
       perf <- append(perf, R2_adj)
     }
-
     perfAll <- rbind(perfAll,perf)
   }
 
