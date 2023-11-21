@@ -78,12 +78,14 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
   if(length(methodDeconv) > 1)
     methodDeconv <- methodDeconv[1]
 
+
   cellTypeName <- colnames(reference)
   geneIntersect <- intersect(rownames(reference), rownames(bulk))
 
   reference <- apply(reference[geneIntersect, ], 2, as.numeric)
   bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
   rownames(reference) <- rownames(bulk) <- geneIntersect
+
 
   # Initialize variables to store results and metrics
   matrixAbundances <- performs <- performs2plot <- opt <- NULL
@@ -94,7 +96,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
     out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
 
     bulkDeconv <- as.matrix(reference) %*% out_Dec
-    diff_bulk <- bulk - bulkDeconv
+
 
     matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
 
@@ -107,20 +109,23 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
 
       if (length(performs) > 1 &&
           ((metric == "R2_adj" && performs[iterate_] > 0.99) ||
-           (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0 ) ||
-           iterate_ == nIteration)) {
+           (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0 ))) {
         opt <- ifelse(iterate_ == nIteration, iterate_, iterate_ - 1)
         message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
 
         break
       }
     }
+    diff_bulk <- as.data.frame(abs(bulk - bulkDeconv))
 
-    # Estimate one unknown component using NMF
-    resNMF <- nmf(x = abs(diff_bulk), rank = 1)
-    unknownMat <- as.data.frame(basis(resNMF))
-    colnames(unknownMat) <- paste0("Unknown_", iterate_)
-    reference <- cbind(reference, unknownMat)
+    # Estimate one unknown component using NMF for each sample
+    for (col in colnames(diff_bulk)) {
+      resNMF <- NMF::nmf(x = diff_bulk[col], rank = 1)
+      unknownMat <- as.data.frame(basis(resNMF))
+      colnames(unknownMat) <- paste0("Unknown_", col, "_", iterate_)
+      reference <- cbind(reference, unknownMat)
+    }
+
   }
 
   rownames(performs2plot) <- NULL
