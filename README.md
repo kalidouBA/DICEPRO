@@ -1,34 +1,34 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## **SSDRnaSeq (Semi-Supervise Deconvolution of RnaSeq)**
+## **DICEPRO (Deconvolution with Iterative Completion for Estimating cellular Proportion from RNA-seq data)**
 
 Is a software package that has been meticulously designed to address the
 persistent challenges that cellular deconvolution methods have faced for
 years. One of its key features is its ability to overcome the
 limitations posed by incomplete reference matrix, which have hampered
 the accuracy and efficiency of many existing methodologies. In doing so,
-`SSDRnaSeq` hopes to contribute to the advancement of RNA-seq analysis,
+`DICEPRO` hopes to contribute to the advancement of RNA-seq analysis,
 offering a more complete and reliable solution for better elucidating
 the complexities of cell composition and gene expression.
 
-`SSDRnaSeq`’s core functionality lies in its iterative deconvolution
+`DICEPRO`’s core functionality lies in its iterative deconvolution
 process, which continues until convergence is reached. This approach
 involves joint updates of the reference matrix, which may contain
 missing cell populations, and the cell population abundance matrix,
 which contains newly discovered populations. Like other deconvolution
-methods, `SSDRnaSeq` starts by fundamentally modelling the deconvolution
+methods, `DICEPRO` starts by fundamentally modelling the deconvolution
 problem. It relies on established techniques such as `CiberSortX`, `DCQ`
 or others for the supervised aspect, while using
 `non-negative matrix factorization (NMF)` decomposition for the
-unsupervised component. This hybrid approach enables `SSDRnaSeq` to
+unsupervised component. This hybrid approach enables `DICEPRO` to
 provide a robust and versatile solution for unravelling complex RNA-seq
 data.
 
 ## Installation
 
 ``` r
-BiocManager::install("kalidouBA/SSDRnaSeq")
+BiocManager::install("kalidouBA/DICEPRO")
 ```
 
 #### Running cibersortx to deduce the fractions of the different cell populations requires convigurations following the steps below:
@@ -61,6 +61,6 @@ obtained a token from the CIBERSORTx website, you now have access to the
 CIBERSORTx Fractions executable and can run it following the
 instructions below.
 
-##### Once the configuration is complete and docker is running, you can run `SSDRnaSeq` with the token from the CIBERSORTx website `cibersortx_email` and `cibersortx_token` using the main function `SSDRnaSeq()`.
+##### Once the configuration is complete and docker is running, you can run `DICEPRO` with the token from the CIBERSORTx website `cibersortx_email` and `cibersortx_token` using the main function `DICEPRO()`.
 
 ##### Other cell deconvolution methods are available to see with the help of the function `running_method()`.
