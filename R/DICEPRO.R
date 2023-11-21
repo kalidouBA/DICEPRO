@@ -132,8 +132,8 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
     run_deconvolution(bulk[i], reference, nIteration, methodDeconv, cibersortx_email, cibersortx_token)
   }, mc.cores = parallel::detectCores()-1)
 
-  class(results) <- "DICEPRO"
-  return(results)
+  class(result_list) <- "DICEPRO"
+  return(result_list)
 }
 
 
