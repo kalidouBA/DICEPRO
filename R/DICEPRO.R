@@ -58,17 +58,16 @@
 #'
 #' @examples
 #' if(interactive()){
-#'
 #' simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE,
 #' nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
 #' cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 #' refDataIncomplet <- simulation$reference[,-cellTypeOut]
-#' results <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk,
+#' results <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk,
 #' nIteration = 5, methodDeconv = "DCQ")
 #' print(results)
 #' }
 
-SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metric = "RRMSE",
+DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metric = "RRMSE",
                       cibersortx_email = NULL, cibersortx_token = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
@@ -78,14 +77,12 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
   if(length(methodDeconv) > 1)
     methodDeconv <- methodDeconv[1]
 
-
   cellTypeName <- colnames(reference)
   geneIntersect <- intersect(rownames(reference), rownames(bulk))
 
   reference <- apply(reference[geneIntersect, ], 2, as.numeric)
   bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
   rownames(reference) <- rownames(bulk) <- geneIntersect
-
 
   # Initialize variables to store results and metrics
   matrixAbundances <- performs <- performs2plot <- opt <- NULL
@@ -94,9 +91,7 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
     message("Current iteration ++++++++++++++++++++++++++++++++ ", iterate_)
 
     out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
-
     bulkDeconv <- as.matrix(reference) %*% out_Dec
-
 
     matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
 
@@ -112,7 +107,6 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
            (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0 ))) {
         opt <- ifelse(iterate_ == nIteration, iterate_, iterate_ - 1)
         message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
-
         break
       }
     }
@@ -125,14 +119,13 @@ SSDRnaSeq <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", me
       colnames(unknownMat) <- paste0("Unknown_", col, "_", iterate_)
       reference <- cbind(reference, unknownMat)
     }
-
   }
-
   rownames(performs2plot) <- NULL
+
   results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
                   "New_signature" = reference, "Optimal_iteration" = opt,
                   "performs2plot" = performs2plot)
 
-  class(results) <- "SSDRnaSeq"
+  class(results) <- "DICEPRO"
   return(results)
 }

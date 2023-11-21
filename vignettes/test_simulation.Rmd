@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 
 ```{r setup}
-library(SSDRnaSeq)
+library(DICEPRO)
 library(ADAPTS)
 library(NMF)
 ```
@@ -94,7 +94,7 @@ names(cellTypeOut) <- paste0(as.character(percs * 100), "%")
 # 
 # for (i in names(cellTypeOut)) {
 #  refDataIncomplet <- reference[,-cellTypeOut[[i]]]
-#  listAllResult[[i]] <- SSDRnaSeq(reference = refDataIncomplet,
+#  listAllResult[[i]] <- DICEPRO(reference = refDataIncomplet,
 #                                  bulk = simulation$bulk,
 #                                  nIteration = nIteration,
 #                                  methodDeconv = "DCQ",

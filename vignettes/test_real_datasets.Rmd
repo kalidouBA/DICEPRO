@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 
 ```{r setup}
-library(SSDRnaSeq)
+library(DICEPRO)
 library(ADAPTS)
 library(NMF)
 ```
@@ -30,20 +30,20 @@ library(NMF)
 # 
 # 
 # ```{r}
-# bulk <- SSDRnaSeq::GSE107011$gene_expression
-# res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, nIteration = 2,  methodDeconv = "DCQ")
+# bulk <- DICEPRO::GSE107011$gene_expression
+# res <- DICEPRO::DICEPRO(reference = LM22, bulk = bulk, nIteration = 2,  methodDeconv = "DCQ")
 # ```
 #  
 #  
 #  
 # ```{r}
-# bulk <- SSDRnaSeq::GSE107572$gene_expression
-# res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk,  nIteration = 2,  methodDeconv = "DCQ")
+# bulk <- DICEPRO::GSE107572$gene_expression
+# res <- DICEPRO::DICEPRO(reference = LM22, bulk = bulk,  nIteration = 2,  methodDeconv = "DCQ")
 # ```
 # 
 # 
 # ```{r}
-# bulk <- SSDRnaSeq::GSE127813$gene_expression
-# res <- SSDRnaSeq::SSDRnaSeq(reference = LM22, bulk = bulk, nIteration = 2,  methodDeconv = "DCQ")
+# bulk <- DICEPRO::GSE127813$gene_expression
+# res <- DICEPRO::DICEPRO(reference = LM22, bulk = bulk, nIteration = 2,  methodDeconv = "DCQ")
 # ```
 

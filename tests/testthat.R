@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(SSDRnaSeq)
+library(DICEPRO)
 
-test_check("SSDRnaSeq")
+test_check("DICEPRO")

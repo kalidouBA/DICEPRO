@@ -9,14 +9,14 @@
 #'
 #' @return A combined plot showing the cell abundance heatmap and error plot.
 #'
-#'@method plot SSDRnaSeq
+#'@method plot DICEPRO
 #'@import patchwork
 #'
 #' @seealso Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{metric_plot}}.
 #'
 #' @export
 
-plot.SSDRnaSeq <- function(x, ...){
+plot.DICEPRO <- function(x, ...){
 
   if(length(unique(x$Matrix_prediction$Iterate)) > 1){
     # Combine the heatmap and error between folds

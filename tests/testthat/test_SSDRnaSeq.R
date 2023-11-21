@@ -1,4 +1,4 @@
-test_that("SSDRnaSeq", {
+test_that("DICEPRO", {
   skip_on_cran()
   library(clusterGeneration)
   library(NMF)
@@ -13,6 +13,6 @@ test_that("SSDRnaSeq", {
   cellTypeOut <- sample(1:ncol(simulation$reference), 1)
   refDataIncomplet <- simulation$reference[,-cellTypeOut]
 
-  # res <- SSDRnaSeq(reference = refDataIncomplet, bulk = simulation$bulk, nIteration = 2,
+  # res <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk, nIteration = 2,
   #                  methodDeconv = "DCQ")
 })
