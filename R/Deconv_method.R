@@ -35,10 +35,11 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
   nCellType <- ncol(reference)
   common <- intersect(row.names(bulk), row.names(reference))
 
-  bulkIntersect <- bulk[common,]
+  bulkIntersect <- as.data.frame(bulk[common,])
   refIntersect <- reference[common,]
   geneLenght <- nrow(bulk)
   row.names(bulkIntersect) <- row.names(refIntersect) <- common
+  colnames(bulkIntersect) <- colnames(bulk)
 
   if (methodDeconv == "CSx")
     out_Dec <- run_CSx(bulk, reference, cibersortx_email, cibersortx_token)

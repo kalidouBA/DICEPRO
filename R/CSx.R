@@ -33,8 +33,8 @@ run_CSx <- function(bulk, reference, cibersortx_email, cibersortx_token){
   if(code == 0){
     out_CSx <- read.delim2(paste0(out_dir, "/CIBERSORTx_Results.txt"),row.names = 1)
     rownames_ <- rownames(out_CSx)
-    out_CSx <- apply(out_CSx[,!names(out_CSx) %in% c("P.value", "Correlation", "RMSE")],2, as.numeric)
-    rownames(out_CSx) <- rownames_
+    out_CSx <- as.data.frame(apply(out_CSx[,!names(out_CSx) %in% c("P.value", "Correlation", "RMSE")],2, as.numeric))
+    colnames(out_CSx) <- rownames_
   }
-  return(t(out_CSx))
+  return(out_CSx)
 }

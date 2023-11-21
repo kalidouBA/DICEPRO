@@ -4,12 +4,12 @@
 \alias{computPerf}
 \title{Compute Performance Metrics for Comparing Two Data Matrices of abundances}
 \usage{
-computPerf(outDec_1, outDec_2, metric)
+computPerf(x, y, metric)
 }
 \arguments{
-\item{outDec_1}{A matrix of cell type proportions from the i iteration}
+\item{x}{A matrix of cell type proportions from the i iteration}
 
-\item{outDec_2}{A matrix of cell type proportions from the i+1 iteration.}
+\item{y}{A matrix of cell type proportions from the i+1 iteration.}
 
 \item{metric}{A metric select between adjusted R-squared (R2_adj), Root Mean Square Error Relative RMSE (RRMSE).}
 }
@@ -30,9 +30,9 @@ The function calculates and returns the following performance metrics for each v
 }
 \examples{
 if(interactive()){
- outDec_1 <- matrix(rnorm(50), ncol = 5)
- outDec_2 <- matrix(rnorm(50), ncol = 5)
- colnames(outDec_1) <- colnames(outDec_2) <- paste0("C_", 1:5)
- result <- computPerf(outDec_1, outDec_2, "RRMSE")
+ x <- matrix(rnorm(50), ncol = 5)
+ y <- matrix(rnorm(50), ncol = 5)
+ colnames(x) <- colnames(y) <- paste0("C_", 1:5)
+ result <- computPerf(x, y, "RRMSE")
 }
 }

@@ -54,6 +54,7 @@
 #'
 #' @importFrom NMF nmf basis
 #' @importFrom ComICS dcq
+#' @importFrom parallel mclapply
 #' @import dplyr
 #'
 #' @examples
@@ -81,51 +82,58 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
   geneIntersect <- intersect(rownames(reference), rownames(bulk))
 
   reference <- apply(reference[geneIntersect, ], 2, as.numeric)
-  bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
+  bulk <- as.data.frame(apply(bulk[geneIntersect, ], 2, as.numeric))
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
-  # Initialize variables to store results and metrics
-  matrixAbundances <- performs <- performs2plot <- opt <- NULL
+  run_deconvolution <- function(B, W, nIteration, methodDeconv, cibersortx_email, cibersortx_token) {
+    matrixAbundances <- performs <- performs2plot <- opt <- NULL
 
-  for (iterate_ in 0:nIteration) {
-    message("Current iteration ++++++++++++++++++++++++++++++++ ", iterate_)
+    for (iterate_ in 0:nIteration) {
+      out_Dec <- running_method(B, W, methodDeconv, cibersortx_email, cibersortx_token)
+      B_Deconv <- as.matrix(W) %*% as.matrix(out_Dec)
 
-    out_Dec <- running_method(bulk, reference, methodDeconv,  cibersortx_email, cibersortx_token)
-    bulkDeconv <- as.matrix(reference) %*% out_Dec
+      matrixAbundances <- rbind(matrixAbundances, c(t(out_Dec)[,cellTypeName], "Iteraion" = iterate_))
 
-    matrixAbundances <- rbind(matrixAbundances, cbind.data.frame(t(out_Dec)[,cellTypeName], "Iterate" = iterate_))
+      if (iterate_ > 0) {
+        perform_it <- computPerf( matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_-1, cellTypeName],
+                                  matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_, cellTypeName],
+                                  metric)
 
-    if(iterate_ > 0){
-      perform_it <- computPerf(outDec_1 = matrixAbundances[matrixAbundances$Iterate == iterate_-1, cellTypeName],
-                               outDec_2 = matrixAbundances[matrixAbundances$Iterate == iterate_, cellTypeName], metric)
+        performs <- c(performs, perform_it)
+        performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = iterate_))
 
-      performs <- c(performs, perform_it)
-      performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = iterate_))
-
-      if (length(performs) > 1 &&
-          ((metric == "R2_adj" && performs[iterate_] > 0.99) ||
-           (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0 ))) {
-        opt <- ifelse(iterate_ == nIteration, iterate_, iterate_ - 1)
-        message("Convergence criteria Done with optimal criteria: ", opt, "\nBreaking the loop.")
-        break
+        if (length(performs) > 1 &&
+            ((metric == "R2_adj" && performs[iterate_] > 0.99) ||
+             (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0))) {
+          opt <- ifelse(iterate_ == nIteration, iterate_, iterate_ - 1)
+          message("Convergence criteria Done with optimal criteria: ", opt)
+          break
+        }
       }
-    }
-    diff_bulk <- as.data.frame(abs(bulk - bulkDeconv))
 
-    # Estimate one unknown component using NMF for each sample
-    for (col in colnames(diff_bulk)) {
-      resNMF <- NMF::nmf(x = diff_bulk[col], rank = 1)
+      diff_B <- as.data.frame(abs(B - B_Deconv))
+
+      # Estimate one unknown component using NMF for each sample
+      resNMF <- NMF::nmf(x = diff_B, rank = 1)
       unknownMat <- as.data.frame(basis(resNMF))
-      colnames(unknownMat) <- paste0("Unknown_", col, "_", iterate_)
-      reference <- cbind(reference, unknownMat)
+      colnames(unknownMat) <- paste0("Unknown_", iterate_)
+      W <- cbind(W, unknownMat)
     }
-  }
-  rownames(performs2plot) <- NULL
 
-  results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
-                  "New_signature" = reference, "Optimal_iteration" = opt,
-                  "performs2plot" = performs2plot)
+    rownames(performs2plot) <- NULL
+
+    results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
+                    "New_signature" = W, "Optimal_iteration" = opt,
+                    "performs2plot" = performs2plot)
+    return(results)
+  }
+
+  result_list <- mclapply(colnames(bulk), function(i) {
+    run_deconvolution(bulk[i], reference, nIteration, methodDeconv, cibersortx_email, cibersortx_token)
+  }, mc.cores = parallel::detectCores()-1)
 
   class(results) <- "DICEPRO"
   return(results)
 }
+
+

@@ -4,8 +4,8 @@
 #' The function calculates various performance metrics, including adjusted R-squared (R2_adj),
 #' Root Mean Square Error Relative RMSE (RRMSE).
 #'
-#' @param outDec_1 A matrix of cell type proportions from the i iteration
-#' @param outDec_2 A matrix of cell type proportions from the i+1 iteration.
+#' @param x A matrix of cell type proportions from the i iteration
+#' @param y A matrix of cell type proportions from the i+1 iteration.
 #' @param metric A metric select between adjusted R-squared (R2_adj), Root Mean Square Error Relative RMSE (RRMSE).
 #' @export
 #'
@@ -22,19 +22,13 @@
 #'
 #' @examples
 #' if(interactive()){
-#'  outDec_1 <- matrix(rnorm(50), ncol = 5)
-#'  outDec_2 <- matrix(rnorm(50), ncol = 5)
-#'  colnames(outDec_1) <- colnames(outDec_2) <- paste0("C_", 1:5)
-#'  result <- computPerf(outDec_1, outDec_2, "RRMSE")
+#'  x <- matrix(rnorm(50), ncol = 5)
+#'  y <- matrix(rnorm(50), ncol = 5)
+#'  colnames(x) <- colnames(y) <- paste0("C_", 1:5)
+#'  result <- computPerf(x, y, "RRMSE")
 #'}
 
-computPerf <- function(outDec_1, outDec_2, metric) {
-
-  # Normalize outDec_1 and outDec_2 matrices to sum to 1 along each row
-  outDec_1 <- sweep(outDec_1, 1, rowSums(outDec_1), FUN = "/")
-  outDec_2 <- sweep(outDec_2, 1, rowSums(outDec_2), FUN = "/")
-  x <- melt(outDec_1, id.vars=NULL)$value
-  y <- melt(outDec_2, id.vars=NULL)$value
+computPerf <- function(x, y, metric) {
 
   # Calculate Root Mean Squared Error Relative RMSE (RRMSE)
   if(metric == "RRMSE"){
