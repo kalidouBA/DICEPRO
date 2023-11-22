@@ -85,6 +85,8 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
   bulk <- as.data.frame(apply(bulk[geneIntersect, ], 2, as.numeric))
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
+  cl <- parallel::detectCores()-1
+  cl <- ifelse(ncol(bulk) >= cl, cl, ncol(bulk))
   run_deconvolution <- function(B, W, nIteration, methodDeconv, cibersortx_email, cibersortx_token) {
     matrixAbundances <- performs <- performs2plot <- opt <- NULL
 
@@ -130,7 +132,8 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
 
   result_list <- mclapply(colnames(bulk), function(i) {
     run_deconvolution(bulk[i], reference, nIteration, methodDeconv, cibersortx_email, cibersortx_token)
-  }, mc.cores = parallel::detectCores()-1)
+  }, mc.cores = cl)
+
 
   class(result_list) <- "DICEPRO"
   return(result_list)
