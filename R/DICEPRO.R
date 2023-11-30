@@ -69,7 +69,7 @@
 #' }
 
 DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metric = "RRMSE",
-                      cibersortx_email = NULL, cibersortx_token = NULL) {
+                    cibersortx_email = NULL, cibersortx_token = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
   stopifnot(metric %in% c("RRMSE", "R2_adj"))
@@ -116,7 +116,7 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
       diff_B <- as.data.frame(abs(B - B_Deconv))
 
       # Estimate one unknown component using NMF for each sample
-      resNMF <- NMF::nmf(x = diff_B, rank = 1)
+      resNMF <- nmf_conjugate_gradient(V = diff_B, k = 1)
       unknownMat <- as.data.frame(basis(resNMF))
       colnames(unknownMat) <- paste0("Unknown_", iterate_)
       W <- cbind(W, unknownMat)
@@ -138,5 +138,4 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
   class(result_list) <- "DICEPRO"
   return(result_list)
 }
-
 
