@@ -117,7 +117,7 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
 
       # Estimate one unknown component using NMF for each sample
       resNMF <- nmf_conjugate_gradient(V = diff_B, k = 1)
-      unknownMat <- as.data.frame(basis(resNMF))
+      unknownMat <- resNMF$W
       colnames(unknownMat) <- paste0("Unknown_", iterate_)
       W <- cbind(W, unknownMat)
     }
