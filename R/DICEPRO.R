@@ -113,7 +113,7 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
         }
       }
 
-      diff_B <- as.data.frame(abs(B - B_Deconv))
+      diff_B <- as.data.frame(B - B_Deconv)
 
       # Estimate one unknown component using NMF for each sample
       resNMF <- nmf_conjugate_gradient(V = diff_B, k = 1)
