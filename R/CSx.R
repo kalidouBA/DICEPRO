@@ -16,6 +16,7 @@
 #'   \item Reads the output results from CIBERSORTx.
 #'   \item Extracts cell type proportions and returns them as a matrix.
 #'}
+#' @export
 
 run_CSx <- function(bulk, reference, cibersortx_email, cibersortx_token){
   verbose <- FALSE
