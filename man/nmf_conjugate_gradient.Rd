@@ -4,7 +4,14 @@
 \alias{nmf_conjugate_gradient}
 \title{NMF with Projected Conjugate Gradient Optimization}
 \usage{
-nmf_conjugate_gradient(V, k, W = NULL, H = NULL, max_iter = 100)
+nmf_conjugate_gradient(
+  V,
+  k,
+  W = NULL,
+  H = NULL,
+  notNegative = FALSE,
+  max_iter = 100
+)
 }
 \arguments{
 \item{V}{Input matrix for factorization.}
@@ -14,6 +21,8 @@ nmf_conjugate_gradient(V, k, W = NULL, H = NULL, max_iter = 100)
 \item{W}{Initial matrix W (optional, defaults to random non-negative values).}
 
 \item{H}{Initial matrix H (optional, defaults to random non-negative values).}
+
+\item{notNegative}{Logical. If TRUE, the factorization is constrained to non-negative elements.}
 
 \item{max_iter}{Maximum number of iterations (default is 100).}
 }
