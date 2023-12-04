@@ -67,6 +67,9 @@ nmf_conjugate_gradient <- function(V, k, W = NULL, H = NULL, max_iter = 100) {
   # W <- project_to_non_negative(matrix(result$par[1:(nrow(V) * k)], nrow = nrow(V), ncol = k))
   # H <- project_to_non_negative(matrix(result$par[(nrow(V) * k + 1):length(result$par)], nrow = k, ncol = ncol(V)))
 
+  W <- matrix(result$par[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
+  H <- matrix(result$par[(nrow(V) * k + 1):length(result$par)], nrow = k, ncol = ncol(V))
+
   n <- length(V)
   squared_diff <- (V - W%*%H)^2
   mse <- sum(squared_diff) / n
