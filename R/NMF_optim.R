@@ -55,12 +55,6 @@ nmf_conjugate_gradient <- function(V, k = 1, W = NULL, H = NULL, upper_ = Inf, m
     return(c(grad_W, grad_H))
   }
 
-  # # Define the projection function to enforce non-negativity
-  # project_to_non_negative <- function(matrix) {
-  #   matrix[matrix < 0] <- 0
-  #   return(matrix)
-  # }
-
   # Perform projected conjugate gradient optimization
   result <- optim(par = theta, fn = obj_fun, gr = grad_obj_fun, method = "L-BFGS-B",
                   lower = rep(0, length(theta)), upper = rep(upper_, length(theta)),
@@ -69,16 +63,10 @@ nmf_conjugate_gradient <- function(V, k = 1, W = NULL, H = NULL, upper_ = Inf, m
   W <- matrix(result$par[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
   H <- matrix(result$par[(nrow(V) * k + 1):length(result$par)], nrow = k, ncol = ncol(V))
 
-  # # Extract factorized matrices W and H and enforce non-negativity
-  # if(notNegative){
-  #   W <- project_to_non_negative(W)
-  #   H <- project_to_non_negative(H)
-  # }
   n <- length(V)
   squared_diff <- (V - W%*%H)^2
   mse <- sum(squared_diff) / n
   rmse_nmf <- sqrt(mse)
 
-  # Return the factorized matrices W and H and rmse_nmf
   list(W = W, H = H, Error = rmse_nmf)
 }
