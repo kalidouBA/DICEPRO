@@ -6,23 +6,23 @@
 \usage{
 nmf_conjugate_gradient(
   V,
-  k,
+  k = 1,
   W = NULL,
   H = NULL,
-  notNegative = FALSE,
+  upper_ = Inf,
   max_iter = 100
 )
 }
 \arguments{
 \item{V}{Input matrix for factorization.}
 
-\item{k}{Number of components.}
+\item{k}{Number of components. Default is 1}
 
 \item{W}{Initial matrix W (optional, defaults to random non-negative values).}
 
 \item{H}{Initial matrix H (optional, defaults to random non-negative values).}
 
-\item{notNegative}{Logical. If TRUE, the factorization is constrained to non-negative elements.}
+\item{upper_}{An upper bound for the elements in the factorized matrices W and H. Default is Inf.}
 
 \item{max_iter}{Maximum number of iterations (default is 100).}
 }

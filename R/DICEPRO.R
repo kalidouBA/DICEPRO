@@ -86,20 +86,20 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
   cl <- parallel::detectCores()-1
-  cl <- ifelse(ncol(bulk) >= cl, cl, ncol(bulk))
+  cl <- ifelse(ncol(bulk) > cl, cl, ncol(bulk))
   run_deconvolution <- function(B, W, nIteration, methodDeconv, cibersortx_email, cibersortx_token) {
     matrixAbundances <- performs <- performs2plot <- opt <- NULL
 
     for (iterate_ in 0:nIteration) {
       out_Dec <- running_method(B, W, methodDeconv, cibersortx_email, cibersortx_token)
-      B_Deconv <- as.matrix(W) %*% as.matrix(out_Dec)
+      B_Deconv <- as.matrix(W) %*% t(out_Dec)
 
-      matrixAbundances <- rbind(matrixAbundances, c(t(out_Dec)[,cellTypeName], "Iteraion" = iterate_))
+      matrixAbundances <- rbind(matrixAbundances, c(out_Dec[,cellTypeName], "Iteraion" = iterate_))
 
       if (iterate_ > 0) {
-        perform_it <- computPerf( matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_-1, cellTypeName],
-                                  matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_, cellTypeName],
-                                  metric)
+        perform_it <- computPerf(matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_-1, cellTypeName],
+                                 matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_, cellTypeName],
+                                 metric)
 
         performs <- c(performs, perform_it)
         performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = iterate_))
@@ -112,14 +112,24 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
           break
         }
       }
+      if (is.null(opt)) {
+        diff_B <- as.data.frame(B - B_Deconv)
+        Error <- Inf; resNMF <- NULL
+        for (ct in cellTypeName) {
+          W_init <- W[,ct]
+          H_init <- out_Dec[colnames(B), ct]
 
-      diff_B <- as.data.frame(B - B_Deconv)
-
-      # Estimate one unknown component using NMF for each sample
-      resNMF <- nmf_conjugate_gradient(V = diff_B, k = 1)
-      unknownMat <- resNMF$W
-      colnames(unknownMat) <- paste0("Unknown_", iterate_)
-      W <- cbind(W, unknownMat)
+          # Estimate one unknown component using NMF for each sample
+          res <- nmf_conjugate_gradient(V = diff_B, W = W_init, H = H_init)
+          if(res$Error < Error){
+            Error <- res$Error
+            resNMF <- res
+          }
+        }
+        unknownMat <- resNMF$W
+        colnames(unknownMat) <- paste0("Unknown_", iterate_)
+        W <- cbind(W, unknownMat)
+      }
     }
 
     rownames(performs2plot) <- NULL

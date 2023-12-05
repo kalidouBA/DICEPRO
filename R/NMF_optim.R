@@ -4,10 +4,10 @@
 #' gradient optimization. Define the NMF function with projected conjugate gradient optimization
 #'
 #' @param V Input matrix for factorization.
-#' @param k Number of components.
+#' @param k Number of components. Default is 1
 #' @param W Initial matrix W (optional, defaults to random non-negative values).
 #' @param H Initial matrix H (optional, defaults to random non-negative values).
-#' @param notNegative Logical. If TRUE, the factorization is constrained to non-negative elements.
+#' @param upper_ An upper bound for the elements in the factorized matrices W and H. Default is Inf.
 #' @param max_iter Maximum number of iterations (default is 100).
 #' @return A list containing factorized matrices W and H.
 #'
@@ -23,7 +23,7 @@
 #'
 #' @export
 
-nmf_conjugate_gradient <- function(V, k, W = NULL, H = NULL, notNegative = FALSE, max_iter = 100) {
+nmf_conjugate_gradient <- function(V, k = 1, W = NULL, H = NULL, upper_ = Inf, max_iter = 100) {
 
   # Initialize W and H with random non-negative values
   if(is.null(W) || is.null(H)){
@@ -55,23 +55,25 @@ nmf_conjugate_gradient <- function(V, k, W = NULL, H = NULL, notNegative = FALSE
     return(c(grad_W, grad_H))
   }
 
-  # Define the projection function to enforce non-negativity
-  project_to_non_negative <- function(matrix) {
-    matrix[matrix < 0] <- 0
-    return(matrix)
-  }
+  # # Define the projection function to enforce non-negativity
+  # project_to_non_negative <- function(matrix) {
+  #   matrix[matrix < 0] <- 0
+  #   return(matrix)
+  # }
 
   # Perform projected conjugate gradient optimization
-  result <- optim(par = theta, fn = obj_fun, gr = grad_obj_fun, method = "L-BFGS-B", control = list(maxit = max_iter))
+  result <- optim(par = theta, fn = obj_fun, gr = grad_obj_fun, method = "L-BFGS-B",
+                  lower = rep(0, length(theta)), upper = rep(upper_, length(theta)),
+                  control = list(maxit = max_iter))
 
   W <- matrix(result$par[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
   H <- matrix(result$par[(nrow(V) * k + 1):length(result$par)], nrow = k, ncol = ncol(V))
 
-  # Extract factorized matrices W and H and enforce non-negativity
-  if(notNegative){
-    W <- project_to_non_negative(W)
-    H <- project_to_non_negative(H)
-  }
+  # # Extract factorized matrices W and H and enforce non-negativity
+  # if(notNegative){
+  #   W <- project_to_non_negative(W)
+  #   H <- project_to_non_negative(H)
+  # }
   n <- length(V)
   squared_diff <- (V - W%*%H)^2
   mse <- sum(squared_diff) / n
