@@ -52,36 +52,35 @@ computPerf <- function(x, y, metric) {
 }
 
 
-#' Compute precision of sequential simulation
+#' Compute precision of estimated
 #'
-#' This function computes the precision of sequential simulation by evaluating
-#' the Frobenius norm of the difference between the covariance matrix of the model
-#' (CY) and the covariance matrix of the simulated vector CY_tilde, normalized by
-#' the Frobenius norm of the covariance matrix of the model (CY).
+#' This function computes the precision of estimated by evaluating
+#' the Frobenius norm of the difference between the gene expression matrix (Y)
+#' and the product of the reference matrix and the estimated abundance matrix (Y_tilde),
+#' normalized by the Frobenius norm of the the gene expression matrix (Y).
 #'
-#' @param CY The covariance matrix of the model.
-#' @param CY_tilde The covariance matrix of the simulated vector.
+#' @param Y The gene expression matrix.
+#' @param Y_tilde The product of the reference matrix and the estimated abundance matrix.
 #' @export
 #'
 #' @return The precision of sequential simulation.
 #'
 #' @examples
-#' CY <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow=3, ncol=3, byrow=TRUE)
-#' CY_tilde <- CY
-#' precision <- compute_precision(CY, CY_tilde)
+#' Y <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow=3, ncol=3, byrow=TRUE)
+#' Y_tilde <- Y
+#' precision <- compute_precision(Y, Y_tilde)
 #' cat("Precision of sequential simulation:", precision, "\n")
 
-compute_precision <- function(CY, CY_tilde) {
+compute_precision <- function(Y, Y_tilde) {
   frobenius_norm <- function(matrix) {
     sqrt(sum(matrix^2))
   }
 
-
-  diff_matrix <- CY - CY_tilde
+  diff_matrix <- Y - Y_tilde
   norm_diff <- frobenius_norm(diff_matrix)
-  norm_CY <- frobenius_norm(CY)
+  norm_Y <- frobenius_norm(Y)
 
-  precision <- norm_diff / norm_CY
+  precision <- norm_diff / norm_Y
 
   return(precision)
 }
