@@ -51,3 +51,37 @@ computPerf <- function(x, y, metric) {
   return(perf)
 }
 
+
+#' Compute precision of sequential simulation
+#'
+#' This function computes the precision of sequential simulation by evaluating
+#' the Frobenius norm of the difference between the covariance matrix of the model
+#' (CY) and the covariance matrix of the simulated vector CY_tilde, normalized by
+#' the Frobenius norm of the covariance matrix of the model (CY).
+#'
+#' @param CY The covariance matrix of the model.
+#' @param CY_tilde The covariance matrix of the simulated vector.
+#' @export
+#'
+#' @return The precision of sequential simulation.
+#'
+#' @examples
+#' CY <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow=3, ncol=3, byrow=TRUE)
+#' CY_tilde <- CY
+#' precision <- compute_precision(CY, CY_tilde)
+#' cat("Precision of sequential simulation:", precision, "\n")
+
+compute_precision <- function(CY, CY_tilde) {
+  frobenius_norm <- function(matrix) {
+    sqrt(sum(matrix^2))
+  }
+
+
+  diff_matrix <- CY - CY_tilde
+  norm_diff <- frobenius_norm(diff_matrix)
+  norm_CY <- frobenius_norm(CY)
+
+  precision <- norm_diff / norm_CY
+
+  return(precision)
+}

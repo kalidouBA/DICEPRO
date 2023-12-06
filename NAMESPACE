@@ -3,6 +3,7 @@
 S3method(plot,DICEPRO)
 export(DICEPRO)
 export(computPerf)
+export(compute_precision)
 export(generateProp)
 export(generate_ref_matrix)
 export(heatmap_abundances)
