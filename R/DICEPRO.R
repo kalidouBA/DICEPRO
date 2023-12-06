@@ -94,7 +94,7 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
       out_Dec <- running_method(B, W, methodDeconv, cibersortx_email, cibersortx_token)
       B_Deconv <- as.matrix(W) %*% t(out_Dec)
 
-      matrixAbundances <- rbind(matrixAbundances, c(out_Dec[,cellTypeName], "Iteraion" = it_))
+      matrixAbundances <- rbind(matrixAbundances, cbind(out_Dec[,cellTypeName], "Iteraion" = it_))
 
       if (it_ > 0) {
         perform_it <- computPerf(matrixAbundances[matrixAbundances[,"Iteraion"] == it_-1, cellTypeName],
@@ -104,7 +104,6 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
 
         performs <- c(performs, perform_it)
         performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = it_))
-
         normFrobs <- c(normFrobs, normFrob_it)
 
         if (length(performs) > 1 &&
@@ -126,7 +125,8 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
 
         res <- nmf_conjugate_gradient(V = B, W = W_init, H = H_init, k_CT+1)
         W <- res$W
-        colnames(W)[k_CT+1] <- paste0("Unknown_", it_)
+        colnames(W) <- c(cellTypeName, paste0("Unknown_", it_))
+        rownames(W) <- geneIntersect
       }
     }
 
