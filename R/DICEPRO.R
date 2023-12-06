@@ -119,7 +119,7 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
       }
 
       if (is.null(opt)) {
-        k_CT <- ncol(W_init)
+        k_CT <- ncol(W)
 
         W_init <- as.matrix(cbind.data.frame(W, unk = 0))
         H_init <- as.matrix(cbind.data.frame(out_Dec, unk = 0.5))
