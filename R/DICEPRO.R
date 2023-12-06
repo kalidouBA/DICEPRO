@@ -88,47 +88,45 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
   cl <- parallel::detectCores()-1
   cl <- ifelse(ncol(bulk) > cl, cl, ncol(bulk))
   run_deconvolution <- function(B, W, nIteration, methodDeconv, cibersortx_email, cibersortx_token) {
-    matrixAbundances <- performs <- performs2plot <- opt <- NULL
+    matrixAbundances <- performs <- normFrobs <- performs2plot <- opt <- NULL
 
-    for (iterate_ in 0:nIteration) {
+    for (it_ in 0:nIteration) {
       out_Dec <- running_method(B, W, methodDeconv, cibersortx_email, cibersortx_token)
       B_Deconv <- as.matrix(W) %*% t(out_Dec)
 
-      matrixAbundances <- rbind(matrixAbundances, c(out_Dec[,cellTypeName], "Iteraion" = iterate_))
+      matrixAbundances <- rbind(matrixAbundances, c(out_Dec[,cellTypeName], "Iteraion" = it_))
 
-      if (iterate_ > 0) {
-        perform_it <- computPerf(matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_-1, cellTypeName],
-                                 matrixAbundances[matrixAbundances[,"Iteraion"] == iterate_, cellTypeName],
+      if (it_ > 0) {
+        perform_it <- computPerf(matrixAbundances[matrixAbundances[,"Iteraion"] == it_-1, cellTypeName],
+                                 matrixAbundances[matrixAbundances[,"Iteraion"] == it_, cellTypeName],
                                  metric)
+        normFrob_it <- compute_precision(B, B_Deconv)
 
         performs <- c(performs, perform_it)
-        performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = iterate_))
+        performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = it_))
+
+        normFrobs <- c(normFrobs, normFrob_it)
 
         if (length(performs) > 1 &&
-            ((metric == "R2_adj" && performs[iterate_] > 0.99) ||
-             (metric == "RRMSE" && performs[iterate_-1] - performs[iterate_] < 0))) {
-          opt <- ifelse(iterate_ == nIteration, iterate_, iterate_ - 1)
+            ((metric == "R2_adj" && performs[it_] > 0.99) ||
+             (metric == "RRMSE" && performs[it_-1] - performs[it_] < 0) ||
+             normFrobs[it_-1] - normFrobs[it_] < 0)) {
+
+          opt <- ifelse(it_ == nIteration, it_, it_ - 1)
           message("Convergence criteria Done with optimal criteria: ", opt)
           break
         }
       }
-      if (is.null(opt)) {
-        diff_B <- as.data.frame(B - B_Deconv)
-        Error <- Inf; resNMF <- NULL
-        for (ct in cellTypeName) {
-          W_init <- W[,ct]
-          H_init <- out_Dec[colnames(B), ct]
 
-          # Estimate one unknown component using NMF for each sample
-          res <- nmf_conjugate_gradient(V = diff_B, W = W_init, H = H_init)
-          if(res$Error < Error){
-            Error <- res$Error
-            resNMF <- res
-          }
-        }
-        unknownMat <- resNMF$W
-        colnames(unknownMat) <- paste0("Unknown_", iterate_)
-        W <- cbind(W, unknownMat)
+      if (is.null(opt)) {
+        k_CT <- ncol(W_init)
+
+        W_init <- as.matrix(cbind.data.frame(W, unk = 0))
+        H_init <- as.matrix(cbind.data.frame(out_Dec, unk = 0.5))
+
+        res <- nmf_conjugate_gradient(V = B, W = W_init, H = H_init, k_CT+1)
+        W <- res$W
+        colnames(W)[k_CT+1] <- paste0("Unknown_", it_)
       }
     }
 
