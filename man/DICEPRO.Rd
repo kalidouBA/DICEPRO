@@ -7,7 +7,6 @@
 DICEPRO(
   reference,
   bulk,
-  nIteration = 50,
   methodDeconv = "CSx",
   metric = "RRMSE",
   cibersortx_email = NULL,
@@ -18,8 +17,6 @@ DICEPRO(
 \item{reference}{The reference data matrix containing cell type (column) gene expression (row) profiles.}
 
 \item{bulk}{The bulk RNA-seq data matrix. In the columns we have the samples and in the rows the genes.}
-
-\item{nIteration}{The number of iterations to perform for refining the reference data.}
 
 \item{methodDeconv}{A character vector specifying the deconvolution method.
 Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
@@ -76,8 +73,7 @@ simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE,
 nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
 cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 refDataIncomplet <- simulation$reference[,-cellTypeOut]
-results <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk,
-nIteration = 5, methodDeconv = "DCQ")
+results <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk, methodDeconv = "DCQ")
 print(results)
 }
 }

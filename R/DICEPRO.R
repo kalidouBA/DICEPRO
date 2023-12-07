@@ -6,7 +6,6 @@
 #'
 #' @param reference The reference data matrix containing cell type (column) gene expression (row) profiles.
 #' @param bulk The bulk RNA-seq data matrix. In the columns we have the samples and in the rows the genes.
-#' @param nIteration The number of iterations to perform for refining the reference data.
 #' @param methodDeconv A character vector specifying the deconvolution method.
 #'        Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
 #'        \code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.
@@ -63,12 +62,11 @@
 #' nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
 #' cellTypeOut <- sample(1:ncol(simulation$reference), 2)
 #' refDataIncomplet <- simulation$reference[,-cellTypeOut]
-#' results <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk,
-#' nIteration = 5, methodDeconv = "DCQ")
+#' results <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk, methodDeconv = "DCQ")
 #' print(results)
 #' }
 
-DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metric = "RRMSE",
+DICEPRO <- function(reference, bulk, methodDeconv = "CSx", metric = "RRMSE",
                     cibersortx_email = NULL, cibersortx_token = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
@@ -84,6 +82,7 @@ DICEPRO <- function(reference, bulk, nIteration = 50, methodDeconv = "CSx", metr
   reference <- apply(reference[geneIntersect, ], 2, as.numeric)
   bulk <- as.data.frame(apply(bulk[geneIntersect, ], 2, as.numeric))
   rownames(reference) <- rownames(bulk) <- geneIntersect
+  nIteration = ncol(reference)
 
   cl <- parallel::detectCores()-1
   cl <- ifelse(ncol(bulk) > cl, cl, ncol(bulk))
