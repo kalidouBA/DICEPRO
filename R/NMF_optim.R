@@ -57,7 +57,7 @@ nmf_conjugate_gradient <- function(V, k = 1, W = NULL, H = NULL, upper_ = Inf) {
   # Perform projected conjugate gradient optimization
   result <- optim(par = theta, fn = obj_fun, gr = grad_obj_fun, method = "L-BFGS-B",
                   lower = rep(0, length(theta)), upper = rep(upper_, length(theta)),
-                  control = list(maxit = 30000, trace = FALSE, factr = 1e-8))
+                  control = list(maxit = 1000, trace = FALSE, factr = 1e-8))
 
   W <- matrix(result$par[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
   H <- matrix(result$par[(nrow(V) * k + 1):length(result$par)], nrow = k, ncol = ncol(V))
