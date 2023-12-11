@@ -9,11 +9,6 @@
 #' @param methodDeconv A character vector specifying the deconvolution method.
 #'        Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
 #'        \code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.
-#' @param metric A metric used to detect the convergence method.
-#'        Supported values are "R2_adj", "ICC", "RRMSE", "simRatio".
-#'        Choose the metric to evaluate the convergence method. Options include \code{R2_adj},
-#'        which represents Adjusted R-squared and \code{RRMSE} for Relative Root Mean Squared Error.
-#'        The convergence method will be determined based on the selected metric.
 #'
 #' @param cibersortx_email The CIBERSORTx account email.
 #' @param cibersortx_token The CIBERSORTx account token.
@@ -43,10 +38,7 @@
 #' The function performs several steps for semi-supervised deconvolution, including:
 #' \enumerate{
 #'   \item Running CIBERSORTx or Digital Cell Quantification or others for cell type proportion estimation.
-#'   \item Calculating and storing performance metrics.
 #'   \item Estimating unknown components using non-negative matrix factorization (NMF).
-#'   \item Computing distances between unknown components and known cell types.
-#'   \item Iteratively refining the reference data with unknown components.
 #'}
 #'
 #' @export
@@ -66,12 +58,9 @@
 #' print(results)
 #' }
 
-DICEPRO <- function(reference, bulk, methodDeconv = "CSx", metric = "RRMSE",
-                    cibersortx_email = NULL, cibersortx_token = NULL) {
+DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
-  stopifnot(metric %in% c("RRMSE", "R2_adj"))
-  stopifnot(nIteration > 0)
 
   if(length(methodDeconv) > 1)
     methodDeconv <- methodDeconv[1]
@@ -82,67 +71,27 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", metric = "RRMSE",
   reference <- apply(reference[geneIntersect, ], 2, as.numeric)
   bulk <- as.data.frame(apply(bulk[geneIntersect, ], 2, as.numeric))
   rownames(reference) <- rownames(bulk) <- geneIntersect
-  nIteration = ncol(reference)
 
-  cl <- parallel::detectCores()-1
-  cl <- ifelse(ncol(bulk) > cl, cl, ncol(bulk))
-  run_deconvolution <- function(B, W, nIteration, methodDeconv, cibersortx_email, cibersortx_token) {
-    matrixAbundances <- performs <- normFrobs <- performs2plot <- opt <- NULL
+  matrixAbundances <- performs <- normFrobs <- performs2plot <- opt <- NULL
 
-    for (it_ in 0:nIteration) {
-      out_Dec <- running_method(B, W, methodDeconv, cibersortx_email, cibersortx_token)
-      B_Deconv <- as.matrix(W) %*% t(out_Dec)
+  out_Dec <- running_method(bulk, W, methodDeconv, cibersortx_email, cibersortx_token)
+  B_Deconv <- as.matrix(W) %*% t(out_Dec)
 
-      matrixAbundances <- rbind(matrixAbundances, cbind(out_Dec[,cellTypeName], "Iteraion" = it_))
+  k_CT <- ncol(W)
 
-      if (it_ > 0) {
-        perform_it <- computPerf(matrixAbundances[matrixAbundances[,"Iteraion"] == it_-1, cellTypeName],
-                                 matrixAbundances[matrixAbundances[,"Iteraion"] == it_, cellTypeName],
-                                 metric)
-        normFrob_it <- compute_precision(B, B_Deconv)
+  res <- nmf_conjugate_gradient(V = bulk, W = W, H = out_Dec, k_CT+1)
+  W <- res$W
 
-        performs <- c(performs, perform_it)
-        performs2plot <- rbind.data.frame(performs2plot, data.frame(metric = perform_it, Iterate = it_))
-        normFrobs <- c(normFrobs, normFrob_it)
+  colnames(W) <- c(cellTypeName, paste0("Unknown"))
+  rownames(W) <- geneIntersect
 
-        if (length(performs) > 1 &&
-            ((metric == "R2_adj" && performs[it_] > 0.99) ||
-             (metric == "RRMSE" && performs[it_-1] - performs[it_] < 0) ||
-             normFrobs[it_-1] - normFrobs[it_] < 0)) {
+  out_Dec_Update <- res$H[,1:ncol(out_Dec)]
+  dimnames(out_Dec_Update) <- dimnames(out_Dec)
+  rownames(performs2plot) <- NULL
 
-          opt <- ifelse(it_ == nIteration, it_, it_ - 1)
-          message("Convergence criteria Done with optimal criteria: ", opt)
-          break
-        }
-      }
+  results <- list("Prediction" = out_Dec_Update, "New_signature" = W)
 
-      if (is.null(opt)) {
-        k_CT <- ncol(W)
-
-        W_init <- as.matrix(cbind.data.frame(W, unk = 0))
-        H_init <- as.matrix(cbind.data.frame(out_Dec, unk = 0.5))
-
-        res <- nmf_conjugate_gradient(V = B, W = W_init, H = H_init, k_CT+1)
-        W <- res$W
-        colnames(W) <- c(cellTypeName, paste0("Unknown_", it_))
-        rownames(W) <- geneIntersect
-      }
-    }
-
-    rownames(performs2plot) <- NULL
-
-    results <- list("Prediction" = out_Dec, "Matrix_prediction" = matrixAbundances,
-                    "New_signature" = W, "Optimal_iteration" = opt,
-                    "performs2plot" = performs2plot)
-    return(results)
-  }
-
-  result_list <- mclapply(colnames(bulk), function(i) {
-    run_deconvolution(bulk[i], reference, nIteration, methodDeconv, cibersortx_email, cibersortx_token)
-  }, mc.cores = cl)
-
-
-  class(result_list) <- "DICEPRO"
-  return(result_list)
+  class(results) <- "DICEPRO"
+  return(results)
 }
 

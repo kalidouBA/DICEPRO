@@ -8,7 +8,6 @@ DICEPRO(
   reference,
   bulk,
   methodDeconv = "CSx",
-  metric = "RRMSE",
   cibersortx_email = NULL,
   cibersortx_token = NULL
 )
@@ -21,12 +20,6 @@ DICEPRO(
 \item{methodDeconv}{A character vector specifying the deconvolution method.
 Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
 \code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.}
-
-\item{metric}{A metric used to detect the convergence method.
-Supported values are "R2_adj", "ICC", "RRMSE", "simRatio".
-Choose the metric to evaluate the convergence method. Options include \code{R2_adj},
-which represents Adjusted R-squared and \code{RRMSE} for Relative Root Mean Squared Error.
-The convergence method will be determined based on the selected metric.}
 
 \item{cibersortx_email}{The CIBERSORTx account email.}
 
@@ -61,10 +54,7 @@ The function returns the estimated cell type proportions and their associated ma
 The function performs several steps for semi-supervised deconvolution, including:
 \enumerate{
 \item Running CIBERSORTx or Digital Cell Quantification or others for cell type proportion estimation.
-\item Calculating and storing performance metrics.
 \item Estimating unknown components using non-negative matrix factorization (NMF).
-\item Computing distances between unknown components and known cell types.
-\item Iteratively refining the reference data with unknown components.
 }
 }
 \examples{
