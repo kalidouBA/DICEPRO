@@ -4,7 +4,7 @@
 \alias{nmf_conjugate_gradient}
 \title{NMF with Projected Conjugate Gradient Optimization}
 \usage{
-nmf_conjugate_gradient(V, k = 1, W = NULL, H = NULL, upper_ = Inf)
+nmf_conjugate_gradient(V, k = 1, W = NULL, H = NULL)
 }
 \arguments{
 \item{V}{Input matrix for factorization.}
@@ -14,8 +14,6 @@ nmf_conjugate_gradient(V, k = 1, W = NULL, H = NULL, upper_ = Inf)
 \item{W}{Initial matrix W (optional, defaults to random non-negative values).}
 
 \item{H}{Initial matrix H (optional, defaults to random non-negative values).}
-
-\item{upper_}{An upper bound for the elements in the factorized matrices W and H. Default is Inf.}
 }
 \value{
 A list containing factorized matrices W and H.
@@ -23,13 +21,4 @@ A list containing factorized matrices W and H.
 \description{
 Perform non-negative matrix factorization (NMF) using projected conjugate
 gradient optimization. Define the NMF function with projected conjugate gradient optimization
-}
-\examples{
-set.seed(123)
-data_matrix <- matrix(runif(100), nrow = 10, ncol = 10)
-k <- 2
-result <- nmf_conjugate_gradient(data_matrix, k)
-print(result$W)
-print(result$H)
-
 }
