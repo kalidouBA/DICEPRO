@@ -64,7 +64,7 @@ nmf_conjugate_gradient <- function(V, k = 1, W = NULL, H = NULL) {
 
     list(W = W, H = t(H), Error = rmse_nmf)
   }
- cl <-  min(5, detectCores())
+  cl <-  min(5, detectCores())
   result_list <- mclapply(seq(0,1,0.25), function(i) {
     par_nmf(i)
   }, mc.cores = cl)

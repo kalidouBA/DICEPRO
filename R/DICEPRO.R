@@ -72,21 +72,16 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   bulk <- as.data.frame(apply(bulk[geneIntersect, ], 2, as.numeric))
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
-  matrixAbundances <- performs <- normFrobs <- performs2plot <- opt <- NULL
+  out_Dec <- running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token)
+  k_CT <- ncol(reference) + 1
 
-  out_Dec <- running_method(bulk, W, methodDeconv, cibersortx_email, cibersortx_token)
-  B_Deconv <- as.matrix(W) %*% t(out_Dec)
-
-  k_CT <- ncol(W)
-
-  res <- nmf_conjugate_gradient(V = bulk, W = W, H = out_Dec, k_CT+1)
+  res <- nmf_conjugate_gradient(V = bulk, W = reference, H = out_Dec, k = k_CT)
   W <- res$W
 
-  colnames(W) <- c(cellTypeName, paste0("Unknown"))
+  dimnames(W) <- list(geneIntersect, c(cellTypeName, paste0("Unknown")))
 
-  out_Dec_Update <- res$H[,1:ncol(out_Dec)]
+  out_Dec_Update <- res$H[,-k_CT]
   dimnames(out_Dec_Update) <- dimnames(out_Dec)
-  rownames(performs2plot) <- NULL
 
   results <- list("Prediction" = out_Dec_Update, "New_signature" = W)
 
