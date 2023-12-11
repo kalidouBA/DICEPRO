@@ -83,7 +83,6 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   W <- res$W
 
   colnames(W) <- c(cellTypeName, paste0("Unknown"))
-  rownames(W) <- geneIntersect
 
   out_Dec_Update <- res$H[,1:ncol(out_Dec)]
   dimnames(out_Dec_Update) <- dimnames(out_Dec)
