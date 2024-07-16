@@ -21,10 +21,10 @@ obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
 
   V_optim <- cbind(W, Wunknown) %*% H
   constraints <- colSums(H) - 1
-  penalty <- lambda * sum(abs(constraints)) + (gamma / 2) * sum(constraints^2)
+  penalty <- lambda * sum(constraints) + (gamma / 2) * sum(constraints^2)
 
   frobenius_norm <- sum((V_optim - V_obs)^2)
-  mlog_likelihood_value <- 1/(2 * sigma2) * frobenius_norm + prod(dim(V_optim)) * log(2 * pi * sigma2) - penalty
+  mlog_likelihood_value <- 1/(2 * sigma2) * frobenius_norm + prod(dim(V_optim)) * log(2 * pi * sigma2) + penalty
 
   return(mlog_likelihood_value)
 }
@@ -47,7 +47,7 @@ grad_obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
   grad_Wunknown <- (1 / sigma2) * (V_obs - V_optim) %*% t(H[npop + 1:nUnknownSup, , drop=FALSE])
 
   sum_diff <- rowSums(H) - 1
-  grad_lambda <- sum(abs(sum_diff))
+  grad_lambda <- sum(sum_diff)
 
   grad_gamma <- 0.5 * sum(sum_diff^2)
 
@@ -55,9 +55,9 @@ grad_obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
   grad_sigma <- error / (2*sigma2^2) - prod(dim(V_obs)) / (2*sigma2)
 
   constraints <- colSums(H) - 1
-  penalty_grad <- lambda * sign(constraints) + gamma * constraints
+  penalty_grad <- lambda + gamma * constraints
 
-  grad_H <- (1 / sigma2) * t(Wall) %*% (V_obs - V_optim) - penalty_grad
+  grad_H <- (1 / sigma2) * t(Wall) %*% (V_obs - V_optim) + penalty_grad
   # for (s in 1:length(penalty_grad)) {
   #   grad_H[, s] <- grad_H[, s] - penalty_grad[s]
   # }
@@ -96,16 +96,19 @@ nmf_conjugate_gradient <- function(V, Winit, Hinit = NULL, nUnknownSup = 1,  nco
 
     Hinit_C <- matrix(i, nrow = nrow(Hinit), ncol = nUnknownSup, dimnames = dimnames_Comp)
     H <- cbind(Hinit, Hinit_C)
+    H <- H/rowSums(H)
 
     dimnames_H <- dimnames(t(H))
-    sigma <-  var(as.vector(Winit %*% t(Hinit) - V))
-    theta <- c(as.vector(Winit_C), as.vector(t(H)), lambda, gamma, sigma)
+    sigma2 <-  var(as.vector(Winit %*% t(Hinit) - V))
+    theta <- c(as.vector(Winit_C), as.vector(t(H)),
+               lambda, gamma, sigma2)
 
     browser()
     result <- optim(par = theta, fn = obj_fun, #gr = grad_obj_fun,
                     W = Winit, V_obs = V, nUnknownSup = nUnknownSup,
-                    lower = rep(0, length(theta)),
-                    control =  list(fnscale = 1, maxit = 100, tmax = 10, trace=3), method = "L-BFGS-B")
+                    lower = c(rep(0, length(theta)-3), 0, 0, 0),
+                    control =  list(fnscale = 1, maxit = 100, trace=3),
+                    method = "L-BFGS-B")
 
       theta_opt <- result$par
 
@@ -114,11 +117,11 @@ nmf_conjugate_gradient <- function(V, Winit, Hinit = NULL, nUnknownSup = 1,  nco
       nsamples <- ncol(V)
       Wunknown <- matrix(theta_opt[1:(ngenes * nUnknownSup)], nrow = ngenes, ncol = nUnknownSup)
       H <- matrix(theta_opt[(ngenes * nUnknownSup) + 1:((npop + nUnknownSup)*nsamples)], ncol = nsamples, nrow = npop + nUnknownSup)
-      lambda <- theta_opt[2*ngenes*nUnknownSup + 1]
-      gamma <- theta_opt[2*ngenes*nUnknownSup + 2]
-      sigma2 <- theta_opt[2*ngenes*nUnknownSup + 3]
+      lambda <- theta_opt[ngenes*nUnknownSup + nsamples*(npop + nUnknownSup) + 1]
+      gamma <- theta_opt[ngenes*nUnknownSup + nsamples*(npop + nUnknownSup) + 2]
+      sigma2 <- theta_opt[ngenes*nUnknownSup + nsamples*(npop + nUnknownSup) + 3]
       normF <- result$value
-      constraints <- rowSums(H) - 1
+      constraints <- colSums(H) - 1
       opt <- list("Wunknown"  = Wunknown,
                   "H" = H,
                   "lambda" = lambda,
@@ -126,6 +129,10 @@ nmf_conjugate_gradient <- function(V, Winit, Hinit = NULL, nUnknownSup = 1,  nco
                   "sigma2" = sigma2,
                   "normF" = normF,
                   "constraints" = constraints)
+      #sqrt(sum((simulation$pred_CSx[,1:47] -simulation$prop[,1:47])^2))
+      #sqrt(sum((t(H)[,1:47] -simulation$prop[,1:47])^2))
+      #cor(as.vector(t(H)[,1:47]), as.vector(as.matrix(simulation$prop[,1:47])))
+      #cor(as.vector(as.matrix(simulation$pred_CSx[,1:47])), as.vector(as.matrix(simulation$prop[,1:47])))
       return(opt)
     }
 
@@ -133,6 +140,8 @@ nmf_conjugate_gradient <- function(V, Winit, Hinit = NULL, nUnknownSup = 1,  nco
                                    cl = ncores)
   return(result_list)
 }
+
+
 
 set.seed(2101)
 simulation <- DICEPRO::simulation(loi = "gauss", scenario = " ", bias = TRUE,nSample = nSample, prop = NULL,
