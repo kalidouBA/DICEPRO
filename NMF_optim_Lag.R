@@ -15,16 +15,16 @@ obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
 
   Wunknown <- matrix(theta[1:(ngenes * nUnknownSup)], nrow = ngenes, ncol = nUnknownSup)
   H <- matrix(theta[(ngenes * nUnknownSup) + 1:((npop + nUnknownSup)*nsamples)], ncol = nsamples, nrow = npop + nUnknownSup)
-  lambda <- theta[2*ngenes*nUnknownSup + 1]
-  gamma <- theta[2*ngenes*nUnknownSup + 2]
-  sigma2 <- theta[2*ngenes*nUnknownSup + 3]
+  lambda <- theta[ngenes*nUnknownSup + nsamples*(npop + nUnknownSup) + 1]
+  gamma <- theta[ngenes*nUnknownSup + nsamples* (npop + nUnknownSup) + 2]
+  sigma2 <- theta[ngenes*nUnknownSup + nsamples* (npop + nUnknownSup) + 3]
 
   V_optim <- cbind(W, Wunknown) %*% H
   constraints <- colSums(H) - 1
   penalty <- lambda * sum(abs(constraints)) + (gamma / 2) * sum(constraints^2)
 
   frobenius_norm <- sum((V_optim - V_obs)^2)
-  mlog_likelihood_value <- -(- (1 / (2 * sigma2)) * frobenius_norm - prod(dim(V_optim)) * log(2 * pi * sigma2) - penalty)
+  mlog_likelihood_value <- 1/(2 * sigma2) * frobenius_norm + prod(dim(V_optim)) * log(2 * pi * sigma2) - penalty
 
   return(mlog_likelihood_value)
 }
@@ -37,14 +37,14 @@ grad_obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
 
   Wunknown <- matrix(theta[1:(ngenes * nUnknownSup)], nrow = ngenes, ncol = nUnknownSup)
   H <- matrix(theta[(ngenes * nUnknownSup) + 1:((npop + nUnknownSup)*nsamples)], ncol = nsamples, nrow = npop + nUnknownSup)
-  lambda <- theta[2*ngenes*nUnknownSup + 1]
-  gamma <- theta[2*ngenes*nUnknownSup + 2]
-  sigma2 <- theta[2*ngenes*nUnknownSup + 3]
+  lambda <- theta[ngenes*nUnknownSup + nsamples*(npop + nUnknownSup) + 1]
+  gamma <- theta[ngenes*nUnknownSup + nsamples* (npop + nUnknownSup) + 2]
+  sigma2 <- theta[ngenes*nUnknownSup + nsamples* (npop + nUnknownSup) + 3]
 
   Wall <- cbind(W, Wunknown)
   V_optim <- Wall %*% H
 
-  grad_Wunknown <- (1 / sigma2) * (V_obs - V_optim) %*% t(H)
+  grad_Wunknown <- (1 / sigma2) * (V_obs - V_optim) %*% t(H[npop + 1:nUnknownSup, , drop=FALSE])
 
   sum_diff <- rowSums(H) - 1
   grad_lambda <- sum(abs(sum_diff))
@@ -52,7 +52,7 @@ grad_obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
   grad_gamma <- 0.5 * sum(sum_diff^2)
 
   error <- sum((V_obs - V_optim)^2)
-  grad_sigma <- error / (sqrt(sigma2)^3) - prod(dim(V_obs)) / sqrt(sigma2)
+  grad_sigma <- error / (2*sigma2^2) - prod(dim(V_obs)) / (2*sigma2)
 
   constraints <- colSums(H) - 1
   penalty_grad <- lambda * sign(constraints) + gamma * constraints
@@ -62,7 +62,7 @@ grad_obj_fun <- function(theta, V_obs, W, nUnknownSup=1) {
   #   grad_H[, s] <- grad_H[, s] - penalty_grad[s]
   # }
 
-  grads <- c(as.vector(grad_Wunknown[, ncol(W) + 1:nUnknownSup]),
+  grads <- c(as.vector(grad_Wunknown),
             as.vector(grad_H),
             grad_lambda,
             grad_gamma,
@@ -93,17 +93,19 @@ nmf_conjugate_gradient <- function(V, Winit, Hinit = NULL, nUnknownSup = 1,  nco
 
   parNMF <- function(i) {
     lambda <- gamma <- 1
-    sigma <- sum(diag(V))
+
     Hinit_C <- matrix(i, nrow = nrow(Hinit), ncol = nUnknownSup, dimnames = dimnames_Comp)
     H <- cbind(Hinit, Hinit_C)
 
     dimnames_H <- dimnames(t(H))
+    sigma <-  var(as.vector(Winit %*% t(Hinit) - V))
     theta <- c(as.vector(Winit_C), as.vector(t(H)), lambda, gamma, sigma)
 
+    browser()
     result <- optim(par = theta, fn = obj_fun, #gr = grad_obj_fun,
                     W = Winit, V_obs = V, nUnknownSup = nUnknownSup,
-                    lower = c(rep(0, length(theta)-3), rep(Inf, 3)),
-                    control =  list(fnscale = 1, maxit = 500, tmax = 10, trace=3), method = "L-BFGS-B")
+                    lower = rep(0, length(theta)),
+                    control =  list(fnscale = 1, maxit = 100, tmax = 10, trace=3), method = "L-BFGS-B")
 
       theta_opt <- result$par
 
@@ -127,7 +129,7 @@ nmf_conjugate_gradient <- function(V, Winit, Hinit = NULL, nUnknownSup = 1,  nco
       return(opt)
     }
 
-  result_list <- pbapply::pblapply(X = seq(0.4, 0.6, 0.05), FUN = parNMF,
+  result_list <- pbapply::pblapply(X = seq(0.05, 0.95, 0.05), FUN = parNMF,
                                    cl = ncores)
   return(result_list)
 }
@@ -160,7 +162,7 @@ PERF <- data.frame()
 for (ind in 1:length(resultsDICEPRO)) {
   pred_DICEPRO <- as.data.frame(resultsDICEPRO[[ind]]$H[,-(ncol(Winit) + 1)])
   pred_DICEPRO <- pred_DICEPRO/rowSums(pred_DICEPRO)
-  RES_Perf <- DICEPRO::perfFunction(melt(truthProp, id.vars = NULL)$value,
+  RES_Perf <- DICEPRO:::perfFunction(melt(truthProp, id.vars = NULL)$value,
                                     melt(pred_DICEPRO, id.vars = NULL)$value)
   PERF <- rbind(PERF, RES_Perf)
 }
