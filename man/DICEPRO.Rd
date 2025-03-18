@@ -2,71 +2,81 @@
 % Please edit documentation in R/DICEPRO.R
 \name{DICEPRO}
 \alias{DICEPRO}
-\title{Semi-Supervised Deconvolution of Bulk RNA-Seq Data}
+\title{DICEPRO: Deconvolution and Inference of Cell Proportions with Optimization}
 \usage{
 DICEPRO(
   reference,
   bulk,
   methodDeconv = "CSx",
   cibersortx_email = NULL,
-  cibersortx_token = NULL
+  cibersortx_token = NULL,
+  W_prime = 0,
+  p_prime = 0,
+  lambda_ = 10,
+  gamma_par = 100,
+  N_unknownCT = 1
 )
 }
 \arguments{
-\item{reference}{The reference data matrix containing cell type (column) gene expression (row) profiles.}
+\item{reference}{A matrix of reference gene expression data, where rows are genes
+and columns are cell types (cellType x gene).}
 
-\item{bulk}{The bulk RNA-seq data matrix. In the columns we have the samples and in the rows the genes.}
+\item{bulk}{A matrix of bulk gene expression data, where rows are genes
+and columns are samples (gene x sample).}
 
-\item{methodDeconv}{A character vector specifying the deconvolution method.
-Supported values are "CSx" or "DCQ" or others. The method to use for deconvolution. Options include \code{CSx},
-\code{DCQ}, \code{CDSeq}, \code{DeconRNASeq}, \code{FARDEEP} and \code{BayesPrism}.}
+\item{methodDeconv}{A character string specifying the deconvolution method to be used.
+Options include: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".}
 
-\item{cibersortx_email}{The CIBERSORTx account email.}
+\item{cibersortx_email}{An optional email address for the CIBERSORTx web-based tool.}
 
-\item{cibersortx_token}{The CIBERSORTx account token.}
+\item{cibersortx_token}{An optional token for the CIBERSORTx web-based tool.}
+
+\item{W_prime}{A numeric value for the initial matrix W for unknown cell types,
+default is 0.}
+
+\item{p_prime}{A numeric value for the initial proportions of unknown cell types,
+default is 0.}
+
+\item{lambda_}{A numeric value for the regularization parameter, default is 10.}
+
+\item{gamma_par}{A numeric value for the penalty parameter, default is 100.}
+
+\item{N_unknownCT}{A numeric value for the number of unknown cell types, default is 1.}
 }
 \value{
-A list data simulated.
+A list containing the following components:
+\item{Prediction}{The estimated cell type proportions for the bulk samples, excluding
+the unknown cell type.}
+\item{New_signature}{The optimized gene-cell type matrix for the cell types, including
+the unknown cell type.}
 }
 \description{
-This function performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or
-Digital Cell Quantification method or others. It iteratively estimates cell type proportions and refines
-reference data using non-negative matrix factorization (NMF).
+This function performs cell type deconvolution of bulk gene expression data using
+a combination of a deconvolution method and Non-Negative Matrix Factorization
+(NMF) with L-BFGS-B optimization. It can integrate known cell type signatures
+and estimate the proportions of unknown cell types.
 }
 \details{
-The function calculates and returns the simulations:
-\itemize{
-\item \code{Prediction}: A matrix or data frame containing the estimated cell type proportions for each sample in the bulk RNA-Seq data.
-\item \code{Matrix_prediction}: A matrix or data frame containing the cell type proportions for each sample in the bulk RNA-Seq data, with iteration information.
-\item \code{New_signature}: The refined reference data matrix with unknown components.
-\item \code{Optimal_iteration}: The optimal iteration at which the convergence criteria were met.
-\item \code{performs2plot}: The variation performance between iteration.
-}
-
-This function performs deconvolution of bulk RNA-Seq data using either
-the CSx or DCQ method. It first prepares the data and runs the selected method
-for cell type proportion estimation. The function then calculates error norms,
-performs cross-validation.
-It estimates unknown components using Non-Negative Matrix Factorization (NMF)
-and calculates distances between unknown components and known cell types.
-The function returns the estimated cell type proportions and their associated matrices.
-
-The function performs several steps for semi-supervised deconvolution, including:
-\enumerate{
-\item Running CIBERSORTx or Digital Cell Quantification or others for cell type proportion estimation.
-\item Estimating unknown components using non-negative matrix factorization (NMF).
-}
+The function performs cell type deconvolution using a specified method (e.g.,
+"CSx") followed by optimization using non-negative matrix factorization (NMF).
+The NMF part is performed using the \code{nmf_lbfgsb} function, where the parameters
+for the optimization (e.g., \code{W_prime}, \code{p_prime}, \code{lambda_}, etc.) can be customized.
 }
 \examples{
-if(interactive()){
-simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE,
-nSample = 10, prop = NULL, nGenes = 50, nCellsType = 5)
-cellTypeOut <- sample(1:ncol(simulation$reference), 2)
-refDataIncomplet <- simulation$reference[,-cellTypeOut]
-results <- DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk, methodDeconv = "DCQ")
-print(results)
+\dontrun{
+# Example usage of DICEPRO function
+set.seed(2101)
+data_simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 20, prop = NULL,
+                              nGenes = 50, nCellsType = 30)
+
+result <- DICEPRO(reference = data_simulation$reference,
+                  bulk = data_simulation$bulk,
+                  methodDeconv = "CSx",
+                  W_prime = 0,
+                  p_prime = 0,
+                  lambda_ = 10,
+                  gamma_par = 100,
+                  N_unknownCT = 1)
 }
-}
-\seealso{
-Other functions used within deconvolution: \code{\link{running_method}}, \code{\link{nmf}}.
+
 }

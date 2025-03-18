@@ -1,74 +1,124 @@
-#' NMF with Projected Conjugate Gradient Optimization
+#' NMF with L-BFGS-B Optimization
 #'
-#' Perform non-negative matrix factorization (NMF) using projected conjugate
-#' gradient optimization. Define the NMF function with projected conjugate gradient optimization
+#' Perform non-negative matrix factorization (NMF) using L-BFGS-B optimization. This method uses an iterative approach
+#' to solve a regularized least-squares problem for the factorization of a matrix into non-negative matrices W and H.
+#' It incorporates a regularization term to ensure that the solution meets certain constraints, such as cell type composition.
 #'
-#' @param V Input matrix for factorization.
-#' @param k Number of components. Default is 1
-#' @param W Initial matrix W (optional, defaults to random non-negative values).
-#' @param H Initial matrix H (optional, defaults to random non-negative values).
-#' @return A list containing factorized matrices W and H.
+#' @param r_dataset A list containing the dataset for the factorization, including:
+#'   - `B`: A matrix of size (N_gene x N_sample), the input matrix to factorize (gene expression data).
+#'   - `P_cb`: A matrix of size (N_sample x N_cellsType), cell type proportions for the samples.
+#'   - `W_cb`: A matrix of size (N_gene x N_cellsType), initial matrix W (gene-cell type matrix).
+#' @param W_prime Initial value for W (optional, defaults to 0). It is a scalar.
+#' @param p_prime Initial value for p_cb (optional, defaults to 0). It is a scalar.
+#' @param lambda_ Regularization parameter (optional, defaults to 10). It is a scalar.
+#' @param gamma_par Penalty factor for the sum of cell type proportions (optional, defaults to 100). It is a scalar.
+#' @param N_unknownCT Number of unknown cell types to model (optional, defaults to 1). It is a scalar.
+#' @param con A list of control parameters for the optimization process passed to `optim` (optional).
+#'   - `fnscale`: Scaling factor for the objective function (optional, defaults to 1).
+#'   - `maxit`: Maximum number of iterations (optional, defaults to 5000).
+#'   - `tmax`: Maximum number of function evaluations (optional, defaults to 50).
+#'
+#' @return A list containing:
+#'   - `w`: The optimized matrix W, a vector of length N_gene.
+#'   - `H`: The optimized matrix H (cell type proportions), a matrix of size (N_sample x N_cellsType).
+#'   - `loss`: The final value of the objective function (scalar).
+#'   - `constraint`: The final value of the constraint term (penalty for sum of cell type proportions), a scalar.
+#'
+#' @details This function applies the L-BFGS-B optimization method to solve the NMF problem with a regularized objective
+#'   function. The regularization includes a penalty for the sum of cell type proportions and a scaling factor.
+#'   The optimization minimizes the objective function subject to constraints on the cell type proportions.
 #'
 #' @importFrom stats optim
-#' @importFrom parallel detectCores
 #'
 #' @export
 
-nmf_conjugate_gradient <- function(V, k = 1, W = NULL, H = NULL) {
+nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
+                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 5e3, tmax = 50)) {
 
-  # Initialize W and H with random non-negative values
-  if(is.null(W) || is.null(H)){
-    W <- matrix(runif(nrow(V) * k), nrow = nrow(V), ncol = k)
-    H <- matrix(runif(k * ncol(V)), nrow = k, ncol = ncol(V))
+  B <- as.data.frame(r_dataset$B)
+  p_cb <- as.data.frame(r_dataset$P_cb)
+  W_cb <- as.data.frame(r_dataset$W_cb)
+  N_gene <- nrow(B); N_sample <- ncol(B); N_cellsType <- ncol(W_cb) + N_unknownCT
+
+  p_cb_C <- matrix(p_prime, nrow = N_sample, ncol = N_unknownCT)
+  W_cb_C <- matrix(W_prime, nrow = N_gene, ncol = N_unknownCT)
+  colnames(p_cb_C) <- colnames(W_cb_C) <- paste0("Uknown_", 1:N_unknownCT)
+
+  H <- as.matrix(cbind.data.frame(p_cb, p_cb_C))
+  H <- H / rowSums(H)
+
+  W <- as.matrix(cbind.data.frame(W_cb, W_cb_C))
+
+  residual <- W %*% t(H) - B
+  transformed_residual <- asinh(residual)
+  sigma_par <- sd(as.vector(as.matrix(transformed_residual)))
+  theta <- c(W_cb_C, H, sigma_par)
+
+  lambda_par <- rep(lambda_, N_sample)
+  IterateIndex <- 1
+  listH <- list()
+  all_loss <- c()
+
+  obj_fun <- function(theta) {
+    W[, N_cellsType] <- theta[1:N_gene]
+    H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
+    listH[[IterateIndex]] <<- as.vector(theta[(N_gene + 1):(length(theta) - 1)])
+    sigma_par <- theta[length(theta)]
+    residual <- W %*% t(H) - B
+    obj_term1 <- (1 / (2 * sigma_par^2)) * sum(asinh(residual)^2)
+    obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
+
+    h_H <- rowSums(H) - 1
+    obj_term3 <- lambda_par %*% h_H
+    obj_term4 <- (gamma_par / 2) * sum(h_H^2)
+    obj_value <- obj_term1 + obj_term2
+    penalty <- obj_term3 + obj_term4
+    f_val <- obj_value + penalty
+    all_loss <<- c(all_loss, f_val)
+    IterateIndex <<- IterateIndex + 1
+    return(f_val)
   }
 
-  par_nmf <- function(i){
-    W <- as.matrix(cbind.data.frame(W, unk = 0))
-    H <- as.matrix(cbind.data.frame(H, unk = i))
-    # Flatten matrices for use in optimization
-    theta <- c(W, H)
+  grad_obj_fun <- function(theta) {
+    W[, N_cellsType] <- theta[1:N_gene]
+    H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
+    sigma_par <- theta[length(theta)]
 
-    # Define the objective function and its gradient
-    obj_fun <- function(theta) {
-      W <- matrix(theta[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
-      H <- matrix(theta[(nrow(V) * k + 1):length(theta)], nrow = k, ncol = ncol(V))
+    residual <- as.matrix(W %*% t(H) - B)
 
-      # Calculate Frobenius norm squared
-      obj_value <- sum((W %*% H - V)^2)
+    grad_W <- (1 / sigma_par^2) * (asinh(residual) / sqrt(1 + residual^2)) %*% H
+    grad_H <- t((1 / sigma_par^2) * t(W) %*% (asinh(residual) / sqrt(1 + residual^2)))
 
-      return(obj_value)
-    }
+    h_H <- rowSums(H) - 1
+    grad_H <- grad_H + lambda_par + gamma_par * h_H
 
-    grad_obj_fun <- function(theta) {
-      W <- matrix(theta[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
-      H <- matrix(theta[(nrow(V) * k + 1):length(theta)], nrow = k, ncol = ncol(V))
+    grad_sigma <- (-1 / sigma_par^3) * sum(asinh(residual)^2) + (N_sample * N_gene) / sigma_par
 
-      # Calculate gradients
-      grad_W <- 2 * as.matrix(W %*% H - V) %*% t(H)
-      grad_H <- 2 * t(W) %*% as.matrix(W %*% H - V)
+    grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
 
-      return(c(grad_W, grad_H))
-    }
-
-    # Perform projected conjugate gradient optimization
-    result <- optim(par = theta, fn = obj_fun, gr = grad_obj_fun, method = "L-BFGS-B",
-                    lower = rep(0, length(theta)), control = list(maxit = 1000, trace = FALSE, factr = 1e-8))
-
-    W <- matrix(result$par[1:(nrow(V) * k)], nrow = nrow(V), ncol = k)
-    H <- matrix(result$par[(nrow(V) * k + 1):length(result$par)], nrow = k, ncol = ncol(V))
-
-    n <- length(V)
-    squared_diff <- (V - W%*%H)^2
-    mse <- sum(squared_diff) / n
-    rmse_nmf <- sqrt(mse)
-
-    list(W = W, H = t(H), Error = rmse_nmf)
+    return(grad)
   }
-  cl <-  min(5, detectCores())
-  result_list <- mclapply(seq(0,1,0.25), function(i) {
-    par_nmf(i)
-  }, mc.cores = cl)
 
-  ind <- which.min(lapply(result_list, `[[`, 3))
-  result_list[[ind]]
+  result <- optim(par = theta, fn = obj_fun, gr = grad_obj_fun,
+                  lower = c(rep(0, length(theta) - 1), 1e-6),
+                  upper = c(rep(Inf, N_gene * N_cellsType), rep(1, N_sample * N_cellsType), Inf),
+                  control = con, method = "L-BFGS-B")
+
+  if (is.null(result$par) || !is.finite(result$value)) {
+    return(NULL)
+  }
+
+  theta <- result$par
+  W_opt <- W
+  W_opt[, N_cellsType] <- theta[1:N_gene]
+  H_opt <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
+
+  dimnames(H_opt) <- dimnames(H)
+  h_H <- abs(rowSums(H_opt) - 1)
+  constraints = sum(h_H)
+
+  H <- as.data.frame(H_opt[, 1:(N_cellsType - N_unknownCT)])
+  p_prime <- H_opt[, N_unknownCT]
+  results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value, constraint = 1 - constraints)
+  return(results)
 }

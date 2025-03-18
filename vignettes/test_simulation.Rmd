@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 library(DICEPRO)
 library(ADAPTS)
 library(NMF)
+library(MASS)
 ```
 
 
@@ -59,9 +60,9 @@ corr <- cov2cor(V)
 
 
 ```{r}
-nGenes = 500
+nGenes = 100
 nSample <- 20
-simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, corr = corr,
+simulation <- DICEPRO::simulation(loi = "gauss", scenario = " ", bias = TRUE, corr = corr,
                          nSample = nSample, prop = NULL,
                          nGenes = nGenes, nCellsType = nCellsType)
 
@@ -74,7 +75,7 @@ Let's consider as unknown populations of cells of `10%, 20%, 30%, 40% and 50%`, 
 
 ```{r}
 set.seed(2101)
-percs <- seq(0.1, 0.5, 0.1)
+percs <- 0.3 # seq(0.1, 0.5, 0.1)
 cellTypeOut <- list()
 for (p in percs) {
   num_samples <- round(ncol(reference) * p)
@@ -86,21 +87,11 @@ names(cellTypeOut) <- paste0(as.character(percs * 100), "%")
 
 
 
-# ```{r, message=FALSE}
-# set.seed(2101)
-# k <- 5
-# nIteration <- 15
-# listAllResult <- listErrorPred <- list()
-# 
-# for (i in names(cellTypeOut)) {
-#  refDataIncomplet <- reference[,-cellTypeOut[[i]]]
-#  listAllResult[[i]] <- DICEPRO(reference = refDataIncomplet,
-#                                  bulk = simulation$bulk,
-#                                  nIteration = nIteration,
-#                                  methodDeconv = "DCQ",
-#                                  cibersortx_email = "ba.kalidou@u-bordeaux.fr",
-#                                  cibersortx_token = "64e6182579ab593171f815a48875e963")
-#  }
-# 
-# save(listAllResult, file = "ResultsDCQ.rda")
-# ```
+```{r, message=FALSE}
+set.seed(2101)
+refDataIncomplet <- reference[,-cellTypeOut$`30%`]
+
+result <- DICEPRO::DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk, methodDeconv = "DCQ", W_prime = 0, p_prime = 0)
+result
+```
+
