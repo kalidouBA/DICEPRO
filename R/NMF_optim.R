@@ -35,9 +35,9 @@
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
                        N_unknownCT = 1, con = list(fnscale = 1, maxit = 5e3, tmax = 50)) {
 
-  B <- as.data.frame(r_dataset$B)
-  p_cb <- as.data.frame(r_dataset$P_cb)
-  W_cb <- as.data.frame(r_dataset$W_cb)
+  B <- r_dataset$B
+  p_cb <- r_dataset$P_cb
+  W_cb <- r_dataset$W_cb
   N_gene <- nrow(B); N_sample <- ncol(B); N_cellsType <- ncol(W_cb) + N_unknownCT
 
   p_cb_C <- matrix(p_prime, nrow = N_sample, ncol = N_unknownCT)
@@ -85,14 +85,14 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     sigma_par <- theta[length(theta)]
 
     residual <- as.matrix(W %*% t(H) - B)
-
-    grad_W <- (1 / sigma_par^2) * (asinh(residual) / sqrt(1 + residual^2)) %*% H
-    grad_H <- t((1 / sigma_par^2) * t(W) %*% (asinh(residual) / sqrt(1 + residual^2)))
+    residual_asinh <- asinh(residual)
+    grad_W <- (1 / sigma_par^2) * (residual_asinh / sqrt(1 + residual^2)) %*% H
+    grad_H <- t((1 / sigma_par^2) * t(W) %*% (residual_asinh / sqrt(1 + residual^2)))
 
     h_H <- rowSums(H) - 1
     grad_H <- grad_H + lambda_par + gamma_par * h_H
 
-    grad_sigma <- (-1 / sigma_par^3) * sum(asinh(residual)^2) + (N_sample * N_gene) / sigma_par
+    grad_sigma <- (-1 / sigma_par^3) * sum(residual_asinh^2) + (N_sample * N_gene) / sigma_par
 
     grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
 
