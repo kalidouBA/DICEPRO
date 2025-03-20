@@ -60,7 +60,7 @@ corr <- cov2cor(V)
 
 
 ```{r}
-nGenes = 100
+nGenes <- 100
 nSample <- 20
 simulation <- DICEPRO::simulation(loi = "gauss", scenario = " ", bias = TRUE, corr = corr,
                          nSample = nSample, prop = NULL,
@@ -91,7 +91,7 @@ names(cellTypeOut) <- paste0(as.character(percs * 100), "%")
 set.seed(2101)
 refDataIncomplet <- reference[,-cellTypeOut$`30%`]
 
-result <- DICEPRO::DICEPRO(reference = refDataIncomplet, bulk = simulation$bulk, methodDeconv = "DCQ", W_prime = 0, p_prime = 0)
+result <- DICEPRO::DICEPRO(reference = refDataIncomplet, bulk = as.matrix(simulation$bulk), methodDeconv = "DCQ", W_prime = 0, p_prime = 0)
 result
 ```
 

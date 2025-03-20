@@ -5,8 +5,25 @@ Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
-Imports: matrixStats, NMF, dplyr, rBeta2009, reshape2, scater, ggplot2, patchwork,
-         Metrics, SimMultiCorrData, MASS, ComICS, DeconRNASeq, FARDEEP, parallel, pcaMethods, clusterGeneration
+Imports: 
+    matrixStats,
+    NMF,
+    dplyr,
+    rBeta2009,
+    reshape2,
+    scater,
+    ggplot2,
+    patchwork,
+    Metrics,
+    SimMultiCorrData,
+    MASS,
+    ComICS,
+    DeconRNASeq,
+    FARDEEP,
+    parallel,
+    pcaMethods,
+    clusterGeneration,
+    Rcpp
 Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
             It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
             factorization (NMF) for to solve incomplete reference matrix problems..
@@ -23,3 +40,6 @@ Suggests:
 VignetteBuilder: knitr
 LazyData: true
 Config/testthat/edition: 3
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo

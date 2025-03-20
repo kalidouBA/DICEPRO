@@ -58,12 +58,3 @@ This function applies the L-BFGS-B optimization method to solve the NMF problem 
 function. The regularization includes a penalty for the sum of cell type proportions and a scaling factor.
 The optimization minimizes the objective function subject to constraints on the cell type proportions.
 }
-\examples{
-\dontrun{
-  # Example usage of nmf_lbfgsb
-  result <- nmf_lbfgsb(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100, N_unknownCT = 1)
-  print(result$w)
-  print(result$H)
-}
-
-}

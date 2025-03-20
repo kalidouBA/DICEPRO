@@ -34,6 +34,11 @@
 #'
 #' @importFrom stats optim
 #' @importFrom parallel detectCores
+#' @importFrom Rcpp sourceCpp
+#'
+## usethis namespace: start
+#' @useDynLib DICEPRO, .registration = TRUE
+## usethis namespace: end
 #'
 #' @examples
 #' \dontrun{
@@ -65,8 +70,22 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   cellTypeName <- colnames(reference)
   geneIntersect <- intersect(rownames(reference), rownames(bulk))
 
-  reference <- apply(reference[geneIntersect, ], 2, as.numeric)
-  bulk <- as.data.frame(apply(bulk[geneIntersect, ], 2, as.numeric))
+  if(is.matrix(reference)){
+    stopifnot(is.numeric(reference))
+    reference <- reference[geneIntersect, ]
+  }else{
+    reference <- apply(reference[geneIntersect, ], 2, as.numeric)
+    reference <- as.matrix(reference)
+  }
+
+  if(is.matrix(bulk)){
+    stopifnot(is.numeric(bulk))
+    bulk <- bulk[geneIntersect, ]
+  }else{
+    bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
+    bulk <- as.matrix(bulk)
+  }
+
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
   out_Dec <- t(running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token))
