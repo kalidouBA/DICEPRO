@@ -22,7 +22,8 @@ Imports:
     parallel,
     pcaMethods,
     clusterGeneration,
-    Rcpp
+    Rcpp,
+    RcppEigen
 Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
             It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
             factorization (NMF) for to solve incomplete reference matrix problems..
