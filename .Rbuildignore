@@ -2,3 +2,5 @@
 ^\.Rproj\.user$
 ^README.Rmd
 ^\.github
+dataSave.rds
+NMF_optim_Lag.R

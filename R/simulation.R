@@ -11,6 +11,7 @@
 #' @export
 #'
 #' @importFrom rBeta2009 rdirichlet
+#' @importFrom stats rnorm runif aggregate
 #'
 #' @return a matrix representing proportions of different cell types in samples
 #'
@@ -86,6 +87,7 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @importFrom clusterGeneration rcorrmatrix
 #' @importFrom SimMultiCorrData calc_theory
 #' @importFrom MASS mvrnorm
+#' @importFrom stats runif rbinom
 #' @import dplyr
 #'
 #' @return A reference matrix with cell types as columns and genes as rows.

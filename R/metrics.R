@@ -11,6 +11,7 @@
 #'
 #' @importFrom Metrics rmse
 #' @importFrom reshape2 melt
+#' @importFrom stats lm
 #'
 #'
 #' @return A data frame containing performance metrics for each variable in the comparison.

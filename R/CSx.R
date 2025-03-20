@@ -8,6 +8,8 @@
 #' @param cibersortx_email The CIBERSORTx account email.
 #' @param cibersortx_token The CIBERSORTx account token.
 #'
+#' @importFrom utils read.delim2 write.table
+#'
 #' @return A matrix containing the estimated cell type proportions.
 #'
 #' @details The function performs the following steps:

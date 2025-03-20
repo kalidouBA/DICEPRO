@@ -29,6 +29,7 @@
 #'   The optimization minimizes the objective function subject to constraints on the cell type proportions.
 #'
 #' @importFrom stats optim
+#' @importFrom stats sd
 #'
 #' @export
 

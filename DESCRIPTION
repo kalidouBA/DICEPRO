@@ -7,7 +7,6 @@ Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
 Imports: 
     matrixStats,
-    NMF,
     dplyr,
     rBeta2009,
     reshape2,

@@ -60,8 +60,8 @@ corr <- cov2cor(V)
 
 
 ```{r}
-nGenes <- 100
-nSample <- 20
+nGenes <- 1000
+nSample <- 200
 simulation <- DICEPRO::simulation(loi = "gauss", scenario = " ", bias = TRUE, corr = corr,
                          nSample = nSample, prop = NULL,
                          nGenes = nGenes, nCellsType = nCellsType)

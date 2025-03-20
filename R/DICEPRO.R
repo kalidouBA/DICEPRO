@@ -35,6 +35,7 @@
 #' @importFrom stats optim
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
+#' @importFrom stats rpois runif rnorm
 #'
 ## usethis namespace: start
 #' @useDynLib DICEPRO, .registration = TRUE

@@ -10,7 +10,6 @@ using namespace Rcpp;
 //   http://adv-r.had.co.nz/Rcpp.html
 //   http://gallery.rcpp.org/
 //
-//' @export
 // [[Rcpp::export]]
 double compute_obj_term1_arma(const arma::mat& W,
                               const arma::mat& H,
