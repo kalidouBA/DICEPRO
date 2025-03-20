@@ -35,7 +35,8 @@ Suggests:
     knitr,
     rmarkdown,
     ADAPTS,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    NMF
 VignetteBuilder: knitr
 LazyData: true
 Config/testthat/edition: 3
