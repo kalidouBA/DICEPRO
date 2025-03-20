@@ -38,6 +38,7 @@
 #' @importFrom stats rpois runif rnorm
 #'
 ## usethis namespace: start
+#' @import RcppEigen
 #' @useDynLib DICEPRO, .registration = TRUE
 ## usethis namespace: end
 #'

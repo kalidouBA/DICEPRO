@@ -65,7 +65,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     listH[[IterateIndex]] <<- theta[(N_gene + 1):(length(theta) - 1)]
     sigma_par <- theta[length(theta)]
-    obj_term1 <- compute_obj_term1_arma(W,H,as.matrix(B),sigma_par)
+    obj_term1 <- compute_obj_term1_eigen_fast(W,H,as.matrix(B),sigma_par)
     obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
 
     h_H <- rowSums(H) - 1
@@ -84,20 +84,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     sigma_par <- theta[length(theta)]
 
-    residual <- tcrossprod(W,H) - B
-
-    asr <- asinh(residual)
-    temp <- asr / sqrt(1 + residual^2) / sigma_par^2
-    grad_W <- temp %*% H
-    grad_H <- crossprod(temp, W)
-
-    h_H <- rowSums(H) - 1
-    grad_H <- grad_H + lambda_par + gamma_par * h_H
-
-    grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
-
-    grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
-
+    grad <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
     return(grad)
   }
 
