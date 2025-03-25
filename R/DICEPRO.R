@@ -15,27 +15,33 @@
 #' @param cibersortx_token An optional token for the CIBERSORTx web-based tool.
 #' @param W_prime A numeric value for the initial matrix W for unknown cell types,
 #'                default is 0.
-#' @param p_prime A numeric value for the initial proportions of unknown cell types,
-#'                default is 0.
-#' @param lambda_ A numeric value for the regularization parameter, default is 10.
-#' @param gamma_par A numeric value for the penalty parameter, default is 100.
+#' @param bulkName A string indicating the name of the bulk samples dataset.
+#' @param refName A string indicating the name of the reference dataset.
+#' @param hp_max_evals A numeric value indicating the maximum number of evaluations for optimization.
+#'                     Default is 100.
 #' @param N_unknownCT A numeric value for the number of unknown cell types, default is 1.
 #'
 #' @return A list containing the following components:
-#' \item{Prediction}{The estimated cell type proportions for the bulk samples, excluding
+#' \item{Prediction}{A matrix of the estimated cell type proportions for the bulk samples, excluding
 #'                  the unknown cell type.}
-#' \item{New_signature}{The optimized gene-cell type matrix for the cell types, including
+#' \item{New_signature}{A matrix of the optimized gene-cell type matrix for the cell types, including
 #'                     the unknown cell type.}
+#' \item{W_prime}{The optimized matrix W for the unknown cell types.}
+#' \item{P_prime}{The optimized proportions for the unknown cell types.}
+#' \item{constraint}{The final constraint value from the optimization process.}
 #'
 #' @details The function performs cell type deconvolution using a specified method (e.g.,
 #'          "CSx") followed by optimization using non-negative matrix factorization (NMF).
 #'          The NMF part is performed using the `nmf_lbfgsb` function, where the parameters
 #'          for the optimization (e.g., `W_prime`, `p_prime`, `lambda_`, etc.) can be customized.
+#'          The optimization process is executed via a Python script using `reticulate` for
+#'          interfacing with Python.
 #'
 #' @importFrom stats optim
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rpois runif rnorm
+#' @importFrom reticulate import_from_path
 #'
 ## usethis namespace: start
 #' @import RcppEigen
@@ -53,16 +59,16 @@
 #'                   bulk = data_simulation$bulk,
 #'                   methodDeconv = "CSx",
 #'                   W_prime = 0,
-#'                   p_prime = 0,
-#'                   lambda_ = 10,
-#'                   gamma_par = 100,
+#'                   bulkName = "Bulk_Sample",
+#'                   refName = "Reference_Data",
+#'                   hp_max_evals = 100,
 #'                   N_unknownCT = 1)
 #' }
 #'
 #' @export
 
 DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL,
-                    W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100, N_unknownCT = 1) {
+                    W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
 
@@ -91,17 +97,32 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
   out_Dec <- t(running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token))
-  k_CT <- ncol(reference) + 1
 
-  res <- nmf_lbfgsb(r_dataset = list(B = bulk, P_cb = out_Dec, W_cb = reference),
-                    W_prime = W_prime, p_prime = p_prime, lambda_ = lambda_,
-                    gamma_par = gamma_par, N_unknownCT = N_unknownCT)
+  # Python-based optimization part
+  script_path <- system.file("python/optimisation.py", package = "DICEPRO")
+  optimisation <- import_from_path("optimisation", path = dirname(script_path))
 
-  out_Dec_Update <- res$H
-  dimnames(out_Dec_Update) <- dimnames(out_Dec)
+  bulk <- convert_matrix_to_df(bulk)
+  print(dimnames(bulk))
+  reference <- convert_matrix_to_df(reference)
+  print(dimnames(reference))
+  out_Dec <- convert_matrix_to_df(out_Dec)
+  print(dimnames(out_Dec))
 
-  results <- list("Prediction" = out_Dec_Update, "W_prime" = res$w, "P_prime" = res$p_prime, "constraint" = res$constraint)
+  bulk_py <- r_to_py(bulk)
+  W_cb_py <- r_to_py(reference)
+  out_Dec_cb_py <- r_to_py(out_Dec)
 
-  class(results) <- "DICEPRO"
-  return(results)
+  optimisation$run_experiment(bulk_py, W_cb_py, out_Dec_cb_py, bulkName, refName, hp_max_evals)
+  pathDir <- paste0("dataTestNMFOptHyper/", bulkName, "_", refName)
+
+  best_hyperOpt <- paste0(pathDir, "/best_hyperparameters_", bulkName, "_", refName, ".json")
+  r_dataset <- list('B' = bulk, "P_cb" = out_Dec, "W_cb" = reference)
+  if(file.exists(best_hyperOpt)){
+    bestHP <- fromJSON(best_hyperOpt)
+    resultDicepro <- nmf_lbfgsb(r_dataset, W_prime, p_prime = bestHP$p_prime, lambda_ = bestHP$lambda_, gamma_par = bestHP$gamma)
+    results <- list("Prediction" = out_Dec_Update, "W_prime" = resultDicepro$w, "P_prime" = resultDicepro$p_prime, "constraint" = resultDicepro$constraint)
+    class(results) <- "DICEPRO"
+    return(results)
+  }
 }

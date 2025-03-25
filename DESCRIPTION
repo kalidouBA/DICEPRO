@@ -5,6 +5,40 @@ Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
+Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
+            It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
+            factorization (NMF) for to solve incomplete reference matrix problems..
+Config/reticulate:
+    list(
+        packages = list(
+            list(package = "numpy"),
+            list(package = "scikit-learn"),
+            list(package = "scipy"),
+            list(package = "pandas"),
+            list(package = "rpy2"),
+            list(package = "matplotlib"),
+            list(package = "lightgbm"),
+            list(package = "seaborn"),
+            list(package = "hyperopt")
+        )
+    ) 
+License: GPL (>= 3)
+Depends: R (>= 3.6)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown,
+    ADAPTS,
+    testthat (>= 3.0.0),
+    NMF
+VignetteBuilder: knitr
+LazyData: true
+Config/testthat/edition: 3
+LinkingTo: 
+    Rcpp,
+    RcppEigen
 Imports: 
     matrixStats,
     dplyr,
@@ -23,24 +57,5 @@ Imports:
     pcaMethods,
     clusterGeneration,
     Rcpp,
-    RcppEigen
-Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
-            It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
-            factorization (NMF) for to solve incomplete reference matrix problems..
-License: GPL (>= 3)
-Depends: R (>= 3.6)
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Suggests: 
-    knitr,
-    rmarkdown,
-    ADAPTS,
-    testthat (>= 3.0.0),
-    NMF
-VignetteBuilder: knitr
-LazyData: true
-Config/testthat/edition: 3
-LinkingTo: 
-    Rcpp,
-    RcppEigen
+    RcppEigen,
+    reticulate

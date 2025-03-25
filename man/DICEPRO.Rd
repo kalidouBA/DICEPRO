@@ -11,9 +11,9 @@ DICEPRO(
   cibersortx_email = NULL,
   cibersortx_token = NULL,
   W_prime = 0,
-  p_prime = 0,
-  lambda_ = 10,
-  gamma_par = 100,
+  bulkName = "",
+  refName = "",
+  hp_max_evals = 100,
   N_unknownCT = 1
 )
 }
@@ -34,21 +34,24 @@ Options include: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".}
 \item{W_prime}{A numeric value for the initial matrix W for unknown cell types,
 default is 0.}
 
-\item{p_prime}{A numeric value for the initial proportions of unknown cell types,
-default is 0.}
+\item{bulkName}{A string indicating the name of the bulk samples dataset.}
 
-\item{lambda_}{A numeric value for the regularization parameter, default is 10.}
+\item{refName}{A string indicating the name of the reference dataset.}
 
-\item{gamma_par}{A numeric value for the penalty parameter, default is 100.}
+\item{hp_max_evals}{A numeric value indicating the maximum number of evaluations for optimization.
+Default is 100.}
 
 \item{N_unknownCT}{A numeric value for the number of unknown cell types, default is 1.}
 }
 \value{
 A list containing the following components:
-\item{Prediction}{The estimated cell type proportions for the bulk samples, excluding
+\item{Prediction}{A matrix of the estimated cell type proportions for the bulk samples, excluding
 the unknown cell type.}
-\item{New_signature}{The optimized gene-cell type matrix for the cell types, including
+\item{New_signature}{A matrix of the optimized gene-cell type matrix for the cell types, including
 the unknown cell type.}
+\item{W_prime}{The optimized matrix W for the unknown cell types.}
+\item{P_prime}{The optimized proportions for the unknown cell types.}
+\item{constraint}{The final constraint value from the optimization process.}
 }
 \description{
 This function performs cell type deconvolution of bulk gene expression data using
@@ -61,6 +64,8 @@ The function performs cell type deconvolution using a specified method (e.g.,
 "CSx") followed by optimization using non-negative matrix factorization (NMF).
 The NMF part is performed using the \code{nmf_lbfgsb} function, where the parameters
 for the optimization (e.g., \code{W_prime}, \code{p_prime}, \code{lambda_}, etc.) can be customized.
+The optimization process is executed via a Python script using \code{reticulate} for
+interfacing with Python.
 }
 \examples{
 \dontrun{
@@ -73,9 +78,9 @@ result <- DICEPRO(reference = data_simulation$reference,
                   bulk = data_simulation$bulk,
                   methodDeconv = "CSx",
                   W_prime = 0,
-                  p_prime = 0,
-                  lambda_ = 10,
-                  gamma_par = 100,
+                  bulkName = "Bulk_Sample",
+                  refName = "Reference_Data",
+                  hp_max_evals = 100,
                   N_unknownCT = 1)
 }
 
