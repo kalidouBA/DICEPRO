@@ -17,9 +17,3 @@ If the input is not a matrix, it is returned unchanged.
 This function converts a given matrix into a data frame while preserving its row names and column names.
 If the input is not a matrix, it is returned as is.
 }
-\examples{
-mat <- matrix(1:9, nrow = 3, dimnames = list(c("A", "B", "C"), c("X", "Y", "Z")))
-df <- convert_matrix_to_df(mat)
-print(df)
-
-}
