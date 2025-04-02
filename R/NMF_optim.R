@@ -58,8 +58,6 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
   lambda_par <- rep(lambda_, N_sample)
   IterateIndex <- 1
   listH <- list()
-  all_loss <- list()
-
   obj_fun <- function(theta) {
     W[, N_cellsType] <- theta[1:N_gene]
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
@@ -75,8 +73,6 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     obj_value <- obj_term1 + obj_term2
     penalty <- obj_term3 + obj_term4
     f_val <- obj_value + penalty
-    all_loss <<- c(all_loss, f_val)
-    all_constrainte <<- c(all_constrainte, abs(h_H))
     IterateIndex <<- IterateIndex + 1
     return(f_val)
   }
