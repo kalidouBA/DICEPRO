@@ -42,7 +42,7 @@
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rpois runif rnorm
-#' @importFrom reticulate import_from_path
+#' @importFrom reticulate import_from_path, r_to_py
 #'
 ## usethis namespace: start
 #' @import RcppEigen

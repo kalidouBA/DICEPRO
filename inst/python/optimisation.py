@@ -74,7 +74,7 @@ def run_experiment(dataset, bulkName="", refName="", hp_max_evals=100, algo_sele
         "seed": 4,
         "hp_space": {
             "lambda_": ["loguniform", 1, 1e+5],
-            "gamma": ["loguniform", 1, 1e+6],
+            "gamma": ["loguniform", 1, 1e+8],
             "p_prime": ["loguniform", 1e-1, 1],
         },
     }
