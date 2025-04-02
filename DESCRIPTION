@@ -19,7 +19,8 @@ Config/reticulate:
             list(package = "matplotlib"),
             list(package = "lightgbm"),
             list(package = "seaborn"),
-            list(package = "hyperopt")
+            list(package = "hyperopt"),
+            list(package = "reservoirpy")
         )
     ) 
 License: GPL (>= 3)

@@ -14,7 +14,8 @@ DICEPRO(
   bulkName = "",
   refName = "",
   hp_max_evals = 100,
-  N_unknownCT = 1
+  N_unknownCT = 1,
+  algo_select = "tpe"
 )
 }
 \arguments{
@@ -42,6 +43,8 @@ default is 0.}
 Default is 100.}
 
 \item{N_unknownCT}{A numeric value for the number of unknown cell types, default is 1.}
+
+\item{algo_select}{(character) Le choix de l'algorithme d'optimisation. Options disponibles : \code{"random"} ou \code{"tpe"}. Par défaut, \code{"tpe"}.}
 }
 \value{
 A list containing the following components:

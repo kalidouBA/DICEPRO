@@ -35,8 +35,7 @@
 
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
                        N_unknownCT = 1, con = list(fnscale = 1, maxit = 5e3, tmax = 50)) {
-
-  B <- r_dataset$B
+  B <- as.matrix(r_dataset$B)
   p_cb <- r_dataset$P_cb
   W_cb <- r_dataset$W_cb
   N_gene <- nrow(B); N_sample <- ncol(B); N_cellsType <- ncol(W_cb) + N_unknownCT
@@ -45,12 +44,13 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
   W_cb_C <- matrix(W_prime, nrow = N_gene, ncol = N_unknownCT)
   colnames(p_cb_C) <- colnames(W_cb_C) <- paste0("Uknown_", 1:N_unknownCT)
 
-  H <- cbind(p_cb, p_cb_C)
+  H <- as.matrix(cbind(p_cb, p_cb_C))
   H <- H / rowSums(H)
 
-  W <- cbind(W_cb, W_cb_C)
+  W <- as.matrix(cbind(W_cb, W_cb_C))
 
   residuals_vec <- as.vector(tcrossprod(W,H) - B)
+
   transformed_residuals_vec <- asinh(residuals_vec)
   sigma_par <- sd(transformed_residuals_vec)
   theta <- c(W_cb_C, H, sigma_par)
@@ -63,9 +63,10 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
   obj_fun <- function(theta) {
     W[, N_cellsType] <- theta[1:N_gene]
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
-    listH[[IterateIndex]] <<- theta[(N_gene + 1):(length(theta) - 1)]
+    listH[[IterateIndex]] <<- as.vector(theta[(N_gene + 1):(length(theta) - 1)])
     sigma_par <- theta[length(theta)]
-    obj_term1 <- compute_obj_term1_eigen_fast(W,H,as.matrix(B),sigma_par)
+    residual <- W %*% t(H) - B
+    obj_term1 <- (1 / (2 * sigma_par^2)) * sum(asinh(residual)^2)
     obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
 
     h_H <- rowSums(H) - 1
@@ -74,7 +75,8 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     obj_value <- obj_term1 + obj_term2
     penalty <- obj_term3 + obj_term4
     f_val <- obj_value + penalty
-    all_loss[[IterateIndex]] <<- f_val
+    all_loss <<- c(all_loss, f_val)
+    all_constrainte <<- c(all_constrainte, abs(h_H))
     IterateIndex <<- IterateIndex + 1
     return(f_val)
   }
@@ -84,7 +86,18 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     sigma_par <- theta[length(theta)]
 
-    grad <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
+    residual <- as.matrix(W %*% t(H) - B)
+
+    grad_W <- (1 / sigma_par^2) * (asinh(residual) / sqrt(1 + residual^2)) %*% H
+    grad_H <- t((1 / sigma_par^2) * t(W) %*% (asinh(residual) / sqrt(1 + residual^2)))
+
+    h_H <- rowSums(H) - 1
+    grad_H <- grad_H + lambda_par + gamma_par * h_H
+
+    grad_sigma <- (-1 / sigma_par^3) * sum(asinh(residual)^2) + (N_sample * N_gene) / sigma_par
+
+    grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
+
     return(grad)
   }
 
