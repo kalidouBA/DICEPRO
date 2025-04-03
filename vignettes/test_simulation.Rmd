@@ -87,11 +87,11 @@ names(cellTypeOut) <- paste0(as.character(percs * 100), "%")
 
 
 
-<!-- ```{r, message=FALSE} -->
-<!-- set.seed(2101) -->
-<!-- refDataIncomplet <- reference[,-cellTypeOut$`30%`] -->
+```{r, message=FALSE}
+set.seed(2101)
+refDataIncomplet <- reference[,-cellTypeOut$`30%`]
 
-<!-- result <- DICEPRO(reference = refDataIncomplet, bulk = as.matrix(simulation$bulk), methodDeconv = "DCQ", W_prime = 0, p_prime = 0) -->
-<!-- result -->
-<!-- ``` -->
+result <- DICEPRO(reference = refDataIncomplet, bulk = as.matrix(simulation$bulk), methodDeconv = "DCQ", W_prime = 0, p_prime = 0, gamma_par = 10^12)
+result
+```
 

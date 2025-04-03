@@ -4,3 +4,4 @@
 ^\.github
 dataSave.rds
 NMF_optim_Lag.R
+*test_simulation.Rmd$
