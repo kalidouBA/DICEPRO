@@ -15,7 +15,8 @@ DICEPRO(
   refName = "",
   hp_max_evals = 100,
   N_unknownCT = 1,
-  algo_select = "tpe"
+  algo_select = "tpe",
+  output_path = NULL
 )
 }
 \arguments{

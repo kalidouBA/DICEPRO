@@ -1,0 +1,57 @@
+---
+title: "real_dataset"
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+```{r setup}
+library(DICEPRO)
+library(ADAPTS)
+library(NMF)
+library(MASS)
+```
+
+
+```{r load_data bulk}
+mixDatasetName <- "CellMixtures"
+file_path <- system.file("extdata", "mixing", paste0(mixDatasetName,".rda"), package = "DICEPRO")
+load(file_path)
+loaded_objects <- ls()
+mixDataset <- get(loaded_objects[1])
+rownames(mixDataset) <- mixDataset[,1]
+mixDataset <- mixDataset[,-1]
+head(mixDataset)
+```
+
+```{r load_data refernces}
+refDatasetName <- "10XImmune"
+file_path <- system.file("extdata", "references", paste0(refDatasetName,".rda"), package = "DICEPRO")
+load(file_path)
+loaded_objects <- ls()
+refDataset <- get(loaded_objects[1])
+rownames(refDataset) <- refDataset[,1]
+refDataset <- refDataset[,-1]
+head(refDataset)
+reference = refDataset
+bulk = mixDataset
+methodDeconv = "DCQ"
+refName = "10XImmune"
+bulkName = "CellMixtures"
+
+
+```
+
+
+```{r run DICEPRO}
+DICEPRO::DICEPRO(reference = refDataset, bulk = mixDataset, methodDeconv = "DCQ", refName = "10XImmune", bulkName = "CellMixtures")
+```
+
+
+

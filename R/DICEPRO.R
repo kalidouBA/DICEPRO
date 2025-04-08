@@ -69,7 +69,8 @@
 #' @export
 
 DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL,
-                    W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "tpe") {
+                    W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "tpe",
+                    output_path = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
 
@@ -84,7 +85,6 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
     reference <- reference[geneIntersect, ]
   }else{
     reference <- apply(reference[geneIntersect, ], 2, as.numeric)
-    reference <- as.matrix(reference)
   }
 
   if(is.matrix(bulk)){
@@ -92,22 +92,28 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
     bulk <- bulk[geneIntersect, ]
   }else{
     bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
-    bulk <- as.matrix(bulk)
   }
 
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
   out_Dec <- t(running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token))
 
-  bulk_py <- r_to_py(bulk)
-  W_cb_py <- r_to_py(reference)
-  out_Dec_cb_py <- r_to_py(out_Dec)
+  bulk_df <- as.data.frame(bulk)
+  reference_df <- as.data.frame(reference)
+  out_Dec_df <- as.data.frame(out_Dec)
+  bulk_py <- reticulate::r_to_py(bulk_df)
+  W_cb_py <- reticulate::r_to_py(reference_df)
+  out_Dec_cb_py <- reticulate::r_to_py(out_Dec_df)
 
   dataset <- list('B' = bulk_py, 'W' = W_cb_py, 'P' = out_Dec_cb_py)
 
-  # Python-based optimization part
   script_path <- system.file("python/optimisation.py", package = "DICEPRO")
-  optimisation <- import_from_path("optimisation", path = dirname(script_path))
+  suppressWarnings({
+    optimisation <- reticulate::import_from_path("optimisation", path = dirname(script_path))
+  })
 
-  optimisation$run_experiment(dataset, bulkName, refName, 20, 'tpe')
+  if (is.null(output_path))
+    output_base_dir <- getwd()
+
+  optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_base_dir)
 }

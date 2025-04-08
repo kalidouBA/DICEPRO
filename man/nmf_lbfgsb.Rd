@@ -11,7 +11,7 @@ nmf_lbfgsb(
   lambda_ = 10,
   gamma_par = 100,
   N_unknownCT = 1,
-  con = list(fnscale = 1, maxit = 5000, tmax = 50)
+  con = list(fnscale = 1, maxit = 500, tmax = 50)
 )
 }
 \arguments{
