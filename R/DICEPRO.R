@@ -21,6 +21,8 @@
 #'                     Default is 100.
 #' @param N_unknownCT A numeric value for the number of unknown cell types, default is 1.
 #' @param algo_select (character) Le choix de l'algorithme d'optimisation. Options disponibles : `"random"` ou `"tpe"`. Par défaut, `"tpe"`.
+#' @param output_path Optional. A file path (character) to save the output results.
+#'                    If NULL, results are written to the current working directory (`getwd()`).
 #'
 #' @return A list containing the following components:
 #' \item{Prediction}{A matrix of the estimated cell type proportions for the bulk samples, excluding
@@ -67,6 +69,7 @@
 #' }
 #'
 #' @export
+
 
 DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL,
                     W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "tpe",

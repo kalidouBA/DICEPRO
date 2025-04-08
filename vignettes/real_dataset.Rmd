@@ -49,9 +49,9 @@ bulkName = "CellMixtures"
 ```
 
 
-# ```{r run DICEPRO}
-# DICEPRO::DICEPRO(reference = refDataset, bulk = mixDataset, methodDeconv = "DCQ", refName = "10XImmune", bulkName = "CellMixtures", output_path = getwd())
-# ```
+```{r run DICEPRO}
+DICEPRO::DICEPRO(reference = refDataset, bulk = mixDataset, methodDeconv = "DCQ", refName = "10XImmune", bulkName = "CellMixtures", output_path = getwd())
+```
 
 
 

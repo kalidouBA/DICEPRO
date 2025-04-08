@@ -46,6 +46,9 @@ Default is 100.}
 \item{N_unknownCT}{A numeric value for the number of unknown cell types, default is 1.}
 
 \item{algo_select}{(character) Le choix de l'algorithme d'optimisation. Options disponibles : \code{"random"} ou \code{"tpe"}. Par défaut, \code{"tpe"}.}
+
+\item{output_path}{Optional. A file path (character) to save the output results.
+If NULL, results are written to the current working directory (\code{getwd()}).}
 }
 \value{
 A list containing the following components:
