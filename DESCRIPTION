@@ -7,22 +7,7 @@ Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "boris.hejblum@u-bordeaux.fr"))
 Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
             It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
-            factorization (NMF) for to solve incomplete reference matrix problems..
-Config/reticulate:
-    list(
-        packages = list(
-            list(package = "numpy"),
-            list(package = "scikit-learn"),
-            list(package = "scipy"),
-            list(package = "pandas"),
-            list(package = "rpy2"),
-            list(package = "matplotlib"),
-            list(package = "lightgbm"),
-            list(package = "seaborn"),
-            list(package = "hyperopt"),
-            list(package = "reservoirpy")
-        )
-    ) 
+            factorization (NMF) for to solve incomplete reference matrix problems.
 License: GPL (>= 3)
 Depends: R (>= 3.6)
 Encoding: UTF-8
