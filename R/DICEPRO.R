@@ -104,6 +104,9 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   bulk_df <- as.data.frame(bulk)
   reference_df <- as.data.frame(reference)
   out_Dec_df <- as.data.frame(out_Dec)
+
+  #nmf_lbfgsb(list(B = bulk_df, P_cb = out_Dec_df, W_cb = reference_df), lambda_ = 17.80878, gamma_par = 1.686415, p_prime = 0.1483778, W_prime = 0)
+
   bulk_py <- reticulate::r_to_py(bulk_df)
   W_cb_py <- reticulate::r_to_py(reference_df)
   out_Dec_cb_py <- reticulate::r_to_py(out_Dec_df)
