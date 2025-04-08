@@ -8,13 +8,12 @@
 #'
 #' @details This function uses the ggplot2 package to create a heatmap. It plots cell abundances across iterations and cell types, with colors representing the abundance levels.
 #'
-#' @seealso Other functions for data visualization: \code{\link{ggplot}}, \code{\link{geom_raster}}.
+#' @seealso Other functions for data visualization: \code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_raster}}.
 #'
 #' @export
 #'
 #' @importFrom reshape2 melt
 #' @import ggplot2
-
 heatmap_abundances <- function(res2plot){
   Iterate <- Cell_Type <- Abundances <- NULL
   data2plot <- reshape2::melt(res2plot, id.vars = "Iterate")
@@ -49,18 +48,20 @@ heatmap_abundances <- function(res2plot){
   return(p)
 }
 
-#' Create an Error/performance Plot
+
+#' Create an Error/Performance Plot
 #'
-#' This function generates an metric plot to visualize metric values between folds across different iterations.
+#' This function generates a metric plot to visualize metric values between folds across different iterations.
 #'
-#' @param perf2plot A data frame containing the metric values to be plotted, including Iterate, and metric
+#' @param perf2plot A data frame containing the metric values to be plotted, including `Iterate`, and `metric`.
 #'
-#' @return An metric plot showing the mean metric values with confidence intervals.
+#' @return A metric plot showing the mean metric values with confidence intervals.
 #'
 #' @details This function calculates the mean and confidence intervals of metric values between folds and creates a line plot with shaded confidence intervals.
 #' It is useful for visualizing the variation in metric across iterations.
 #'
-#' @seealso Other functions for data visualization: \code{\link{ggplot}}, \code{\link{geom_line}}, \code{\link{geom_ribbon}}, \code{\link{facet_wrap}}.
+#' @seealso Other functions for data visualization:
+#' \code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_line}}, \code{\link[ggplot2]{geom_ribbon}}, \code{\link[ggplot2]{facet_wrap}}.
 #'
 #' @export
 #'

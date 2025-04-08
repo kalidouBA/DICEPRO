@@ -1,5 +1,5 @@
 ---
-title: "test_simulation"
+title: "Test simulation dataset"
 author: "Kalidou BA"
 output: rmarkdown::html_vignette
 vignette: >

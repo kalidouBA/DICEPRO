@@ -78,7 +78,6 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #' @param sparse Logical indicating whether to introduce sparsity.
 #' @param prob_sparse Probability of sparsity (used when sparse = TRUE).
 #'
-#'
 #' @export
 #'
 #' @importFrom matrixStats rowVars
@@ -92,7 +91,7 @@ generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
 #'
 #' @return A reference matrix with cell types as columns and genes as rows.
 #'
-#' @seealso \code{\link{rcorrvar2}}, \code{\link{mvrnorm}}
+#' @seealso \code{\link[SimMultiCorrData]{rcorrvar2}}, \code{\link[MASS]{mvrnorm}}
 #'
 #' @examples
 #' if(interactive()){

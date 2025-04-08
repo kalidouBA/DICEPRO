@@ -1,17 +1,17 @@
 #' Run Deconvolution Method
 #'
-#' This function performs cell deconvolution using various methods.
+#' This function performs cell deconvolution using various methods, including CSx, DCQ, DeconRNASeq, FARDEEP, etc.
 #'
-#' @param bulk A matrix of bulk RNA-seq data.
-#' @param reference A matrix of reference cell type gene expression profiles.
-#' @param methodDeconv The method to use for deconvolution. Options include "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", and "BayesPrism".
-#' @param cibersortx_email The CIBERSORTx account email.
-#' @param cibersortx_token The CIBERSORTx account token.
+#' @param bulk A matrix of bulk RNA-seq data where rows are genes and columns are samples.
+#' @param reference A matrix of reference cell type gene expression profiles where rows are genes and columns are cell types.
+#' @param methodDeconv The method to use for deconvolution. Options include "CSx", "DCQ", "DeconRNASeq", "FARDEEP", and "BayesPrism".
+#' @param cibersortx_email The CIBERSORTx account email (used if `methodDeconv` is "CSx").
+#' @param cibersortx_token The CIBERSORTx account token (used if `methodDeconv` is "CSx").
 #'
 #' @return A matrix containing the estimated cell proportions for each cell type.
 #'
-#' @details This function allows you to run cell deconvolution using different methods, including CSx, DCQ, DeconRNASeq, FARDEEP...
-#' The choice of method should be specified using the `methodDeconv` parameter.
+#' @details This function allows you to run cell deconvolution using different methods. The choice of method is specified by the `methodDeconv` parameter.
+#'          Each method runs its corresponding deconvolution procedure and returns the estimated proportions of the cell types in the bulk data.
 #'
 #' @seealso Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{DeconRNASeq}},
 #' \code{\link{fardeep}}.
@@ -22,7 +22,6 @@
 #' @importFrom parallel detectCores
 #' @importFrom pcaMethods prep
 #' @export
-
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email, cibersortx_token){
   dimname_ <- dimnames(reference)
   reference <- apply(reference, 2, as.numeric)

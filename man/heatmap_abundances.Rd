@@ -19,5 +19,5 @@ This function generates a heatmap to visualize cell abundances across different 
 This function uses the ggplot2 package to create a heatmap. It plots cell abundances across iterations and cell types, with colors representing the abundance levels.
 }
 \seealso{
-Other functions for data visualization: \code{\link{ggplot}}, \code{\link{geom_raster}}.
+Other functions for data visualization: \code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_raster}}.
 }

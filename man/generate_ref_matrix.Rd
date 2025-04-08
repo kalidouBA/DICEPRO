@@ -60,5 +60,5 @@ ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
 }
 }
 \seealso{
-\code{\link{rcorrvar2}}, \code{\link{mvrnorm}}
+\code{\link[SimMultiCorrData]{rcorrvar2}}, \code{\link[MASS]{mvrnorm}}
 }
