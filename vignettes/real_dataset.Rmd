@@ -39,16 +39,9 @@ refDataset <- get(loaded_objects[1])
 rownames(refDataset) <- refDataset[,1]
 refDataset <- refDataset[,-1]
 head(refDataset)
-reference = refDataset
-bulk = mixDataset
-methodDeconv = "DCQ"
-refName = "10XImmune"
-bulkName = "CellMixtures"
-
-
 ```
 
-
+ 
 ```{r run DICEPRO}
 DICEPRO::DICEPRO(reference = refDataset, bulk = mixDataset, methodDeconv = "DCQ", refName = "10XImmune", bulkName = "CellMixtures", output_path = getwd())
 ```

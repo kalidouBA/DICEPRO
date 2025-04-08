@@ -116,7 +116,7 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   })
 
   if (is.null(output_path))
-    output_base_dir <- getwd()
+    output_path <- getwd()
 
-  optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_base_dir)
+  optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_path)
 }
