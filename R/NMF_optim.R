@@ -63,11 +63,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     listH[[IterateIndex]] <<- as.vector(theta[(N_gene + 1):(length(theta) - 1)])
     sigma_par <- theta[length(theta)]
-    residual <- W %*% t(H) - B
     obj_term1 <- compute_obj_term1_eigen_fast(W, H, B, sigma_par)
-    if(!is.finite(obj_term1) && is_interactive()){
-      browser()
-    }
     obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
 
     h_H <- rowSums(H) - 1
@@ -85,10 +81,23 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     sigma_par <- theta[length(theta)]
 
-    grad <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
-    if(!any(is.finite(grad)) && is_interactive()){
+    grad_new <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
+
+    residual <- as.matrix(W %*% t(H) - B)
+    asr <- asinh(residual)
+    grad_W <- (1 / sigma_par^2) * (asr / sqrt(1 + residual^2)) %*% H
+    grad_H <- t((1 / sigma_par^2) * t(W) %*% (asr / sqrt(1 + residual^2)))
+    h_H <- rowSums(H) - 1
+    grad_H <- grad_H + lambda_par + gamma_par * h_H
+    grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
+    grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
+
+    if(all.equal(grad[1:nrow(grad_W)], grad_new[1:nrow(grad_W)]) != TRUE &&
+       all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE &&
+       all.equal(grad_sigma, grad_new[length(grad_new)]) != TRUE){
       browser()
     }
+
     return(grad)
   }
 
