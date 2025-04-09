@@ -92,8 +92,8 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
     grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
 
-    if(all.equal(grad[1:nrow(grad_W)], grad_new[1:nrow(grad_W)]) != TRUE &&
-       all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE &&
+    if(all.equal(grad[1:nrow(grad_W)], grad_new[1:nrow(grad_W)]) != TRUE |
+       all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE |
        all.equal(grad_sigma, grad_new[length(grad_new)]) != TRUE){
       browser()
     }
