@@ -83,21 +83,19 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     grad_new <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
 
-    residual <- as.matrix(W %*% t(H) - B)
-    asr <- asinh(residual)
-    asr_norm <- asr/sqrt(1 + residual^2)
-    grad_W <- (1 / sigma_par^2) * (asr / sqrt(1 + residual^2)) %*% H
-    grad_H <- crossprod(asr_norm, W) / (sigma_par^2)
-    h_H <- rowSums(H) - 1
-    grad_H <- grad_H + lambda_par + gamma_par * h_H
-    grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
-    grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
-
-    if(all.equal(grad[1:nrow(grad_W)], grad_new[1:nrow(grad_W)]) != TRUE |
-       all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE |
-       all.equal(grad_sigma, grad_new[length(grad_new)]) != TRUE){
-      browser()
-    }
+    # residual <- as.matrix(W %*% t(H) - B)
+    # asr <- asinh(residual)
+    # asr_norm <- asr / sqrt(1 + residual^2)
+    # grad_W <- asr_norm %*% H / sigma_par^2
+    # grad_H <- crossprod(asr_norm, W) / (sigma_par^2)
+    # h_H <- rowSums(H) - 1
+    # grad_H <- grad_H + lambda_par + gamma_par * h_H
+    # grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
+    # grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
+    # if(all.equal(grad[1:nrow(grad_W)], grad_new[1:nrow(grad_W)]) != TRUE |
+    #    all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE |
+    #    all.equal(grad_sigma, grad_new[length(grad_new)]) != TRUE){
+    # }
 
     return(grad)
   }

@@ -47,7 +47,7 @@ Eigen::VectorXd compute_grad_eigen_fast(const Eigen::MatrixXd& W,
   Eigen::VectorXd adjust = lambda + gamma * (H_row_sum.array() - 1.0).matrix();
 
   // Add the adjustment to each row of grad_H (broadcasting the adjustment vector)
-  grad_H = grad_H.rowwise() + adjust.transpose();
+  grad_H = grad_H.colwise() + adjust;
 
   // Build final gradient vector by concatenating:
   // 1. grad_W_last (length n_gene)
