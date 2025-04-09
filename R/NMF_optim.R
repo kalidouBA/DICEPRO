@@ -81,7 +81,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     sigma_par <- theta[length(theta)]
 
-    grad_new <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
+    grad <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
 
     # residual <- as.matrix(W %*% t(H) - B)
     # asr <- asinh(residual)
