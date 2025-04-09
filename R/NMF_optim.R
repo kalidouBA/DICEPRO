@@ -85,8 +85,9 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     residual <- as.matrix(W %*% t(H) - B)
     asr <- asinh(residual)
+    asr_norm <- asr/sqrt(1 + residual^2)
     grad_W <- (1 / sigma_par^2) * (asr / sqrt(1 + residual^2)) %*% H
-    grad_H <- t((1 / sigma_par^2) * t(W) %*% (asr / sqrt(1 + residual^2)))
+    grad_H <- crossprod(asr_norm, W) / (sigma_par^2)
     h_H <- rowSums(H) - 1
     grad_H <- grad_H + lambda_par + gamma_par * h_H
     grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
