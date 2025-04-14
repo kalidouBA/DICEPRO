@@ -70,7 +70,6 @@
 #'
 #' @export
 
-
 DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL,
                     W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "tpe",
                     output_path = NULL) {

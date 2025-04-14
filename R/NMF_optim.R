@@ -34,7 +34,7 @@
 #' @export
 
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
-                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 5e2, tmax = 50)) {
+                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 1e3, tmax = 50)) {
   B <- as.matrix(r_dataset$B)
   p_cb <- r_dataset$P_cb
   W_cb <- r_dataset$W_cb
@@ -56,12 +56,10 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
   theta <- c(W_cb_C, H, sigma_par)
 
   lambda_par <- rep(lambda_, N_sample)
-  IterateIndex <- 1
-  listH <- list()
+
   obj_fun <- function(theta) {
     W[, N_cellsType] <- theta[1:N_gene]
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
-    listH[[IterateIndex]] <<- as.vector(theta[(N_gene + 1):(length(theta) - 1)])
     sigma_par <- theta[length(theta)]
     obj_term1 <- compute_obj_term1_eigen_fast(W, H, B, sigma_par)
     obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
@@ -72,7 +70,6 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     obj_value <- obj_term1 + obj_term2
     penalty <- obj_term3 + obj_term4
     f_val <- obj_value + penalty
-    IterateIndex <<- IterateIndex + 1
     return(f_val)
   }
 
@@ -82,7 +79,6 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     sigma_par <- theta[length(theta)]
 
     grad <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
-
     # residual <- as.matrix(W %*% t(H) - B)
     # asr <- asinh(residual)
     # asr_norm <- asr / sqrt(1 + residual^2)
@@ -96,7 +92,6 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     #    all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE |
     #    all.equal(grad_sigma, grad_new[length(grad_new)]) != TRUE){
     # }
-
     return(grad)
   }
 
@@ -109,9 +104,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     message("error message from `optim`:\n", result[1], "\n")
     warning("Infinite values during optim, try lower values for `gamma_par`.")
     return(NULL)
-
   } else {
-
     theta <- result$par
     W_opt <- W
     W_opt[, N_cellsType] <- theta[1:N_gene]
@@ -123,8 +116,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     H <- as.data.frame(H_opt[, 1:(N_cellsType - N_unknownCT)])
     p_prime <- H_opt[, N_unknownCT]
-    results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value, constraint = 1 - constraints)
+    results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value, constraint = abs(1 - constraints))
     return(results)
   }
-
 }

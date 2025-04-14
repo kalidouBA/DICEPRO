@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 from utils import generate_experiment_paths
+from plot_hyperOpt import plot_hyperopt_report_v2
+from hypersearch import research_v2
+from hyperopt import hp
 
 iteration = 0
 def redirect_output_to_file(log_file):
@@ -18,8 +21,7 @@ def reset_output():
 
 def convert_trials_to_dict(trials):
     """Convertit un objet Trials en dictionnaire JSON-sérialisable."""
-    return [{key: (value.tolist() if isinstance(value, np.ndarray) else value)
-             for key, value in trial.items()}
+    return [{key: (value.tolist() if isinstance(value, np.ndarray) else value) for key, value in trial.items()}
             for trial in trials.results] if hasattr(trials, "results") else []
 
 def contains_nan_or_inf(value):
@@ -30,7 +32,7 @@ def contains_nan_or_inf(value):
         return np.isnan(value) or np.isinf(value)
     return False
 
-def kalidou_lbfgsb(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100):
+def nmf_lbfgsb_hyperOpt(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100):
     """Appelle la fonction R pour effectuer l'optimisation."""
     numpy2ri.activate()
     pandas2ri.activate()
@@ -54,49 +56,68 @@ def kalidou_lbfgsb(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100):
 
 def objective(dataset, config=None, **kwargs):
     """Fonction objectif pour HyperOpt."""
-    lambda_ = kwargs.get("lambda_")
     gamma = kwargs.get("gamma")
+    lambda_factor = kwargs.get("lambda_factor")
     p_prime = kwargs.get("p_prime")
     W_prime = kwargs.get("W_prime", 0)
-    
-    result = kalidou_lbfgsb(dataset, W_prime, p_prime, lambda_, gamma)
+    lambda_ = gamma * lambda_factor
+    result = nmf_lbfgsb_hyperOpt(dataset, W_prime, p_prime, lambda_, gamma)
     result_dict = {name: np.array(result[i]) for i, name in enumerate(result.names)}
+    # if contains_nan_or_inf(result_dict.get('loss', np.array([]))) or contains_nan_or_inf(result_dict.get('constraint', np.array([]))):
+    #     return {'loss': float('inf'), 'constraint': float('inf'), 'status': 'fail'}
+    # 
+    # return {
+    #     'loss': float(result_dict['loss'][0]),
+    #     'constraint': float(result_dict['constraint'][0]),
+    #     'status': 'OK'
+    # }
     if contains_nan_or_inf(result_dict.get('loss', np.array([]))) or contains_nan_or_inf(result_dict.get('constraint', np.array([]))):
-        return {'loss': float('inf'), 'constraint': float('inf'), 'status': 'fail'}
+        return {
+            'loss': float('inf'),
+            'constraint': float('inf'),
+            'status': 'fail',
+            'current_params': {
+                'lambda_factor': lambda_factor,
+                'gamma': gamma,
+                'p_prime': p_prime
+            }
+        }
     return {
         'loss': float(result_dict['loss'][0]),
         'constraint': float(result_dict['constraint'][0]),
-        'status': 'OK'
+        'status': 'OK',
+        'current_params': {
+            'lambda_factor': lambda_factor,
+            'gamma': gamma,
+            'p_prime': p_prime
+        }
+    }
+
+def custom_space():
+    return {
+        "gamma": hp.loguniform("gamma", np.log(1), np.log(1e5)),
+        "lambda_factor": hp.loguniform("lambda_factor", np.log(2), np.log(1e2)),
+        "p_prime": hp.loguniform("p_prime", np.log(1e-1), np.log(1)),
     }
 
 def run_experiment(dataset, bulkName="", refName="", hp_max_evals=100, algo_select="tpe", output_base_dir="."):
     """Exécute l'expérience d'optimisation des hyperparamètres et sauvegarde les résultats dans un dossier organisé."""
-    print(dataset)
     pandas2ri.activate()
-    output_dir, optim_dir, data_dir, config_path, best_json_path, trials_json_path, report_path = generate_experiment_paths(output_base_dir, bulkName, refName)
-    
+    output_dir, optim_dir, data_dir, config_path, best_json_path, trials_json_path, report_dir, report_path = generate_experiment_paths(output_base_dir, bulkName, refName)
     hyperopt_config = {
         "exp": optim_dir,
         "hp_max_evals": hp_max_evals,
         "hp_method": algo_select,
-        "seed": 4,
-        "hp_space": {
-            "lambda_": ["loguniform", 1, 1e+8],
-            "gamma": ["loguniform", 1, 1e+5],
-            "p_prime": ["loguniform", 1e-1, 1],
-        },
+        "seed": 4
     }
     with open(config_path, "w") as f:
         json.dump(hyperopt_config, f)
-    best_results, trials = reservoirpy.hyper.research(objective, dataset, config_path, ".")
-    with open(best_json_path, "w") as f:
-        json.dump(best_results, f, indent=4)
+    hp_space = custom_space()
+    best, trials = research_v2(objective, dataset, config_path, hp_space, report_dir)
     with open(trials_json_path, "w") as f:
         json.dump(convert_trials_to_dict(trials), f, indent=4)
-    fig_constraint = reservoirpy.hyper.plot_hyperopt_report(optim_dir, ("lambda_", "gamma", "p_prime"), metric="constraint")
+    fig_constraint = plot_hyperopt_report_v2(optim_dir, ("lambda_factor", "gamma", "p_prime"), metric="constraint")
     fig_constraint.savefig(report_path)
     plt.show()
-
-
 
 
