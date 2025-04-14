@@ -18,7 +18,8 @@ Suggests:
     rmarkdown,
     ADAPTS,
     testthat (>= 3.0.0),
-    NMF
+    NMF,
+    jsonlite
 VignetteBuilder: knitr
 LazyData: true
 Config/testthat/edition: 3
