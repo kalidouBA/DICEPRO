@@ -64,34 +64,26 @@ def objective(dataset, config=None, **kwargs):
     result = nmf_lbfgsb_hyperOpt(dataset, W_prime, p_prime, lambda_, gamma)
     result_dict = {name: np.array(result[i]) for i, name in enumerate(result.names)}
     if contains_nan_or_inf(result_dict.get('loss', np.array([]))) or contains_nan_or_inf(result_dict.get('constraint', np.array([]))):
-        return {'loss': float('inf'), 'constraint': float('inf'), 'status': 'fail'}
-
+        return {
+            'loss': float('inf'),
+            'constraint': float('inf'),
+            'status': 'fail',
+            'current_params': {
+                'lambda_factor': lambda_factor,
+                'gamma': gamma,
+                'p_prime': p_prime
+            }
+        }
     return {
         'loss': float(result_dict['loss'][0]),
         'constraint': float(result_dict['constraint'][0]),
-        'status': 'OK'
+        'status': 'OK',
+        'current_params': {
+            'lambda_factor': lambda_factor,
+            'gamma': gamma,
+            'p_prime': p_prime
+        }
     }
-    # if contains_nan_or_inf(result_dict.get('loss', np.array([]))) or contains_nan_or_inf(result_dict.get('constraint', np.array([]))):
-    #     return {
-    #         'loss': float('inf'),
-    #         'constraint': float('inf'),
-    #         'status': 'fail',
-    #         'current_params': {
-    #             'lambda_factor': lambda_factor,
-    #             'gamma': gamma,
-    #             'p_prime': p_prime
-    #         }
-    #     }
-    # return {
-    #     'loss': float(result_dict['loss'][0]),
-    #     'constraint': float(result_dict['constraint'][0]),
-    #     'status': 'OK',
-    #     'current_params': {
-    #         'lambda_factor': lambda_factor,
-    #         'gamma': gamma,
-    #         'p_prime': p_prime
-    #     }
-    # }
 
 def custom_space():
     return {
