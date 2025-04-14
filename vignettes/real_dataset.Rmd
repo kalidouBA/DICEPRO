@@ -103,7 +103,7 @@ output_file <- file.path(paste0(mixDatasetName, "_", refDatasetName), "diceproRe
 truth_file <- file.path("inst/extdata/truthProportion", paste0("TrueProps", mixDatasetName, ".tsv"))
 
 cmd <- paste(
-  "python 2ReformatPredictions/A_FormatPredictions.py",
+  "python inst/2ReformatPredictions/A_FormatPredictions.py",
   input_file,
   truth_file,
   ">",
@@ -125,7 +125,7 @@ intersectSample <- intersect(rownames(goldProp), rownames(predProp))
 resultPerfrom <- compute_metrics(goldProp[intersectSample, intersectCT], predProp[intersectSample, intersectCT])
 
 write.csv(resultPerfrom, 
-          paste0("2ReformatPredictions/metrics_Dicepro_", 
+          paste0("inst/2ReformatPredictions/metrics_Dicepro_", 
                  bulkName , "_", refName, ".csv"), 
           row.names = FALSE)
 ```

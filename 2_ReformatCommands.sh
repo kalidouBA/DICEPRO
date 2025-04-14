@@ -1,1 +1,0 @@
-python 2ReformatPredictions/A_FormatPredictions.py CellMixtures_10XImmune/Dicepro.tsv inst/extdata/truthProportion/TruePropsCellMixtures.tsv CellMixtures_10XImmune/diceproReformattedPredictions.tsv
