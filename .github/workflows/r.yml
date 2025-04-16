@@ -48,10 +48,11 @@ jobs:
         with:
           python-version: '3.12'
           
-      - name: Install dependencies devtools
+      - name: Install dependencies (devtools, remotes)
         run: |
-          install.packages(c("devtools", "remotes"))
-          remotes::install_deps(dependencies = TRUE)   
+          Rscript -e 'install.packages(c("devtools", "remotes"))'
+          Rscript -e 'remotes::install_deps(dependencies = TRUE)'
+
       # Fix for R.lib missing on Windows for Python/R C extensions
       - name: Install Rtools (Windows only)
         if: runner.os == 'Windows'
