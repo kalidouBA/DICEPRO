@@ -47,11 +47,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.12'
-          
-      - name: Install dependencies (devtools, remotes)
-        run: |
-          Rscript -e 'install.packages(c("devtools", "remotes"))'
-          Rscript -e 'remotes::install_deps(dependencies = TRUE)'
 
       # Fix for R.lib missing on Windows for Python/R C extensions
       - name: Install Rtools (Windows only)
