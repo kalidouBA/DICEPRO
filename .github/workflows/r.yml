@@ -48,6 +48,10 @@ jobs:
         with:
           python-version: '3.12'
           
+      - name: Install dependencies devtools
+        run: |
+          install.packages(c("devtools", "remotes"))
+          remotes::install_deps(dependencies = TRUE)   
       # Fix for R.lib missing on Windows for Python/R C extensions
       - name: Install Rtools (Windows only)
         if: runner.os == 'Windows'
@@ -69,6 +73,7 @@ jobs:
             pip install -r inst/python/requirements.txt
           fi
         shell: bash
+        
 
 
       # Install R dependencies (including reticulate)
