@@ -270,7 +270,7 @@ def plot_hyperopt_report_v2(
     else:
         lmaxs = loss < loss.max()
 
-#  Créer un delta de contrainte max Inclure la valeur absolue de la contrainte finale ie la mean des contraintes
+    # Créer un delta de contrainte max Inclure la valeur absolue de la contrainte finale ie la mean des contraintes
     percent = math.ceil(len(scores) * 0.05)
     smaxs = scores.argsort()[-percent:][::-1]
     cmaxs = _scale(scores[smaxs])
@@ -328,7 +328,6 @@ def plot_hyperopt_report_v2(
                 )
 
     # legends
-
     handles, labels = sc_l.legend_elements(prop="sizes")
     legend = rad_ax.legend(
         handles,

@@ -167,20 +167,41 @@ def research_v2(objective, dataset, config_path, hp_space, report_path=None):
             )
             warnings.warn(str(e))
         return returned_dict
-    # search_space = {}
-    # for arg, specs in hp_space.items():
-    #     search_space[arg] = _parse_hyperopt_searchspace(arg, specs)
     
-    search_space = hp_space 
+    if hp_space is None:
+        search_space = {}
+        for arg, specs in config["hp_space"].items():
+            search_space[arg] = _parse_hyperopt_searchspace(arg, specs)
+    else:
+        search_space = hp_space
+          
     trials = hopt.Trials()
     if config.get("seed") is None:
         rs = np.random.default_rng()
     else:
         rs = np.random.default_rng(config["seed"])
+      
+    # Convert hp_method from string to function if necessary
+    if isinstance(config["hp_method"], str):
+        if config["hp_method"] == "tpe":
+            algo = hopt.tpe.suggest
+        elif config["hp_method"] == "atpe":
+            algo = hopt.atpe.suggest
+        elif config["hp_method"] == "random":
+            algo = hopt.rand.suggest
+        else:
+            raise ValueError(f"Unknown hp_method string: {config['hp_method']}")
+    elif callable(config["hp_method"]):
+        # Already a function (e.g. loaded manually or via partial)
+        algo = config["hp_method"]
+    else:
+        raise TypeError("hp_method must be a string or a callable (suggest function)")
+
+    
     best = hopt.fmin(
         objective_wrapper,
         space=search_space,
-        algo=config["hp_method"],
+        algo=algo,
         max_evals=config["hp_max_evals"],
         trials=trials,
         rstate=rs,

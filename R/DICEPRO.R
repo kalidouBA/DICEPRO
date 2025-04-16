@@ -20,9 +20,10 @@
 #' @param hp_max_evals A numeric value indicating the maximum number of evaluations for optimization.
 #'                     Default is 100.
 #' @param N_unknownCT A numeric value for the number of unknown cell types, default is 1.
-#' @param algo_select (character) Le choix de l'algorithme d'optimisation. Options disponibles : `"random"` ou `"tpe"`. Par défaut, `"tpe"`.
+#' @param algo_select (character) Choice of optimization algorithm. Available options: `"random"` or `"tpe"` or `"atpe"`. Par défaut, `"random"`.
 #' @param output_path Optional. A file path (character) to save the output results.
 #'                    If NULL, results are written to the current working directory (`getwd()`).
+#' @param hspaceTechniqueChoose Control the search space for hyperparameters. Available options: `"restrictionEspace"` or `"all"`. Par défaut, `"restrictionEspace"`.
 #'
 #' @return A list containing the following components:
 #' \item{Prediction}{A matrix of the estimated cell type proportions for the bulk samples, excluding
@@ -71,8 +72,8 @@
 #' @export
 
 DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL,
-                    W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "tpe",
-                    output_path = NULL) {
+                    W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "random",
+                    output_path = NULL, hspaceTechniqueChoose = "restrictionEspace") {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
 
@@ -104,8 +105,6 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   reference_df <- as.data.frame(reference)
   out_Dec_df <- as.data.frame(out_Dec)
 
-  #nmf_lbfgsb(list(B = bulk_df, P_cb = out_Dec_df, W_cb = reference_df), lambda_ = 17.80878, gamma_par = 1.686415, p_prime = 0.1483778, W_prime = 0)
-
   bulk_py <- reticulate::r_to_py(bulk_df)
   W_cb_py <- reticulate::r_to_py(reference_df)
   out_Dec_cb_py <- reticulate::r_to_py(out_Dec_df)
@@ -120,5 +119,5 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   if (is.null(output_path))
     output_path <- getwd()
 
-  optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_path)
+  optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_path, hspaceTechniqueChoose)
 }

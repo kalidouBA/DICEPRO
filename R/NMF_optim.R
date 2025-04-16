@@ -34,7 +34,7 @@
 #' @export
 
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
-                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 1e3, tmax = 50)) {
+                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 3e3, tmax = 30)) {
   B <- as.matrix(r_dataset$B)
   p_cb <- r_dataset$P_cb
   W_cb <- r_dataset$W_cb
@@ -79,19 +79,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     sigma_par <- theta[length(theta)]
 
     grad <- compute_grad_eigen_fast(W, H, B, sigma_par, lambda_par, gamma_par)
-    # residual <- as.matrix(W %*% t(H) - B)
-    # asr <- asinh(residual)
-    # asr_norm <- asr / sqrt(1 + residual^2)
-    # grad_W <- asr_norm %*% H / sigma_par^2
-    # grad_H <- crossprod(asr_norm, W) / (sigma_par^2)
-    # h_H <- rowSums(H) - 1
-    # grad_H <- grad_H + lambda_par + gamma_par * h_H
-    # grad_sigma <- (-1 / sigma_par^3) * sum(asr^2) + (N_sample * N_gene) / sigma_par
-    # grad <- c(as.vector(grad_W[, N_cellsType]), grad_H, grad_sigma)
-    # if(all.equal(grad[1:nrow(grad_W)], grad_new[1:nrow(grad_W)]) != TRUE |
-    #    all.equal(grad[nrow(grad_W)+1:length(grad_H)], grad_new[nrow(grad_W)+1:length(grad_H)]) != TRUE |
-    #    all.equal(grad_sigma, grad_new[length(grad_new)]) != TRUE){
-    # }
+
     return(grad)
   }
 
@@ -116,7 +104,23 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     H <- as.data.frame(H_opt[, 1:(N_cellsType - N_unknownCT)])
     p_prime <- H_opt[, N_unknownCT]
-    results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value, constraint = abs(1 - constraints))
+
+
+    # Recalcul des paramètre à l'optimisation
+    sigma_par_opt <- result$par[length(result$par)]
+    # Norme de Frob
+    obj_term1_opt <- compute_obj_term1_eigen_fast(W_opt, H_opt, B, sigma_par)
+    # Maximum de vraissemble
+    obj_term2_opt <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
+
+    obj_term3_opt <- as.double(lambda_par %*% h_H)
+    obj_term4_opt <- (gamma_par / 2) * sum(h_H^2)
+
+    results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value,
+                    frobNorm = obj_term1_opt, constNorm = obj_term2_opt, c1 = obj_term3_opt, c2 = obj_term4_opt,
+                    objectiveValue = obj_term1_opt+obj_term2_opt, penalty = obj_term3_opt + obj_term4_opt,
+                    cvrge = result$convergence,
+                    constraint = abs(1 - constraints))
     return(results)
   }
 }

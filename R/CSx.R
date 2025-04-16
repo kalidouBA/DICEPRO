@@ -39,5 +39,5 @@ run_CSx <- function(bulk, reference, cibersortx_email, cibersortx_token){
     out_CSx <- as.data.frame(apply(out_CSx[,!names(out_CSx) %in% c("P.value", "Correlation", "RMSE")],2, as.numeric))
     rownames(out_CSx) <- rownames_
   }
-  return(out_CSx)
+  return(t(out_CSx))
 }

@@ -15,8 +15,9 @@ DICEPRO(
   refName = "",
   hp_max_evals = 100,
   N_unknownCT = 1,
-  algo_select = "tpe",
-  output_path = NULL
+  algo_select = "random",
+  output_path = NULL,
+  hspaceTechniqueChoose = "restrictionEspace"
 )
 }
 \arguments{
@@ -45,10 +46,12 @@ Default is 100.}
 
 \item{N_unknownCT}{A numeric value for the number of unknown cell types, default is 1.}
 
-\item{algo_select}{(character) Le choix de l'algorithme d'optimisation. Options disponibles : \code{"random"} ou \code{"tpe"}. Par défaut, \code{"tpe"}.}
+\item{algo_select}{(character) Choice of optimization algorithm. Available options: \code{"random"} or \code{"tpe"} or \code{"atpe"}. Par défaut, \code{"random"}.}
 
 \item{output_path}{Optional. A file path (character) to save the output results.
 If NULL, results are written to the current working directory (\code{getwd()}).}
+
+\item{hspaceTechniqueChoose}{Control the search space for hyperparameters. Available options: \code{"restrictionEspace"} or \code{"all"}. Par défaut, \code{"restrictionEspace"}.}
 }
 \value{
 A list containing the following components:

@@ -5,24 +5,27 @@ import plotly.graph_objs as go
 import plotly.io as pio
 
 def custom_space():
-    gamma = hp.loguniform("gamma", np.log(1), np.log(1e4))
-    lambda_factor = hp.loguniform("lambda_factor", np.log(2), np.log(1e4))  # lambda_ = gamma * factor
+    gamma = hp.loguniform("gamma", np.log(1), np.log(1e5))
+    lambda_factor = hp.loguniform("lambda_factor", np.log(2), np.log(1e2))  # lambda_ = gamma * factor
     lambda_ = gamma * lambda_factor
     p_prime = hp.loguniform("p_prime", np.log(1e-1), np.log(1))
-    
     return {
         "lambda_": lambda_,
         "gamma": gamma,
-        "p_prime": p_prime,
-    }
+        "p_prime": p_prime
+      }  
+    
+    
 space = custom_space()
-samples = [sample(space) for _ in range(10000)]
+samples = [sample(space) for _ in range(200)]
 gamma_samples = [s["gamma"] for s in samples]
 lambda_samples = [s["lambda_"] for s in samples]
 
-gamma_range = np.logspace(0, 4, 100)
+
+gamma_range = np.logspace(0, 5, 100)
 lambda_min = 2 * gamma_range
-lambda_max = 1e4 * gamma_range
+lambda_max = 1e2 * gamma_range
+
 
 scatter = go.Scatter(
     x=gamma_samples,

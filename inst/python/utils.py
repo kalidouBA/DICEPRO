@@ -1,9 +1,9 @@
 import os
 import json
 
-def generate_experiment_paths(output_dir, bulkName, refName):
+def generate_experiment_paths(output_dir, bulkName, refName, hspaceTechniqueChoose, algo_select):
     os.makedirs(output_dir, exist_ok=True)
-    data_dir = os.path.join(output_dir, f"{bulkName}_{refName}")
+    data_dir = os.path.join(output_dir, f"{bulkName}_{refName}_{hspaceTechniqueChoose}_{algo_select}")
     os.makedirs(data_dir, exist_ok=True)
     optim_dir = os.path.join(data_dir, "optim")
     os.makedirs(optim_dir, exist_ok=True)
