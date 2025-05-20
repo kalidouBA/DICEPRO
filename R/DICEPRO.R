@@ -116,8 +116,14 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
     optimisation <- reticulate::import_from_path("optimisation", path = dirname(script_path))
   })
 
-  if (is.null(output_path))
+  if (is.null(output_path)) {
     output_path <- getwd()
+  }
+
+  if (!is.null(output_path) && !dir.exists(output_path)) {
+    dir.create(output_path, recursive = TRUE)
+  }
+
 
   optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_path, hspaceTechniqueChoose)
 }

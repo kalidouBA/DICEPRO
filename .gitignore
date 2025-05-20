@@ -8,3 +8,4 @@ dataSave.rds
 CellMixtures_10XImmune
 /doc/
 /Meta/
+inst/python/__pycache__/

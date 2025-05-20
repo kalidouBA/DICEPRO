@@ -20,7 +20,7 @@
 #' @importFrom DeconRNASeq DeconRNASeq
 #' @importFrom FARDEEP fardeep
 #' @importFrom parallel detectCores
-#' @importFrom pcaMethods prep
+#'
 #' @export
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email, cibersortx_token){
   dimname_ <- dimnames(reference)

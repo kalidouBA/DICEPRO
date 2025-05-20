@@ -85,7 +85,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
   result <- try(optim(par = theta, fn = obj_fun, gr = grad_obj_fun,
                       lower = c(rep(0, length(theta) - 1), 1e-6),
-                      upper = c(rep(Inf, N_gene * N_cellsType), rep(1, N_sample * N_cellsType), Inf),
+                      upper = c(rep(Inf, nrow(W_cb_C)), rep(1, N_sample * N_cellsType), Inf),
                       control = con, method = "L-BFGS-B"), silent=TRUE)
 
   if (inherits(result, "try-error")) {
@@ -100,11 +100,11 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     dimnames(H_opt) <- dimnames(H)
     h_H <- abs(rowSums(H_opt) - 1)
-    constraints = sum(h_H)
+    constraints <- sum(h_H)
 
     H <- as.data.frame(H_opt[, 1:(N_cellsType - N_unknownCT)])
+    H <- cbind(Mixture = rownames(H), H)
     p_prime <- H_opt[, N_unknownCT]
-
 
     # Recalcul des paramètre à l'optimisation
     sigma_par_opt <- result$par[length(result$par)]
@@ -115,6 +115,9 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     obj_term3_opt <- as.double(lambda_par %*% h_H)
     obj_term4_opt <- (gamma_par / 2) * sum(h_H^2)
+    write.table(H, file = sprintf("outputH/H_lambda_%s_gamma_%s.tsv", round(lambda_,2), round(gamma_par,2)),
+                sep = "\t", quote = FALSE, row.names = FALSE)
+
 
     results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value,
                     frobNorm = obj_term1_opt, constNorm = obj_term2_opt, c1 = obj_term3_opt, c2 = obj_term4_opt,

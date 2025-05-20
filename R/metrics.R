@@ -53,6 +53,110 @@ computPerf <- function(x, y, metric) {
 }
 
 
+#' Compare Two Data Frames Column by Column
+#'
+#' This function compares two numeric data frames of equal dimensions by computing
+#' statistical metrics (NRMSE, adjusted R², ICC3, and CCC) for each column,
+#' after Z-score normalization. It returns per-column results and a combined summary.
+#'
+#' @param x A numeric data frame.
+#' @param y A numeric data frame with the same dimensions as `x`.
+#' @param method Aggregation method for combined metrics: `"weighted"` (default, weights by SD) or `"unweighted"`.
+#'
+#' @return A list with:
+#' \describe{
+#'   \item{by_column}{Named list of per-column metrics: NRMSE, R² adjusted, ICC3, and CCC.}
+#'   \item{combined}{Aggregated metrics across all columns (weighted or unweighted).}
+#'   \item{method}{Description of the aggregation method used.}
+#' }
+#'
+#' @details
+#' - Z-score normalization is applied to each column.
+#' - If standard deviation is zero, the column is set to zero.
+#' - ICC3 is computed if the \pkg{irr} package is available.
+#' - CCC (Concordance Correlation Coefficient) is computed using the formula from Lin (1989).
+#'
+#' @references
+#' Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility. *Biometrics*, 45(1), 255–268.
+#' @examples
+#' \dontrun{
+#' df1 <- data.frame(a = rnorm(100), b = runif(100))
+#' df2 <- data.frame(a = df1$a + rnorm(100, sd = 0.1), b = df1$b + rnorm(100, sd = 0.1))
+#' compare_abundances(df1, df2)
+#' }
+#'
+#'
+#' @export
+compare_abundances <- function(x, y, method = "weighted") {
+  tryCatch({
+    # 1. Vérifications initiales
+    if (!identical(dim(x), dim(y))) stop("Dimensions incohérentes")
+    if (any(is.na(x)) || any(is.na(y))) stop("NA détectés")
+    if (any(is.infinite(as.matrix(x)))) stop("Inf dans x")
+    if (any(is.infinite(as.matrix(y)))) stop("Inf dans y")
+
+    # 2. Normalisation Z-score
+    normalize <- function(v) {
+      if (sd(v) == 0) return(v * 0)
+      (v - mean(v)) / sd(v)
+    }
+
+    x_norm <- as.data.frame(lapply(x, normalize))
+    y_norm <- as.data.frame(lapply(y, normalize))
+
+    # 3. Calcul des métriques par colonne
+    metrics <- lapply(colnames(x), function(col) {
+      vx <- x_norm[[col]]
+      vy <- y_norm[[col]]
+
+      # NRMSE
+      nrmse <- sqrt(mean((vx - vy)^2)) / sd(vy)
+
+      # R² ajusté
+      r2_adj <- summary(lm(vy ~ vx))$adj.r.squared
+
+      # ICC3
+      icc_val <- if (requireNamespace("irr", quietly = TRUE)) {
+        irr::icc(data.frame(vx, vy), model = "twoway", type = "agreement")$value
+      } else NA
+
+      # Concordance Correlation Coefficient (CCC)
+      mean_x <- mean(vx)
+      mean_y <- mean(vy)
+      var_x <- var(vx)
+      var_y <- var(vy)
+      cov_xy <- cov(vx, vy)
+      ccc_val <- (2 * cov_xy) / (var_x + var_y + (mean_x - mean_y)^2)
+
+      c(NRMSE = nrmse, R2_adj = r2_adj, ICC3 = icc_val, CCC = ccc_val)
+    })
+
+    # 4. Pondération
+    weights <- if (method == "weighted") sapply(x, sd) else rep(1, ncol(x))
+    combined <- list(
+      NRMSE = weighted.mean(sapply(metrics, `[`, "NRMSE"), weights),
+      R2_adj = weighted.mean(sapply(metrics, `[`, "R2_adj"), weights),
+      ICC3 = weighted.mean(sapply(metrics, `[`, "ICC3"), weights, na.rm = TRUE),
+      CCC = weighted.mean(sapply(metrics, `[`, "CCC"), weights)
+    )
+
+    # 5. Résultat final
+    list(
+      by_column = setNames(metrics, colnames(x)),
+      combined = combined,
+      method = paste("Méthode:", method, if (method == "weighted") "(pondérée par SD)" else "")
+    )
+
+  }, error = function(e) {
+    warning("Erreur: ", e$message)
+    return(NULL)
+  })
+}
+
+
+
+
+
 #' Compute precision of estimated
 #'
 #' This function computes the precision of estimated by evaluating
