@@ -11,7 +11,7 @@ nmf_lbfgsb(
   lambda_ = 10,
   gamma_par = 100,
   N_unknownCT = 1,
-  con = list(fnscale = 1, maxit = 3000, tmax = 30)
+  con = list(maxit = 3000)
 )
 }
 \arguments{
@@ -32,11 +32,9 @@ nmf_lbfgsb(
 
 \item{N_unknownCT}{Number of unknown cell types to model (optional, defaults to 1). It is a scalar.}
 
-\item{con}{A list of control parameters for the optimization process passed to \code{optim} (optional).
+\item{con}{A list of control parameters for the optimization process passed to \code{lbfgs3c} (optional).
 \itemize{
-\item \code{fnscale}: Scaling factor for the objective function (optional, defaults to 1).
 \item \code{maxit}: Maximum number of iterations (optional, defaults to 5000).
-\item \code{tmax}: Maximum number of function evaluations (optional, defaults to 50).
 }}
 }
 \value{

@@ -86,7 +86,7 @@ data_simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSampl
 
 result <- DICEPRO(reference = data_simulation$reference,
                   bulk = data_simulation$bulk,
-                  methodDeconv = "CSx",
+                  methodDeconv = "DCQ",
                   W_prime = 0,
                   bulkName = "Bulk_Sample",
                   refName = "Reference_Data",

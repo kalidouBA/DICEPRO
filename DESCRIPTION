@@ -28,6 +28,7 @@ LinkingTo:
     RcppEigen
 Imports: 
     matrixStats,
+    lbfgsb3c,
     dplyr,
     rBeta2009,
     reshape2,

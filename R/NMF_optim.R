@@ -13,10 +13,8 @@
 #' @param lambda_ Regularization parameter (optional, defaults to 10). It is a scalar.
 #' @param gamma_par Penalty factor for the sum of cell type proportions (optional, defaults to 100). It is a scalar.
 #' @param N_unknownCT Number of unknown cell types to model (optional, defaults to 1). It is a scalar.
-#' @param con A list of control parameters for the optimization process passed to `optim` (optional).
-#'   - `fnscale`: Scaling factor for the objective function (optional, defaults to 1).
+#' @param con A list of control parameters for the optimization process passed to `lbfgs3c` (optional).
 #'   - `maxit`: Maximum number of iterations (optional, defaults to 5000).
-#'   - `tmax`: Maximum number of function evaluations (optional, defaults to 50).
 #'
 #' @return A list containing:
 #'   - `w`: The optimized matrix W, a vector of length N_gene.
@@ -30,11 +28,12 @@
 #'
 #' @importFrom stats optim
 #' @importFrom stats sd
+#' @importFrom lbfgsb3c lbfgsb3
 #'
 #' @export
 
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
-                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 3e3, tmax = 30)) {
+                       N_unknownCT = 1, con = list(maxit = 3e3)) {
   B <- as.matrix(r_dataset$B)
   p_cb <- r_dataset$P_cb
   W_cb <- r_dataset$W_cb
@@ -83,7 +82,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     return(grad)
   }
 
-  result <- try(optim(par = theta, fn = obj_fun, gr = grad_obj_fun,
+  result <- try(lbfgsb3c::lbfgsb3c(par = theta, fn = obj_fun, gr = grad_obj_fun,
                       lower = c(rep(0, length(theta) - 1), 1e-6),
                       upper = c(rep(Inf, N_gene * N_cellsType), rep(1, N_sample * N_cellsType), Inf),
                       control = con, method = "L-BFGS-B"), silent=TRUE)
@@ -120,7 +119,8 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
                     frobNorm = obj_term1_opt, constNorm = obj_term2_opt, c1 = obj_term3_opt, c2 = obj_term4_opt,
                     objectiveValue = obj_term1_opt+obj_term2_opt, penalty = obj_term3_opt + obj_term4_opt,
                     cvrge = result$convergence,
-                    constraint = abs(1 - constraints))
+                    constraint = abs(1 - constraints),
+                    iternum <- result$counts[1])
     return(results)
   }
 }
