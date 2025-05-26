@@ -1,6 +1,6 @@
 Package: DICEPRO
 Title: Deconvolution with Iterative Completion for Estimating cellular Proportion from RNA-seq data
-Version: 0.0.1.5
+Version: 0.0.1.6
 Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
