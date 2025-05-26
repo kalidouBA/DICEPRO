@@ -11,19 +11,19 @@ compare_abundances(x, y, method = "weighted")
 
 \item{y}{A numeric data frame with the same dimensions as \code{x}.}
 
-\item{method}{Aggregation method for combined metrics: \code{"weighted"} (default, weights by SD) or \code{"unweighted"}.}
+\item{method}{Aggregation method for combined metrics: "weighted" (default, weights by SD) or "unweighted".}
 }
 \value{
 A list with:
 \describe{
-\item{by_column}{Named list of per-column metrics: NRMSE, R² adjusted, ICC3, and CCC.}
+\item{by_column}{Named list of per-column metrics: NRMSE, R^2 adjusted, ICC3, and CCC.}
 \item{combined}{Aggregated metrics across all columns (weighted or unweighted).}
 \item{method}{Description of the aggregation method used.}
 }
 }
 \description{
 This function compares two numeric data frames of equal dimensions by computing
-statistical metrics (NRMSE, adjusted R², ICC3, and CCC) for each column,
+statistical metrics (NRMSE, adjusted R^2, ICC3, and CCC) for each column,
 after Z-score normalization. It returns per-column results and a combined summary.
 }
 \details{
@@ -41,8 +41,7 @@ df2 <- data.frame(a = df1$a + rnorm(100, sd = 0.1), b = df1$b + rnorm(100, sd = 
 compare_abundances(df1, df2)
 }
 
-
 }
 \references{
-Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility. \emph{Biometrics}, 45(1), 255–268.
+Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility. \emph{Biometrics}, 45(1), 255-268.
 }

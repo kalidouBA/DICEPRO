@@ -56,16 +56,16 @@ computPerf <- function(x, y, metric) {
 #' Compare Two Data Frames Column by Column
 #'
 #' This function compares two numeric data frames of equal dimensions by computing
-#' statistical metrics (NRMSE, adjusted R², ICC3, and CCC) for each column,
+#' statistical metrics (NRMSE, adjusted R^2, ICC3, and CCC) for each column,
 #' after Z-score normalization. It returns per-column results and a combined summary.
 #'
 #' @param x A numeric data frame.
 #' @param y A numeric data frame with the same dimensions as `x`.
-#' @param method Aggregation method for combined metrics: `"weighted"` (default, weights by SD) or `"unweighted"`.
+#' @param method Aggregation method for combined metrics: "weighted" (default, weights by SD) or "unweighted".
 #'
 #' @return A list with:
 #' \describe{
-#'   \item{by_column}{Named list of per-column metrics: NRMSE, R² adjusted, ICC3, and CCC.}
+#'   \item{by_column}{Named list of per-column metrics: NRMSE, R^2 adjusted, ICC3, and CCC.}
 #'   \item{combined}{Aggregated metrics across all columns (weighted or unweighted).}
 #'   \item{method}{Description of the aggregation method used.}
 #' }
@@ -77,7 +77,8 @@ computPerf <- function(x, y, metric) {
 #' - CCC (Concordance Correlation Coefficient) is computed using the formula from Lin (1989).
 #'
 #' @references
-#' Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility. *Biometrics*, 45(1), 255–268.
+#' Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility. *Biometrics*, 45(1), 255-268.
+#'
 #' @examples
 #' \dontrun{
 #' df1 <- data.frame(a = rnorm(100), b = runif(100))
@@ -85,13 +86,14 @@ computPerf <- function(x, y, metric) {
 #' compare_abundances(df1, df2)
 #' }
 #'
-#'
+#' @importFrom stats cov var weighted.mean setNames
+#' @importFrom utils read.table
 #' @export
 compare_abundances <- function(x, y, method = "weighted") {
   tryCatch({
-    # 1. Vérifications initiales
-    if (!identical(dim(x), dim(y))) stop("Dimensions incohérentes")
-    if (any(is.na(x)) || any(is.na(y))) stop("NA détectés")
+    # 1. Verifications initiales
+    if (!identical(dim(x), dim(y))) stop("Dimensions incoherentes")
+    if (any(is.na(x)) || any(is.na(y))) stop("NA detectes")
     if (any(is.infinite(as.matrix(x)))) stop("Inf dans x")
     if (any(is.infinite(as.matrix(y)))) stop("Inf dans y")
 
@@ -104,7 +106,7 @@ compare_abundances <- function(x, y, method = "weighted") {
     x_norm <- as.data.frame(lapply(x, normalize))
     y_norm <- as.data.frame(lapply(y, normalize))
 
-    # 3. Calcul des métriques par colonne
+    # 3. Calcul des metriques par colonne
     metrics <- lapply(colnames(x), function(col) {
       vx <- x_norm[[col]]
       vy <- y_norm[[col]]
@@ -112,7 +114,7 @@ compare_abundances <- function(x, y, method = "weighted") {
       # NRMSE
       nrmse <- sqrt(mean((vx - vy)^2)) / sd(vy)
 
-      # R² ajusté
+      # R^2 ajuste
       r2_adj <- summary(lm(vy ~ vx))$adj.r.squared
 
       # ICC3
@@ -131,7 +133,7 @@ compare_abundances <- function(x, y, method = "weighted") {
       c(NRMSE = nrmse, R2_adj = r2_adj, ICC3 = icc_val, CCC = ccc_val)
     })
 
-    # 4. Pondération
+    # 4. Ponderation
     weights <- if (method == "weighted") sapply(x, sd) else rep(1, ncol(x))
     combined <- list(
       NRMSE = weighted.mean(sapply(metrics, `[`, "NRMSE"), weights),
@@ -140,11 +142,11 @@ compare_abundances <- function(x, y, method = "weighted") {
       CCC = weighted.mean(sapply(metrics, `[`, "CCC"), weights)
     )
 
-    # 5. Résultat final
+    # 5. Resultat final
     list(
       by_column = setNames(metrics, colnames(x)),
       combined = combined,
-      method = paste("Méthode:", method, if (method == "weighted") "(pondérée par SD)" else "")
+      method = paste("Methode:", method, if (method == "weighted") "(ponderee par SD)" else "")
     )
 
   }, error = function(e) {
@@ -152,7 +154,6 @@ compare_abundances <- function(x, y, method = "weighted") {
     return(NULL)
   })
 }
-
 
 
 

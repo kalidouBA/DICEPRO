@@ -13,7 +13,8 @@
 #' @param lambda_ Regularization parameter (optional, defaults to 10). It is a scalar.
 #' @param gamma_par Penalty factor for the sum of cell type proportions (optional, defaults to 100). It is a scalar.
 #' @param N_unknownCT Number of unknown cell types to model (optional, defaults to 1). It is a scalar.
-#' @param con A list of control parameters for the optimization process passed to `optim` (optional).
+#' @param path2save path to save H
+#' @param con A list of control parameters for the optimization process passed to `lbfgs3c` (optional).
 #'   - `fnscale`: Scaling factor for the objective function (optional, defaults to 1).
 #'   - `maxit`: Maximum number of iterations (optional, defaults to 5000).
 #'   - `tmax`: Maximum number of function evaluations (optional, defaults to 50).
@@ -28,13 +29,14 @@
 #'   function. The regularization includes a penalty for the sum of cell type proportions and a scaling factor.
 #'   The optimization minimizes the objective function subject to constraints on the cell type proportions.
 #'
-#' @importFrom stats optim
+#' @importFrom lbfgsb3c lbfgsb3
 #' @importFrom stats sd
 #'
 #' @export
 
-nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100,
-                       N_unknownCT = 1, con = list(fnscale = 1, maxit = 3e3, tmax = 30)) {
+nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100, path2save = "",
+                       N_unknownCT = 1, con = list(maxit = 3e3)) {
+  print(path2save)
   B <- as.matrix(r_dataset$B)
   p_cb <- r_dataset$P_cb
   W_cb <- r_dataset$W_cb
@@ -83,11 +85,10 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     return(grad)
   }
 
-  result <- try(optim(par = theta, fn = obj_fun, gr = grad_obj_fun,
-                      lower = c(rep(0, length(theta) - 1), 1e-6),
-                      upper = c(rep(Inf, nrow(W_cb_C)), rep(1, N_sample * N_cellsType), Inf),
-                      control = con, method = "L-BFGS-B"), silent=TRUE)
-
+  result <- try(lbfgsb3c::lbfgsb3c(par = theta, fn = obj_fun, gr = grad_obj_fun,
+                                   lower = c(rep(0, length(theta) - 1), 1e-6),
+                                   upper = c(rep(Inf, nrow(W_cb_C)), rep(1, N_sample * N_cellsType), Inf),
+                                   control = con), silent=TRUE)
   if (inherits(result, "try-error")) {
     message("error message from `optim`:\n", result[1], "\n")
     warning("Infinite values during optim, try lower values for `gamma_par`.")
@@ -106,7 +107,6 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H <- cbind(Mixture = rownames(H), H)
     p_prime <- H_opt[, N_unknownCT]
 
-    # Recalcul des paramètre à l'optimisation
     sigma_par_opt <- result$par[length(result$par)]
     # Norme de Frob
     obj_term1_opt <- compute_obj_term1_eigen_fast(W_opt, H_opt, B, sigma_par)
@@ -115,9 +115,9 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     obj_term3_opt <- as.double(lambda_par %*% h_H)
     obj_term4_opt <- (gamma_par / 2) * sum(h_H^2)
-    write.table(H, file = sprintf("outputH/H_lambda_%s_gamma_%s.tsv", round(lambda_,2), round(gamma_par,2)),
-                sep = "\t", quote = FALSE, row.names = FALSE)
 
+    write.table(H, file = sprintf("%s/H_lambda_%s_gamma_%s.tsv", path2save, round(lambda_,2), round(gamma_par,2)),
+                sep = "\t", quote = FALSE, row.names = FALSE)
 
     results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value,
                     frobNorm = obj_term1_opt, constNorm = obj_term2_opt, c1 = obj_term3_opt, c2 = obj_term4_opt,

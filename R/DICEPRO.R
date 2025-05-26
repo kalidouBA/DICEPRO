@@ -41,11 +41,11 @@
 #'          The optimization process is executed via a Python script using `reticulate` for
 #'          interfacing with Python.
 #'
-#' @importFrom stats optim
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats rpois runif rnorm
 #' @importFrom reticulate import_from_path r_to_py
+#' @importFrom utils read.table
 #'
 ## usethis namespace: start
 #' @import RcppEigen
@@ -71,9 +71,9 @@
 #'
 #' @export
 
-DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL,
-                    W_prime = 0, bulkName = "", refName = "", hp_max_evals = 100, N_unknownCT = 1, algo_select = "random",
-                    output_path = NULL, hspaceTechniqueChoose = "restrictionEspace") {
+DICEPRO <- function(reference, bulk, methodDeconv = "DCQ", cibersortx_email = NULL, cibersortx_token = NULL,
+                    W_prime = 0, bulkName = "Bulk", refName = "Reference", hp_max_evals = 100, N_unknownCT = 1,
+                    algo_select = "random", output_path = NULL, hspaceTechniqueChoose = "restrictionEspace") {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
 
@@ -86,14 +86,14 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
   if(is.matrix(reference)){
     stopifnot(is.numeric(reference))
     reference <- reference[geneIntersect, ]
-  }else{
+  } else {
     reference <- apply(reference[geneIntersect, ], 2, as.numeric)
   }
 
   if(is.matrix(bulk)){
     stopifnot(is.numeric(bulk))
     bulk <- bulk[geneIntersect, ]
-  }else{
+  } else {
     bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
   }
 
@@ -116,14 +116,29 @@ DICEPRO <- function(reference, bulk, methodDeconv = "CSx", cibersortx_email = NU
     optimisation <- reticulate::import_from_path("optimisation", path = dirname(script_path))
   })
 
+  dirName <- paste0(bulkName, "_", refName, "_", hspaceTechniqueChoose, "_", algo_select)
   if (is.null(output_path)) {
     output_path <- getwd()
   }
 
-  if (!is.null(output_path) && !dir.exists(output_path)) {
+  if (!dir.exists(output_path)) {
     dir.create(output_path, recursive = TRUE)
   }
 
-
+  # === Run optimization ===
   optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_path, hspaceTechniqueChoose)
+
+  # === Call the plotting function ===
+  outputDir <- sprintf("%s/%s", output_path,dirName)
+  bestHP <- try({
+    plot_kraljic(outputDir)
+  }, silent = TRUE)
+
+  bestHP$bestEstimation <- read.table(
+    sprintf("%s/optim/H_lambda_%s_gamma_%s.tsv", outputDir,
+            round(bestHP$lambda_, 2), round(bestHP$gamma, 2)), header = T,row.names = 1
+  )
+
+  class(bestHP) <- "DICEPRO"
+  return(bestHP)
 }

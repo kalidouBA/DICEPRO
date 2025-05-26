@@ -32,42 +32,51 @@ def contains_nan_or_inf(value):
         return np.isnan(value) or np.isinf(value)
     return False
 
-def nmf_lbfgsb_hyperOpt(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100):
+def nmf_lbfgsb_hyperOpt(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100, path2save=""):
     """Appelle la fonction R pour effectuer l'optimisation."""
     numpy2ri.activate()
     pandas2ri.activate()
     r('library(DICEPRO)')
+
     B_r = pandas2ri.py2rpy(pd.DataFrame(dataset['B'])) if isinstance(dataset['B'], np.ndarray) else dataset['B']
     W_cb_r = pandas2ri.py2rpy(pd.DataFrame(dataset['W'])) if isinstance(dataset['W'], np.ndarray) else dataset['W']
     P_cb_r = pandas2ri.py2rpy(pd.DataFrame(dataset['P'])) if isinstance(dataset['P'], np.ndarray) else dataset['P']
+
     r_dataset = ListVector({
         'B': B_r,
         'W_cb': W_cb_r,
         'P_cb': P_cb_r
     })
-    W_prime_r = numpy2ri.py2rpy(W_prime) if W_prime is not None else None
-    p_prime_r = numpy2ri.py2rpy(p_prime) if p_prime is not None else None
-    r_lambda = FloatVector([lambda_])
-    r_gamma = FloatVector([gamma])
+
+    W_prime_r = numpy2ri.py2rpy(W_prime) if W_prime is not None else NULL
+    p_prime_r = numpy2ri.py2rpy(p_prime) if p_prime is not None else NULL
+
     r_func = r['nmf_lbfgsb']
-    result = r_func(r_dataset, W_prime, p_prime, r_lambda, r_gamma)
+    result = r_func(r_dataset, W_prime_r, p_prime_r, FloatVector([lambda_]), FloatVector([gamma]), path2save)
+
     return result
+
 
 def objective(dataset, config=None, **kwargs):
     """Objective function for HyperOpt."""
     lambda_ = kwargs.get("lambda_")
     p_prime = kwargs.get("p_prime")
     W_prime = kwargs.get("W_prime", 0)
+    exp_dir = config.get("exp", ".") if config else "."
 
     # Handle gamma depending on which search space is used
     if "gamma_factor" in kwargs:
         gamma_factor = kwargs["gamma_factor"]
         gamma = lambda_ * gamma_factor
     else:
-        gamma_factor = None  # Not used in restrictionEspace
+        gamma_factor = None
         gamma = kwargs.get("gamma")
+        
+    saveHpath = config.get("exp", exp_dir)
+    print(saveHpath)
+    result = nmf_lbfgsb_hyperOpt(dataset, W_prime, p_prime, lambda_, gamma, saveHpath)
 
-    result = nmf_lbfgsb_hyperOpt(dataset, W_prime, p_prime, lambda_, gamma)
+    # Convert named result to dict of numpy arrays
     result_dict = {name: np.array(result[i]) for i, name in enumerate(result.names)}
 
     if contains_nan_or_inf(result_dict.get('loss', np.array([]))) or contains_nan_or_inf(result_dict.get('constraint', np.array([]))):

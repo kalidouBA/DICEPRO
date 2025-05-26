@@ -1,6 +1,6 @@
 Package: DICEPRO
 Title: Deconvolution with Iterative Completion for Estimating cellular Proportion from RNA-seq data
-Version: 0.0.1.4
+Version: 0.0.1.5
 Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
 	                  email = "kalidou.ba@u-bordeaux.fr"),
 	           person("Boris P.", "Hejblum", role = c("aut"),
@@ -19,30 +19,36 @@ Suggests:
     ADAPTS,
     testthat (>= 3.0.0),
     NMF,
-    jsonlite
+    irr
 VignetteBuilder: knitr
 LazyData: true
 Config/testthat/edition: 3
 LinkingTo: 
     Rcpp,
     RcppEigen
-Imports: 
+Imports:
+    lbfgsb3c,
+    KraljicMatrix,
     matrixStats,
+    Metrics,
+    MASS,
+    parallel,
+    Rcpp,
+    RcppEigen,
     dplyr,
+    plotly,
+    htmlwidgets,
+    purrr,
+    jsonlite,
     rBeta2009,
     reshape2,
     scater,
     ggplot2,
     patchwork,
-    Metrics,
     SimMultiCorrData,
-    MASS,
     ComICS,
     DeconRNASeq,
     FARDEEP,
-    parallel,
     pcaMethods,
     clusterGeneration,
-    Rcpp,
-    RcppEigen,
     reticulate

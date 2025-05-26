@@ -17,3 +17,12 @@ convert_matrix_to_df <- function(mat) {
   }
   return(mat)
 }
+
+
+#' @importFrom stats cov var weighted.mean setNames
+#' @importFrom utils read.table
+
+utils::globalVariables(c(
+  "lambda_", "gamma", "frobNorm", "constraint", "abs_constraint",
+  "p_prime", "duration", "penalty", "objectiveValue"
+))
