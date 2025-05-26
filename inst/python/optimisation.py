@@ -1,6 +1,6 @@
 import sys
 import pandas as pd
-from rpy2.robjects import r, pandas2ri, FloatVector, ListVector, numpy2ri
+from rpy2.robjects import pandas2ri, numpy2ri
 import reservoirpy
 import json
 import matplotlib.pyplot as plt
@@ -34,27 +34,30 @@ def contains_nan_or_inf(value):
 
 def nmf_lbfgsb_hyperOpt(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100, path2save=""):
     """Appelle la fonction R pour effectuer l'optimisation."""
-    numpy2ri.activate()
-    pandas2ri.activate()
+    from rpy2.robjects import r, pandas2ri, numpy2ri, FloatVector, ListVector, NULL, default_converter
+    from rpy2.robjects.conversion import localconverter
+
     r('library(DICEPRO)')
 
-    B_r = pandas2ri.py2rpy(pd.DataFrame(dataset['B'])) if isinstance(dataset['B'], np.ndarray) else dataset['B']
-    W_cb_r = pandas2ri.py2rpy(pd.DataFrame(dataset['W'])) if isinstance(dataset['W'], np.ndarray) else dataset['W']
-    P_cb_r = pandas2ri.py2rpy(pd.DataFrame(dataset['P'])) if isinstance(dataset['P'], np.ndarray) else dataset['P']
+    with localconverter(default_converter + pandas2ri.converter + numpy2ri.converter):
+        B_r = pandas2ri.py2rpy(pd.DataFrame(dataset['B'])) if isinstance(dataset['B'], np.ndarray) else dataset['B']
+        W_cb_r = pandas2ri.py2rpy(pd.DataFrame(dataset['W'])) if isinstance(dataset['W'], np.ndarray) else dataset['W']
+        P_cb_r = pandas2ri.py2rpy(pd.DataFrame(dataset['P'])) if isinstance(dataset['P'], np.ndarray) else dataset['P']
 
-    r_dataset = ListVector({
-        'B': B_r,
-        'W_cb': W_cb_r,
-        'P_cb': P_cb_r
-    })
+        r_dataset = ListVector({
+            'B': B_r,
+            'W_cb': W_cb_r,
+            'P_cb': P_cb_r
+        })
 
-    W_prime_r = numpy2ri.py2rpy(W_prime) if W_prime is not None else NULL
-    p_prime_r = numpy2ri.py2rpy(p_prime) if p_prime is not None else NULL
+        W_prime_r = numpy2ri.py2rpy(W_prime) if W_prime is not None else NULL
+        p_prime_r = numpy2ri.py2rpy(p_prime) if p_prime is not None else NULL
 
     r_func = r['nmf_lbfgsb']
     result = r_func(r_dataset, W_prime_r, p_prime_r, FloatVector([lambda_]), FloatVector([gamma]), path2save)
 
     return result
+
 
 
 def objective(dataset, config=None, **kwargs):
