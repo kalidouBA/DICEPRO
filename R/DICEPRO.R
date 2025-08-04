@@ -5,41 +5,42 @@
 #' (NMF) with L-BFGS-B optimization. It can integrate known cell type signatures
 #' and estimate the proportions of unknown cell types.
 #'
-#' @param reference A matrix of reference gene expression data, where rows are genes
-#'                  and columns are cell types (cellType x gene).
-#' @param bulk A matrix of bulk gene expression data, where rows are genes
-#'             and columns are samples (gene x sample).
+#' @param reference A numeric matrix of reference gene expression data, where rows are genes
+#'                  and columns are cell types (genes x cellTypes).
+#' @param bulk A numeric matrix of bulk gene expression data, where rows are genes
+#'             and columns are samples (genes x samples).
 #' @param methodDeconv A character string specifying the deconvolution method to be used.
 #'                     Options include: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".
-#' @param cibersortx_email An optional email address for the CIBERSORTx web-based tool.
-#' @param cibersortx_token An optional token for the CIBERSORTx web-based tool.
-#' @param W_prime A numeric value for the initial matrix W for unknown cell types,
-#'                default is 0.
-#' @param bulkName A string indicating the name of the bulk samples dataset.
-#' @param refName A string indicating the name of the reference dataset.
-#' @param hp_max_evals A numeric value indicating the maximum number of evaluations for optimization.
-#'                     Default is 100.
-#' @param N_unknownCT A numeric value for the number of unknown cell types, default is 1.
-#' @param algo_select (character) Choice of optimization algorithm. Available options: `"random"` or `"tpe"` or `"atpe"`. Par défaut, `"random"`.
-#' @param output_path Optional. A file path (character) to save the output results.
-#'                    If NULL, results are written to the current working directory (`getwd()`).
-#' @param hspaceTechniqueChoose Control the search space for hyperparameters. Available options: `"restrictionEspace"` or `"all"`. Par défaut, `"restrictionEspace"`.
+#' @param cibersortx_email (Optional) Email address for the CIBERSORTx web-based tool.
+#' @param cibersortx_token (Optional) Token for the CIBERSORTx web-based tool.
+#' @param W_prime A numeric value or matrix for the initial matrix W for unknown cell types.
+#'                Default is 0.
+#' @param bulkName A string specifying the name of the bulk dataset.
+#' @param refName A string specifying the name of the reference dataset.
+#' @param hp_max_evals A numeric value specifying the maximum number of evaluations
+#'                     for the optimization algorithm. Default is 100.
+#' @param N_unknownCT A numeric value indicating the number of unknown cell types to estimate. Default is 1.
+#' @param algo_select A character string selecting the optimization algorithm. Options: "random", "tpe", "atpe". Default is "random".
+#' @param output_path Optional character string specifying the output path to save results.
+#'                    If NULL, results will be saved in the current working directory.
+#' @param hspaceTechniqueChoose A character string to control the hyperparameter search space.
+#'                              Options: "restrictionEspace", "all". Default is "restrictionEspace".
+#' @param out_Decon Optional. A matrix of precomputed cell type proportions. If provided,
+#'                  the `running_method()` step will be skipped, and this matrix will be used directly.
 #'
-#' @return A list containing the following components:
-#' \item{Prediction}{A matrix of the estimated cell type proportions for the bulk samples, excluding
-#'                  the unknown cell type.}
-#' \item{New_signature}{A matrix of the optimized gene-cell type matrix for the cell types, including
-#'                     the unknown cell type.}
-#' \item{W_prime}{The optimized matrix W for the unknown cell types.}
-#' \item{P_prime}{The optimized proportions for the unknown cell types.}
-#' \item{constraint}{The final constraint value from the optimization process.}
+#' @return A list of class `"DICEPRO"` containing:
+#' \item{Prediction}{Estimated cell type proportions (excluding unknown cell types).}
+#' \item{New_signature}{Optimized gene expression signatures including unknown cell types.}
+#' \item{W_prime}{Optimized W matrix for unknown cell types.}
+#' \item{P_prime}{Estimated proportions for unknown cell types.}
+#' \item{constraint}{Final constraint value from the optimization.}
 #'
-#' @details The function performs cell type deconvolution using a specified method (e.g.,
-#'          "CSx") followed by optimization using non-negative matrix factorization (NMF).
-#'          The NMF part is performed using the `nmf_lbfgsb` function, where the parameters
-#'          for the optimization (e.g., `W_prime`, `p_prime`, `lambda_`, etc.) can be customized.
-#'          The optimization process is executed via a Python script using `reticulate` for
-#'          interfacing with Python.
+#' @details
+#' This function integrates deconvolution and optimization steps. If `out_Decon` is NULL,
+#' the selected deconvolution method is run first via `running_method()`. If `out_Decon`
+#' is provided, it is used directly as the predicted proportions matrix.
+#' Then the optimization is performed using Python (via `reticulate`) through the script
+#' `optimisation.py` bundled with the DICEPRO package.
 #'
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
@@ -54,26 +55,36 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Example usage of DICEPRO function
-#' set.seed(2101)
-#' data_simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 20, prop = NULL,
-#'                               nGenes = 50, nCellsType = 30)
+#' # Simulated data example
+#' set.seed(1234)
+#' sim_data <- simulation(loi = "gauss", scenario = "", bias = TRUE, nSample = 20,
+#'                        prop = NULL, nGenes = 50, nCellsType = 30)
 #'
-#' result <- DICEPRO(reference = data_simulation$reference,
-#'                   bulk = data_simulation$bulk,
+#' result <- DICEPRO(reference = sim_data$reference,
+#'                   bulk = sim_data$bulk,
 #'                   methodDeconv = "CSx",
-#'                   W_prime = 0,
-#'                   bulkName = "Bulk_Sample",
-#'                   refName = "Reference_Data",
-#'                   hp_max_evals = 100,
-#'                   N_unknownCT = 1)
+#'                   bulkName = "SimBulk",
+#'                   refName = "SimRef")
+#'
+#' # Using a precomputed deconvolution matrix
+#' precomputed_P <- matrix(runif(100), nrow = 10, ncol = 10)
+#' rownames(precomputed_P) <- colnames(sim_data$bulk)
+#' colnames(precomputed_P) <- colnames(sim_data$reference)
+#'
+#' result2 <- DICEPRO(reference = sim_data$reference,
+#'                    bulk = sim_data$bulk,
+#'                    out_Decon = precomputed_P,
+#'                    bulkName = "SimBulk",
+#'                    refName = "SimRef")
 #' }
 #'
 #' @export
 
+
 DICEPRO <- function(reference, bulk, methodDeconv = "DCQ", cibersortx_email = NULL, cibersortx_token = NULL,
                     W_prime = 0, bulkName = "Bulk", refName = "Reference", hp_max_evals = 100, N_unknownCT = 1,
-                    algo_select = "random", output_path = NULL, hspaceTechniqueChoose = "restrictionEspace") {
+                    algo_select = "random", output_path = NULL, hspaceTechniqueChoose = "restrictionEspace",
+                    out_Decon = NULL) {
 
   stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
 
@@ -99,7 +110,16 @@ DICEPRO <- function(reference, bulk, methodDeconv = "DCQ", cibersortx_email = NU
 
   rownames(reference) <- rownames(bulk) <- geneIntersect
 
-  out_Dec <- t(running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token))
+  # === Choose whether to use running_method() or a provided out_Decon ===
+  if (is.null(out_Decon)) {
+    out_Dec <- t(running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token))
+  } else {
+    message("Utilisation de l'objet out_Decon fourni, sans appel à running_method().")
+    out_Dec <- out_Decon
+    if (!is.matrix(out_Dec)) {
+      stop("L'objet 'out_Decon' doit être une matrice.")
+    }
+  }
 
   bulk_df <- as.data.frame(bulk)
   reference_df <- as.data.frame(reference)
@@ -129,16 +149,12 @@ DICEPRO <- function(reference, bulk, methodDeconv = "DCQ", cibersortx_email = NU
   optimisation$run_experiment(dataset, bulkName, refName, hp_max_evals, algo_select, output_path, hspaceTechniqueChoose)
 
   # === Call the plotting function ===
-  outputDir <- sprintf("%s/%s", output_path,dirName)
+  outputDir <- sprintf("%s/%s", output_path, dirName)
   bestHP <- try({
     plot_kraljic(outputDir)
   }, silent = TRUE)
 
-  bestHP$bestEstimation <- read.table(
-    sprintf("%s/optim/H_lambda_%s_gamma_%s.tsv", outputDir,
-            round(bestHP$lambda_, 2), round(bestHP$gamma, 2)), header = T,row.names = 1
-  )
-
   class(bestHP) <- "DICEPRO"
   return(bestHP)
 }
+

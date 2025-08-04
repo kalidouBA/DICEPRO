@@ -36,7 +36,6 @@
 
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100, path2save = "",
                        N_unknownCT = 1, con = list(maxit = 3e3)) {
-  print(path2save)
   B <- as.matrix(r_dataset$B)
   p_cb <- r_dataset$P_cb
   W_cb <- r_dataset$W_cb

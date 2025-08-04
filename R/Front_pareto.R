@@ -126,8 +126,8 @@ plot_kraljic <- function(outputDir) {
   best_idx <- which.min(
     data2plotfrontier_result$frobNorm + 10 * abs(1 - data2plotfrontier_result$constraint)
   )
-  bestHP <- as.list(data2plotfrontier_result[best_idx, c("gamma", "lambda_", "p_prime")])
-
+  bestHP <- list('frontPreto' = data2plotfrontier_result)
+  bestHP$best_idx <- best_idx
   return(bestHP)
 }
 

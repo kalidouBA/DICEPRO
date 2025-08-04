@@ -1,6 +1,9 @@
 import sys
 import pandas as pd
+from rpy2.robjects import r, FloatVector, ListVector, NULL
 from rpy2.robjects import pandas2ri, numpy2ri
+from rpy2.robjects.conversion import localconverter
+from rpy2.robjects import default_converter
 import reservoirpy
 import json
 import matplotlib.pyplot as plt
@@ -10,14 +13,13 @@ from utils import generate_experiment_paths
 from plot_hyperOpt import plot_hyperopt_report_v2
 from hypersearch import research_v2
 from hyperopt import hp
+from rpy2.robjects.vectors import StrVector
 
-iteration = 0
 def redirect_output_to_file(log_file):
     sys.stdout = open(log_file, 'a')
 
 def reset_output():
     sys.stdout = sys.__stdout__
-
 
 def convert_trials_to_dict(trials):
     """Convertit un objet Trials en dictionnaire JSON-sérialisable."""
@@ -34,9 +36,6 @@ def contains_nan_or_inf(value):
 
 def nmf_lbfgsb_hyperOpt(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=100, path2save=""):
     """Appelle la fonction R pour effectuer l'optimisation."""
-    from rpy2.robjects import r, pandas2ri, numpy2ri, FloatVector, ListVector, NULL, default_converter
-    from rpy2.robjects.conversion import localconverter
-
     r('library(DICEPRO)')
 
     with localconverter(default_converter + pandas2ri.converter + numpy2ri.converter):
@@ -54,11 +53,11 @@ def nmf_lbfgsb_hyperOpt(dataset, W_prime=None, p_prime=None, lambda_=10, gamma=1
         p_prime_r = numpy2ri.py2rpy(p_prime) if p_prime is not None else NULL
 
     r_func = r['nmf_lbfgsb']
-    result = r_func(r_dataset, W_prime_r, p_prime_r, FloatVector([lambda_]), FloatVector([gamma]), path2save)
+    path2save_r = StrVector([path2save])[0]
+
+    result = r_func(r_dataset, W_prime_r, p_prime_r, FloatVector([lambda_]), FloatVector([gamma]), path2save_r)
 
     return result
-
-
 
 def objective(dataset, config=None, **kwargs):
     """Objective function for HyperOpt."""
@@ -67,19 +66,17 @@ def objective(dataset, config=None, **kwargs):
     W_prime = kwargs.get("W_prime", 0)
     exp_dir = config.get("exp", ".") if config else "."
 
-    # Handle gamma depending on which search space is used
     if "gamma_factor" in kwargs:
         gamma_factor = kwargs["gamma_factor"]
         gamma = lambda_ * gamma_factor
     else:
         gamma_factor = None
         gamma = kwargs.get("gamma")
-        
+
     saveHpath = config.get("exp", exp_dir)
     print(saveHpath)
     result = nmf_lbfgsb_hyperOpt(dataset, W_prime, p_prime, lambda_, gamma, saveHpath)
 
-    # Convert named result to dict of numpy arrays
     result_dict = {name: np.array(result[i]) for i, name in enumerate(result.names)}
 
     if contains_nan_or_inf(result_dict.get('loss', np.array([]))) or contains_nan_or_inf(result_dict.get('constraint', np.array([]))):
@@ -119,7 +116,6 @@ def objective(dataset, config=None, **kwargs):
         }
     }
 
-
 def custom_space():
     return {
         "lambda_": hp.loguniform("lambda_", np.log(1), np.log(1e5)),
@@ -131,16 +127,14 @@ def run_experiment(dataset, bulkName="", refName="", hp_max_evals=100, algo_sele
     """
     Runs a hyperparameter optimization experiment and saves results in a structured directory.
     """
-    pandas2ri.activate()
 
-    # Generate necessary paths for saving experiment artifacts
+    # Génération des chemins de sortie
     output_dir, optim_dir, data_dir, config_path, best_json_path, trials_json_path, report_dir, report_path = generate_experiment_paths(
         output_base_dir, bulkName, refName, hspaceTechniqueChoose, algo_select
     )
 
-    hp_space = None  # Default hyperparameter space (may be customized below)
+    hp_space = None
 
-    # Choose hyperparameter search space based on the selected technique
     if hspaceTechniqueChoose == "all":
         hyperopt_config = {
             "exp": optim_dir, 
@@ -161,32 +155,23 @@ def run_experiment(dataset, bulkName="", refName="", hp_max_evals=100, algo_sele
             "hp_method": algo_select,
             "seed": 4
         }
-        hp_space = custom_space()  # Custom-defined hyperparameter space
-    
+        hp_space = custom_space()
+
     else:
-        # Raise an error if the selected technique is invalid
         raise ValueError(f"Technique '{hspaceTechniqueChoose}' not available. Choose 'all' or 'restrictionEspace'.")
 
-    # Save the experiment configuration as a JSON file
     with open(config_path, "w") as f:
         json.dump(hyperopt_config, f)
-        
-    # Run the optimization process
+
     best, trials = research_v2(objective, dataset, config_path, hp_space, report_dir)
 
-    # Save all trials in JSON format
     with open(trials_json_path, "w") as f:
         json.dump(convert_trials_to_dict(trials), f, indent=4)
-    
-    # Plot the optimization report depending on the technique used
+
     if hspaceTechniqueChoose == "all":
         fig_constraint = plot_hyperopt_report_v2(optim_dir, ("gamma", "lambda_", "p_prime"), metric="constraint")
-    else:  # for 'restrictionEspace'
+    else:
         fig_constraint = plot_hyperopt_report_v2(optim_dir, ("gamma_factor", "lambda_", "p_prime"), metric="constraint")
 
-    # Save the plot and display it
     fig_constraint.savefig(report_path)
     plt.show()
-
-
-
