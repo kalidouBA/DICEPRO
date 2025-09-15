@@ -4,34 +4,50 @@
 \alias{compare_abundances}
 \title{Compare Two Data Frames Column by Column}
 \usage{
-compare_abundances(x, y, method = "weighted")
+compare_abundances(
+  x,
+  y,
+  method = "weighted",
+  nrmse_method = "sd",
+  transformation = "none",
+  trans_function = "none"
+)
 }
 \arguments{
-\item{x}{A numeric data frame.}
+\item{x}{A numeric data frame}
 
-\item{y}{A numeric data frame with the same dimensions as \code{x}.}
+\item{y}{A numeric data frame with the same dimensions as \code{x}}
 
-\item{method}{Aggregation method for combined metrics: "weighted" (default, weights by SD) or "unweighted".}
+\item{method}{Aggregation method for combined metrics: "weighted" (default, weights by SD) or "unweighted"}
+
+\item{nrmse_method}{Character string specifying the normalization method for NRMSE:
+"sd" (standard deviation), "mean", "maxmin" (range), or "iq" (interquartile range)}
+
+\item{transformation}{Character string specifying data transformation for NRMSE:
+"none", "sqrt", "4thrt", "log", "log10", "log2", "log1p", "arcsine", or "other"}
+
+\item{trans_function}{Character string specifying custom transformation function
+(required when transformation = "other")}
 }
 \value{
 A list with:
 \describe{
-\item{by_column}{Named list of per-column metrics: NRMSE, R^2 adjusted, ICC3, and CCC.}
-\item{combined}{Aggregated metrics across all columns (weighted or unweighted).}
-\item{method}{Description of the aggregation method used.}
+\item{by_column}{Named list of per-column metrics: NRMSE, R^2, ICC, and CCC}
+\item{combined}{Aggregated metrics across all columns (weighted or unweighted)}
+\item{method}{Description of the aggregation method used}
 }
 }
 \description{
 This function compares two numeric data frames of equal dimensions by computing
-statistical metrics (NRMSE, adjusted R^2, ICC3, and CCC) for each column,
+statistical metrics (NRMSE, R^2, ICC, and CCC) for each column,
 after Z-score normalization. It returns per-column results and a combined summary.
 }
 \details{
 \itemize{
-\item Z-score normalization is applied to each column.
-\item If standard deviation is zero, the column is set to zero.
-\item ICC3 is computed if the \pkg{irr} package is available.
-\item CCC (Concordance Correlation Coefficient) is computed using the formula from Lin (1989).
+\item Z-score normalization is applied to each column
+\item If standard deviation is zero, the column is set to zero
+\item ICC is computed using full_icc_gaussian function
+\item CCC (Concordance Correlation Coefficient) is computed using the formula from Lin (1989)
 }
 }
 \examples{
@@ -43,5 +59,6 @@ compare_abundances(df1, df2)
 
 }
 \references{
-Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility. \emph{Biometrics}, 45(1), 255-268.
+Lin, L. I. (1989). A concordance correlation coefficient to evaluate reproducibility.
+\emph{Biometrics}, 45(1), 255-268.
 }

@@ -99,6 +99,5 @@ generate_experiment_paths <- function(output_dir, bulkName, refName,
 #'   \item Report bugs at \url{https://github.com/yourusername/hyperopt-r/issues}
 #' }
 #'
-#' @docType package
 #' @name hyperopt-package
-NULL
+"_PACKAGE"

@@ -153,7 +153,7 @@ computPerf <- function(x, y, metric, method = "sd", transformation = "none", tra
 #' compare_abundances(df1, df2)
 #' }
 #'
-#' @importFrom stats cov var weighted.mean setNames sd mean
+#' @importFrom stats cov var weighted.mean setNames sd
 #' @importFrom utils read.table
 #' @export
 compare_abundances <- function(x, y, method = "weighted",

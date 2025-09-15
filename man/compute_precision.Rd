@@ -2,27 +2,28 @@
 % Please edit documentation in R/metrics.R
 \name{compute_precision}
 \alias{compute_precision}
-\title{Compute precision of estimated}
+\title{Compute Precision of Estimation}
 \usage{
 compute_precision(Y, Y_tilde)
 }
 \arguments{
-\item{Y}{The gene expression matrix.}
+\item{Y}{The gene expression matrix}
 
-\item{Y_tilde}{The product of the reference matrix and the estimated abundance matrix.}
+\item{Y_tilde}{The product of the reference matrix and the estimated abundance matrix}
 }
 \value{
-The precision of sequential simulation.
+The precision value as a numeric scalar
 }
 \description{
-This function computes the precision of estimated by evaluating
+This function computes the precision of estimation by evaluating
 the Frobenius norm of the difference between the gene expression matrix (Y)
 and the product of the reference matrix and the estimated abundance matrix (Y_tilde),
-normalized by the Frobenius norm of the the gene expression matrix (Y).
+normalized by the Frobenius norm of the gene expression matrix (Y).
 }
 \examples{
-Y <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow=3, ncol=3, byrow=TRUE)
+Y <- matrix(c(3, 5, 7, 2, 6, 4, 0, 2, 8), nrow = 3, ncol = 3, byrow = TRUE)
 Y_tilde <- Y
 precision <- compute_precision(Y, Y_tilde)
-cat("Precision of sequential simulation:", precision, "\n")
+cat("Precision of estimation:", precision, "\n")
+
 }

@@ -2,37 +2,53 @@
 % Please edit documentation in R/metrics.R
 \name{computPerf}
 \alias{computPerf}
-\title{Compute Performance Metrics for Comparing Two Data Matrices of abundances}
+\title{Compute Performance Metrics for Comparing Two Data Matrices}
 \usage{
-computPerf(x, y, metric)
+computPerf(
+  x,
+  y,
+  metric,
+  method = "sd",
+  transformation = "none",
+  trans_function = "none"
+)
 }
 \arguments{
-\item{x}{A matrix of cell type proportions from the i iteration}
+\item{x}{A matrix of values (e.g., cell type proportions from iteration i)}
 
-\item{y}{A matrix of cell type proportions from the i+1 iteration.}
+\item{y}{A matrix of values (e.g., cell type proportions from iteration i+1)}
 
-\item{metric}{A metric select between adjusted R-squared (R2_adj), Root Mean Square Error Relative RMSE (RRMSE).}
+\item{metric}{A character string specifying the metric to compute:
+"NRMSE" for Normalized Root Mean Square Error or
+"R2" for R-squared}
+
+\item{method}{Character string specifying the normalization method for NRMSE:
+"sd" (standard deviation), "mean", "maxmin" (range), or "iq" (interquartile range)}
+
+\item{transformation}{Character string specifying data transformation for NRMSE:
+"none", "sqrt", "4thrt", "log", "log10", "log2", "log1p", "arcsine", or "other"}
+
+\item{trans_function}{Character string specifying custom transformation function
+(required when transformation = "other")}
 }
 \value{
-A data frame containing performance metrics for each variable in the comparison.
+A numeric value representing the computed performance metric
 }
 \description{
 This function computes performance metrics to compare two data matrices.
-The function calculates various performance metrics, including adjusted R-squared (R2_adj),
-Root Mean Square Error Relative RMSE (RRMSE).
+It calculates either Normalized Root Mean Square Error (NRMSE) or
+R-squared (R2) based on the specified metric.
 }
 \details{
-The function calculates and returns the following performance metrics for each variable:
-\itemize{
-\item \code{R2_adj}: Adjusted R-squared.
-\item \code{RRMSE}: Relative Root Mean Square Error (RRMSE).
-}
+For NRMSE: Uses the nrmse function with specified parameters
+For R2: Uses the r2_1dim function
 }
 \examples{
 if(interactive()){
- x <- matrix(rnorm(50), ncol = 5)
- y <- matrix(rnorm(50), ncol = 5)
- colnames(x) <- colnames(y) <- paste0("C_", 1:5)
- result <- computPerf(x, y, "RRMSE")
+  x <- matrix(rnorm(50), ncol = 5)
+  y <- matrix(rnorm(50), ncol = 5)
+  colnames(x) <- colnames(y) <- paste0("C_", 1:5)
+  result <- computPerf(x, y, "NRMSE")
 }
+
 }

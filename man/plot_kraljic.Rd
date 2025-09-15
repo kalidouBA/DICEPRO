@@ -4,29 +4,63 @@
 \alias{plot_kraljic}
 \title{Generate a Kraljic Pareto plot without ground-truth-based metrics}
 \usage{
-plot_kraljic(outputDir)
+plot_kraljic(outputDir, mixName, refName)
 }
 \arguments{
-\item{outputDir}{Name of the directory saving output.}
+\item{outputDir}{Character string. Name of the directory saving output.}
+
+\item{mixName}{Character string. Name of the mixture dataset (for labeling).}
+
+\item{refName}{Character string. Name of the reference dataset (for labeling).}
 }
 \value{
-A named list corresponding to the best solution on the Pareto frontier.
+A list containing:
+\item{frontier_points}{Dataframe containing all points on the Pareto frontier}
+\item{optimal_points}{List with two optimal points:
+\itemize{
+\item{DiceproOptCstrt: Point with constraint closest to 1}
+\item{DiceproOptCstrt_0.1: Point minimizing Frobenius norm with constraint within ±10\%}
+}
+}
+\item{optimal_tsv_data}{List with TSV data corresponding to optimal points}
+\item{plot}{The generated plotly object}
 }
 \description{
 This function generates an interactive Plotly figure showing the Pareto frontier
 based on Frobenius norm and constraint deviation, excluding performance indicators
-calculated against ground truth (e.g., R2, NRMSE).
+calculated against ground truth. It also identifies optimal points based on
+different constraint criteria and includes corresponding TSV data.
 }
 \details{
 The function reads input data from a folder derived from dataset and algorithm names,
 processes the data, computes the Pareto frontier using the \code{KraljicMatrix} package,
-and saves an interactive HTML file. It also returns the frontier solution with the lowest
-Frobenius norm and constraint deviation closest to zero (i.e., constraint closest to 1).
+and saves an interactive HTML file. It returns the frontier points and optimal solutions.
+
+The function performs the following steps:
+\enumerate{
+\item Reads and preprocesses JSON performance data
+\item Identifies the Pareto frontier using KraljicMatrix::get_frontier()
+\item Finds optimal points based on constraint criteria
+\item Loads corresponding TSV files for optimal points
+\item Generates an interactive plotly visualization
+\item Saves HTML plots to the specified directory
+}
 }
 \examples{
 \dontrun{
-plot_kraljic(outputDir)
-}
+result <- plot_kraljic(
+  outputDir = "results/",
+  mixName = "mix1",
+  refName = "ref1"
+)
 
+# Access optimal points
+optimal_DiceproOptCstrt <- result$optimal_points$DiceproOptCstrt
+optimal_DiceproOptCstrt_0.1 <- result$optimal_points$DiceproOptCstrt_0.1
+
+# Access corresponding TSV data
+tsv_data_DiceproOptCstrt <- result$optimal_tsv_data$DiceproOptCstrt
+tsv_data_DiceproOptCstrt_0.1 <- result$optimal_tsv_data$DiceproOptCstrt_0.1
+}
 
 }

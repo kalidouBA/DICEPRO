@@ -17,81 +17,51 @@ DICEPRO(
   N_unknownCT = 1,
   algo_select = "random",
   output_path = NULL,
-  hspaceTechniqueChoose = "restrictionEspace"
+  hspaceTechniqueChoose = "restrictionEspace",
+  out_Decon = NULL
 )
 }
 \arguments{
-\item{reference}{A matrix of reference gene expression data, where rows are genes
-and columns are cell types (cellType x gene).}
+\item{reference}{Numeric matrix of reference gene expression data (genes x cell types).}
 
-\item{bulk}{A matrix of bulk gene expression data, where rows are genes
-and columns are samples (gene x sample).}
+\item{bulk}{Numeric matrix of bulk gene expression data (genes x samples).}
 
-\item{methodDeconv}{A character string specifying the deconvolution method to be used.
-Options include: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".}
+\item{methodDeconv}{Deconvolution method: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".}
 
-\item{cibersortx_email}{An optional email address for the CIBERSORTx web-based tool.}
+\item{cibersortx_email}{Email for CIBERSORTx (optional).}
 
-\item{cibersortx_token}{An optional token for the CIBERSORTx web-based tool.}
+\item{cibersortx_token}{Token for CIBERSORTx (optional).}
 
-\item{W_prime}{A numeric value for the initial matrix W for unknown cell types,
-default is 0.}
+\item{W_prime}{Initial W matrix for unknown cell types (default 0).}
 
-\item{bulkName}{A string indicating the name of the bulk samples dataset.}
+\item{bulkName}{Name of bulk dataset.}
 
-\item{refName}{A string indicating the name of the reference dataset.}
+\item{refName}{Name of reference dataset.}
 
-\item{hp_max_evals}{A numeric value indicating the maximum number of evaluations for optimization.
-Default is 100.}
+\item{hp_max_evals}{Max evaluations for optimization (default 100).}
 
-\item{N_unknownCT}{A numeric value for the number of unknown cell types, default is 1.}
+\item{N_unknownCT}{Number of unknown cell types to estimate (default 1).}
 
-\item{algo_select}{(character) Choice of optimization algorithm. Available options: \code{"random"} or \code{"tpe"} or \code{"atpe"}. Par défaut, \code{"random"}.}
+\item{algo_select}{Optimization algorithm: "random", "tpe", "atpe" (default "random").}
 
-\item{output_path}{Optional. A file path (character) to save the output results.
-If NULL, results are written to the current working directory (\code{getwd()}).}
+\item{output_path}{Path to save results (default current working directory).}
 
-\item{hspaceTechniqueChoose}{Control the search space for hyperparameters. Available options: \code{"restrictionEspace"} or \code{"all"}. Par défaut, \code{"restrictionEspace"}.}
+\item{hspaceTechniqueChoose}{Hyperparameter search space: "restrictionEspace", "all" (default "restrictionEspace").}
+
+\item{out_Decon}{Precomputed deconvolution matrix (optional).}
 }
 \value{
-A list containing the following components:
-\item{Prediction}{A matrix of the estimated cell type proportions for the bulk samples, excluding
-the unknown cell type.}
-\item{New_signature}{A matrix of the optimized gene-cell type matrix for the cell types, including
-the unknown cell type.}
-\item{W_prime}{The optimized matrix W for the unknown cell types.}
-\item{P_prime}{The optimized proportions for the unknown cell types.}
-\item{constraint}{The final constraint value from the optimization process.}
+List of class "DICEPRO" containing:
+\item{Prediction}{Estimated cell type proportions (excluding unknowns).}
+\item{New_signature}{Optimized gene expression signatures including unknown cell types.}
+\item{W_prime}{Optimized W matrix for unknown cell types.}
+\item{P_prime}{Estimated proportions for unknown cell types.}
+\item{constraint}{Final constraint value from optimization.}
+\item{optimization_results}{Complete optimization results including both optimal points and TSV data.}
 }
 \description{
-This function performs cell type deconvolution of bulk gene expression data using
-a combination of a deconvolution method and Non-Negative Matrix Factorization
-(NMF) with L-BFGS-B optimization. It can integrate known cell type signatures
-and estimate the proportions of unknown cell types.
-}
-\details{
-The function performs cell type deconvolution using a specified method (e.g.,
-"CSx") followed by optimization using non-negative matrix factorization (NMF).
-The NMF part is performed using the \code{nmf_lbfgsb} function, where the parameters
-for the optimization (e.g., \code{W_prime}, \code{p_prime}, \code{lambda_}, etc.) can be customized.
-The optimization process is executed via a Python script using \code{reticulate} for
-interfacing with Python.
-}
-\examples{
-\dontrun{
-# Example usage of DICEPRO function
-set.seed(2101)
-data_simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 20, prop = NULL,
-                              nGenes = 50, nCellsType = 30)
-
-result <- DICEPRO(reference = data_simulation$reference,
-                  bulk = data_simulation$bulk,
-                  methodDeconv = "CSx",
-                  W_prime = 0,
-                  bulkName = "Bulk_Sample",
-                  refName = "Reference_Data",
-                  hp_max_evals = 100,
-                  N_unknownCT = 1)
-}
-
+This function performs cell type deconvolution of bulk gene expression data
+using a combination of a deconvolution method and Non-Negative Matrix
+Factorization (NMF) with L-BFGS-B optimization. It can integrate known
+cell type signatures and estimate the proportions of unknown cell types.
 }
