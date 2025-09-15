@@ -37,6 +37,7 @@ Imports:
     Rcpp,
     RcppEigen,
     dplyr,
+    readr,
     plotly,
     htmlwidgets,
     purrr,

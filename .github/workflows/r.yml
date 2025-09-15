@@ -72,10 +72,10 @@ jobs:
           upload-snapshots: true
 
 
-      # Install R dependencies (including lme4)
+      # Install R dependencies (all listed in DESCRIPTION Imports)
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck,lme4
+          extra-packages: any::rcmdcheck,lme4,readr
           needs: check
 
       # Run R CMD check
