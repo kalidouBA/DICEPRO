@@ -27,6 +27,7 @@ LinkingTo:
     Rcpp,
     RcppEigen
 Imports:
+    lme4,
     lbfgsb3c,
     KraljicMatrix,
     matrixStats,

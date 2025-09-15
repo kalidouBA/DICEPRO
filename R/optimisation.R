@@ -1,17 +1,3 @@
-#' Define custom hyperparameter search space
-#'
-#' Returns a list of functions generating random hyperparameter values.
-#'
-#' @return List of functions for `lambda_`, `gamma_factor`, and `p_prime`.
-#' @export
-custom_space <- function() {
-  list(
-    lambda_ = function() exp(runif(1, log(1), log(1e5))),
-    gamma_factor = function() exp(runif(1, log(2), log(1e2))),
-    p_prime = function() exp(runif(1, log(1e-1), log(1)))
-  )
-}
-
 #' Run hyperparameter optimization experiment
 #'
 #' Performs hyperparameter optimization, saves trials and results, and generates reports.
@@ -92,4 +78,19 @@ run_experiment <- function(dataset, W_prime = 0, bulkName = "", refName = "", hp
     plot = fp_plot$plot,
     hyperopt_plot = fig_constraint
   ))
+}
+
+
+#' Define custom hyperparameter search space
+#'
+#' Returns a list of functions generating random hyperparameter values.
+#'
+#' @return List of functions for `lambda_`, `gamma_factor`, and `p_prime`.
+#' @export
+custom_space <- function() {
+  list(
+    lambda_ = function() exp(runif(1, log(1), log(1e5))),
+    gamma_factor = function() exp(runif(1, log(2), log(1e2))),
+    p_prime = function() exp(runif(1, log(1e-1), log(1)))
+  )
 }
