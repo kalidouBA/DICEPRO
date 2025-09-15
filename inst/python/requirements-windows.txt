@@ -1,8 +1,0 @@
-hyperopt
-lightgbm
-matplotlib
-pandas
-reservoirpy
-scikit-learn
-scipy
-seaborn
