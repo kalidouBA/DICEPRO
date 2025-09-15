@@ -2,33 +2,65 @@
 #'
 #' This function generates an interactive Plotly figure showing the Pareto frontier
 #' based on Frobenius norm and constraint deviation, excluding performance indicators
-#' calculated against ground truth (e.g., R2, NRMSE).
+#' calculated against ground truth. It also identifies optimal points based on
+#' different constraint criteria and includes corresponding TSV data.
 #'
 #' The function reads input data from a folder derived from dataset and algorithm names,
 #' processes the data, computes the Pareto frontier using the \code{KraljicMatrix} package,
-#' and saves an interactive HTML file. It also returns the frontier solution with the lowest
-#' Frobenius norm and constraint deviation closest to zero (i.e., constraint closest to 1).
+#' and saves an interactive HTML file. It returns the frontier points and optimal solutions.
 #'
-#' @param outputDir Name of the directory saving output.
+#' @param outputDir Character string. Name of the directory saving output.
+#' @param mixName Character string. Name of the mixture dataset (for labeling).
+#' @param refName Character string. Name of the reference dataset (for labeling).
 #'
-#' @return A named list corresponding to the best solution on the Pareto frontier.
-#' @export
+#' @return A list containing:
+#'   \item{frontier_points}{Dataframe containing all points on the Pareto frontier}
+#'   \item{optimal_points}{List with two optimal points:
+#'     \itemize{
+#'       \item{DiceproOptCstrt: Point with constraint closest to 1}
+#'       \item{DiceproOptCstrt_0.1: Point minimizing Frobenius norm with constraint within ±10%}
+#'     }
+#'   }
+#'   \item{optimal_tsv_data}{List with TSV data corresponding to optimal points}
+#'   \item{plot}{The generated plotly object}
 #'
-#' @importFrom dplyr mutate row_number
+#' @details
+#' The function performs the following steps:
+#' 1. Reads and preprocesses JSON performance data
+#' 2. Identifies the Pareto frontier using KraljicMatrix::get_frontier()
+#' 3. Finds optimal points based on constraint criteria
+#' 4. Loads corresponding TSV files for optimal points
+#' 5. Generates an interactive plotly visualization
+#' 6. Saves HTML plots to the specified directory
+#'
+#' @examples
+#' \dontrun{
+#' result <- plot_kraljic(
+#'   outputDir = "results/",
+#'   mixName = "mix1",
+#'   refName = "ref1"
+#' )
+#'
+#' # Access optimal points
+#' optimal_DiceproOptCstrt <- result$optimal_points$DiceproOptCstrt
+#' optimal_DiceproOptCstrt_0.1 <- result$optimal_points$DiceproOptCstrt_0.1
+#'
+#' # Access corresponding TSV data
+#' tsv_data_DiceproOptCstrt <- result$optimal_tsv_data$DiceproOptCstrt
+#' tsv_data_DiceproOptCstrt_0.1 <- result$optimal_tsv_data$DiceproOptCstrt_0.1
+#' }
+#'
+#' @importFrom dplyr mutate filter slice row_number
 #' @importFrom plotly plot_ly add_trace layout config
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom KraljicMatrix get_frontier
 #' @importFrom purrr map compact
 #' @importFrom dplyr bind_rows
-#'
-#' @examples
-#' \dontrun{
-#' plot_kraljic(outputDir)
-#' }
-#'
-#'
-plot_kraljic <- function(outputDir) {
+#' @importFrom readr read_tsv
+#' @export
+plot_kraljic <- function(outputDir, mixName, refName) {
   json_dir <- paste0(outputDir, "/optim/results")
+  tsv_dir <- paste0(outputDir, "/optim")  # Directory containing TSV files
 
   data2plot <- load_all_json(json_dir)
   rownames(data2plot) <- gsub("^.*\\.(\\d+)$", "\\1", rownames(data2plot))
@@ -52,7 +84,70 @@ plot_kraljic <- function(outputDir) {
   )
   data2plotfrontier_result <- data2plot[rownames(frontier_result), ]
 
-  # Plot
+  # Finding the optimal points
+  optimal_points <- list()
+  optimal_tsv_data <- list()  # To store corresponding TSV data
+
+  # Point with constraint closest to 1
+  optimal_points$DiceproOptCstrt <- data2plotfrontier_result %>%
+    filter(abs_constraint == min(abs_constraint)) %>%
+    slice(1) %>%
+    mutate(
+      type = "DiceproOptCstrt",
+      mix = mixName,
+      ref = refName
+    )
+
+  # Point that minimizes the Frobenius norm with a constraint of ±10%
+  optimal_points$DiceproOptCstrt_0.1 <- data2plotfrontier_result %>%
+    filter(scaled_constraint == 1) %>%
+    filter(constraint >= 0.9 & constraint <= 1.1) %>%
+    filter(frobNorm == min(frobNorm)) %>%
+    slice(1) %>%
+    mutate(
+      type = "DiceproOptCstrt_0.1",
+      mix = mixName,
+      ref = refName
+    )
+
+  # Load corresponding TSV files for optimal points
+  load_tsv_data <- function(optimal_point, point_name) {
+    # Construct the expected TSV filename pattern
+    lambda_val <- optimal_point$lambda_
+    gamma_val <- optimal_point$gamma
+
+    # Format the values to match the filename pattern
+    lambda_formatted <- formatC(lambda_val, format = "e", digits = 2)
+    gamma_formatted <- formatC(gamma_val, format = "e", digits = 2)
+
+    # Create the filename pattern to search for
+    pattern <- sprintf("H_lambda_%s_gamma_%s",
+                       gsub("\\.", "_", lambda_formatted),
+                       gsub("\\.", "_", gamma_formatted))
+
+    # Find matching TSV files
+    tsv_files <- list.files(
+      path = tsv_dir,
+      pattern = paste0("^", pattern, ".*\\.tsv$"),
+      full.names = TRUE
+    )
+
+    if (length(tsv_files) > 0) {
+      # Read the first matching TSV file
+      tsv_data <- readr::read_tsv(tsv_files[1], show_col_types = FALSE)
+      return(tsv_data)
+    } else {
+      warning(paste("No TSV file found for", point_name,
+                    "with lambda =", lambda_val, "gamma =", gamma_val))
+      return(NULL)
+    }
+  }
+
+  # Load TSV data for both optimal points
+  optimal_tsv_data$DiceproOptCstrt <- load_tsv_data(optimal_points$DiceproOptCstrt, "DiceproOptCstrt")
+  optimal_tsv_data$DiceproOptCstrt_0.1 <- load_tsv_data(optimal_points$DiceproOptCstrt_0.1, "DiceproOptCstrt_0.1")
+
+  # Plot (unchanged from your original code)
   fig_kraljic <- plotly::plot_ly() %>%
     plotly::add_trace(
       data = data2plot,
@@ -122,13 +217,13 @@ plot_kraljic <- function(outputDir) {
     selfcontained = FALSE
   )
 
-  # ---- Return best solution as named list ----
-  best_idx <- which.min(
-    data2plotfrontier_result$frobNorm + 10 * abs(1 - data2plotfrontier_result$constraint)
-  )
-  bestHP <- list('frontPreto' = data2plotfrontier_result)
-  bestHP$best_idx <- best_idx
-  return(bestHP)
+  # Return results including TSV data
+  return(list(
+    frontier_points = data2plotfrontier_result,
+    optimal_points = optimal_points,
+    optimal_tsv_data = optimal_tsv_data,
+    plot = configured_fig
+  ))
 }
 
 
