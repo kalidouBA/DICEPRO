@@ -16,6 +16,8 @@ A combined plot showing the cell abundance heatmap and error plot.
 }
 \description{
 This function combines the results of a cell abundance heatmap and an error plot for visualization.
+It takes a list \code{x} containing the results of both plots and generates the combined plot.
+You can pass additional arguments to customize the appearance of the plots.
 }
 \seealso{
 Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{metric_plot}}.

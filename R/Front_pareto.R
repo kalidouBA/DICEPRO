@@ -56,7 +56,6 @@
 #' @importFrom KraljicMatrix get_frontier
 #' @importFrom purrr map compact
 #' @importFrom dplyr bind_rows
-#' @importFrom readr read_tsv
 #' @export
 plot_kraljic <- function(outputDir, mixName, refName) {
   json_dir <- paste0(outputDir, "/optim/results")
@@ -86,76 +85,60 @@ plot_kraljic <- function(outputDir, mixName, refName) {
 
   # Finding the optimal points
   optimal_points <- list()
-  optimal_tsv_data <- list()  # To store corresponding TSV data
+  optimal_tsv_data <- list()
 
   # Point with constraint closest to 1
   optimal_points$DiceproOptCstrt <- data2plotfrontier_result %>%
-    filter(abs_constraint == min(abs_constraint)) %>%
-    slice(1) %>%
-    mutate(
+    dplyr::slice_min(abs_constraint, n = 1, with_ties = FALSE) %>%
+    dplyr::mutate(
       type = "DiceproOptCstrt",
       mix = mixName,
       ref = refName
     )
 
   # Point that minimizes the Frobenius norm with a constraint of ±10%
-  optimal_points$DiceproOptCstrt_0.1 <- data2plotfrontier_result %>%
-    filter(scaled_constraint == 1) %>%
-    filter(constraint >= 0.9 & constraint <= 1.1) %>%
-    filter(frobNorm == min(frobNorm)) %>%
-    slice(1) %>%
-    mutate(
-      type = "DiceproOptCstrt_0.1",
-      mix = mixName,
-      ref = refName
-    )
+  candidates <- data2plotfrontier_result %>%
+    dplyr::filter(constraint >= 0.9 & constraint <= 1.1)
 
-  # Load corresponding TSV files for optimal points
-  load_tsv_data <- function(optimal_point, point_name) {
-    # Construct the expected TSV filename pattern
-    lambda_val <- optimal_point$lambda_
-    gamma_val <- optimal_point$gamma
-
-    # Format the values to match the filename pattern
-    lambda_formatted <- formatC(lambda_val, format = "e", digits = 2)
-    gamma_formatted <- formatC(gamma_val, format = "e", digits = 2)
-
-    # Create the filename pattern to search for
-    pattern <- sprintf("H_lambda_%s_gamma_%s",
-                       gsub("\\.", "_", lambda_formatted),
-                       gsub("\\.", "_", gamma_formatted))
-
-    # Find matching TSV files
-    tsv_files <- list.files(
-      path = tsv_dir,
-      pattern = paste0("^", pattern, ".*\\.tsv$"),
-      full.names = TRUE
-    )
-
-    if (length(tsv_files) > 0) {
-      # Read the first matching TSV file
-      tsv_data <- readr::read_tsv(tsv_files[1], show_col_types = FALSE)
-      return(tsv_data)
-    } else {
-      warning(paste("No TSV file found for", point_name,
-                    "with lambda =", lambda_val, "gamma =", gamma_val))
-      return(NULL)
-    }
+  if (nrow(candidates) > 0) {
+    optimal_points$DiceproOptCstrt_0.1 <- candidates %>%
+      dplyr::slice_min(frobNorm, n = 1, with_ties = FALSE) %>%
+      dplyr::mutate(
+        type = "DiceproOptCstrt_0.1",
+        mix = mixName,
+        ref = refName
+      )
+  } else {
+    message("\u26A0 Aucun point ne satisfait le crit\u00E8re \u00B110%.")
+    optimal_points$DiceproOptCstrt_0.1 <- NULL
   }
 
-  # Load TSV data for both optimal points
-  optimal_tsv_data$DiceproOptCstrt <- load_tsv_data(optimal_points$DiceproOptCstrt, "DiceproOptCstrt")
-  optimal_tsv_data$DiceproOptCstrt_0.1 <- load_tsv_data(optimal_points$DiceproOptCstrt_0.1, "DiceproOptCstrt_0.1")
+  # Load TSV files only if the points exist
+  optimal_tsv_data$DiceproOptCstrt <- load_tsv_data(
+    optimal_points$DiceproOptCstrt,
+    "DiceproOptCstrt",
+    tsv_dir
+  )
 
-  # Plot (unchanged from your original code)
+  if (!is.null(optimal_points$DiceproOptCstrt_0.1)) {
+    optimal_tsv_data$DiceproOptCstrt_0.1 <- load_tsv_data(
+      optimal_points$DiceproOptCstrt_0.1,
+      "DiceproOptCstrt_0.1",
+      tsv_dir
+    )
+  } else {
+    optimal_tsv_data$DiceproOptCstrt_0.1 <- NULL
+  }
+
+  # Plot
   fig_kraljic <- plotly::plot_ly() %>%
     plotly::add_trace(
       data = data2plot,
       x = ~frobNorm,
       y = ~abs_constraint,
-      type = 'scatter',
-      mode = 'markers',
-      marker = list(color = 'gray', size = 6),
+      type = "scatter",
+      mode = "markers",
+      marker = list(color = "gray", size = 6),
       name = "Valid Solutions",
       text = ~paste(
         "<b>\u03BB:</b>", formatC(lambda_, format = "e", digits = 2), "<br>",
@@ -173,10 +156,10 @@ plot_kraljic <- function(outputDir, mixName, refName) {
       data = data2plotfrontier_result[order(data2plotfrontier_result$frobNorm), ],
       x = ~frobNorm,
       y = ~abs_constraint,
-      type = 'scatter',
-      mode = 'markers+lines',
-      marker = list(color = 'red', size = 8, symbol = 'diamond'),
-      line = list(color = 'red', width = 2),
+      type = "scatter",
+      mode = "markers+lines",
+      marker = list(color = "red", size = 8, symbol = "diamond"),
+      line = list(color = "red", width = 2),
       name = "Pareto Frontier (Kraljic)",
       text = ~paste(
         "<b>\u03BB:</b>", formatC(lambda_, format = "e", digits = 2), "<br>",
@@ -217,7 +200,6 @@ plot_kraljic <- function(outputDir, mixName, refName) {
     selfcontained = FALSE
   )
 
-  # Return results including TSV data
   return(list(
     frontier_points = data2plotfrontier_result,
     optimal_points = optimal_points,
@@ -313,3 +295,53 @@ load_all_json <- function(directory) {
     # Add unique identifier column "id" at the start
     dplyr::mutate(id = dplyr::row_number(), .before = 1)
 }
+
+#' Load TSV Data for a Given Optimal Point
+#'
+#' This function searches for a TSV file corresponding to the provided
+#' optimal point, identified by `lambda_` and `gamma`. File names are
+#' expected to follow the pattern `"H_lambda_<lambda>_gamma_<gamma>.tsv"`,
+#' where `<lambda>` and `<gamma>` are truncated to two decimal places
+#' (not rounded). The function reads the first matching TSV file it finds.
+#'
+#' @param optimal_point A list or data frame row containing at least
+#'   the fields `lambda_` and `gamma`.
+#' @param point_name A string used in warning messages to identify the point.
+#' @param tsv_dir The directory where TSV files are stored.
+#'
+#' @return A data frame read from the corresponding TSV file, or `NULL` if
+#'   no matching file is found.
+#'
+#' @examples
+#' \dontrun{
+#' tsv_dir <- "path/to/tsv/files"
+#' load_tsv_data(optimal_points$DiceproOptCstrt, "DiceproOptCstrt", tsv_dir)
+#' }
+#'
+#' @export
+load_tsv_data <- function(optimal_point, point_name, tsv_dir) {
+  if (is.null(optimal_point)) return(NULL)
+
+  lambda_val <- truncate2(optimal_point$lambda_)
+  gamma_val  <- truncate2(optimal_point$gamma)
+
+  pattern <- sprintf("H_lambda_%.2f_gamma_%.2f", lambda_val, gamma_val)
+
+  tsv_files <- list.files(
+    path = tsv_dir,
+    pattern = paste0("^", pattern, ".*\\.tsv$"),
+    full.names = TRUE
+  )
+
+  if (length(tsv_files) > 0) {
+    read.table(tsv_files[1], row.names = 1, header = TRUE)
+  } else {
+    warning(sprintf(
+      "No TSV file found for %s with lambda = %.2f, gamma = %.2f",
+      point_name, lambda_val, gamma_val
+    ))
+    return(NULL)
+  }
+}
+
+

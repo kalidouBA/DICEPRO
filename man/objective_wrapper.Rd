@@ -5,7 +5,7 @@
 \title{Objective wrapper for hyperparameter optimization}
 \usage{
 objective_wrapper(
-  objective,
+  objective_opt,
   dataset,
   config,
   report_path,
@@ -14,7 +14,7 @@ objective_wrapper(
 )
 }
 \arguments{
-\item{objective}{Function. Objective function to optimize. Must accept arguments \verb{(dataset, config, params)} and return a list containing at least a \code{loss} element.}
+\item{objective_opt}{Function. Objective function to optimize. Must accept arguments \verb{(dataset, config, params)} and return a list containing at least a \code{loss} element.}
 
 \item{dataset}{List. Dataset used for optimization (e.g., bulk matrix, reference signatures, precomputed proportions).}
 

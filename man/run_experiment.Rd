@@ -16,7 +16,9 @@ run_experiment(
 )
 }
 \arguments{
-\item{dataset}{List. Dataset containing matrices \code{B}, \code{W}, and \code{P}.}
+\item{dataset}{List. Dataset containing matrices B, W, and P.}
+
+\item{W_prime}{Numeric. Additional parameter for objective function.}
 
 \item{bulkName}{Character. Name identifier for bulk data.}
 
@@ -31,7 +33,7 @@ run_experiment(
 \item{hspaceTechniqueChoose}{Character. Hyperparameter space technique ("all" or "restrictionEspace").}
 }
 \value{
-None. Saves JSON files and plots to disk.
+A list with results, plots, and TSV data.
 }
 \description{
 Performs hyperparameter optimization, saves trials and results, and generates reports.

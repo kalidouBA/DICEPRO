@@ -1,15 +1,3 @@
-#' @title Hyperparameter Optimization Tools for DICEPRO
-#' @name hyperopt_dicepro
-#' @description Hyperparameter optimization tools for DICEPRO package
-#' @importFrom jsonlite read_json write_json
-#' @importFrom purrr map map_dbl map_lgl
-#' @importFrom dplyr bind_rows
-#' @importFrom ggplot2 ggplot geom_point geom_line scale_x_log10 scale_y_log10 theme_bw ggsave
-#' @importFrom plotly plot_ly layout
-#' @importFrom stats runif
-#' @importFrom utils glob2rx
-NULL
-
 #' Check if a value contains NaN or Inf
 #'
 #' Checks whether a numeric value, vector, matrix, or data frame contains NaN or Inf.
@@ -85,7 +73,7 @@ nmf_lbfgsb_hyperOpt <- function(dataset, W_prime = NULL, p_prime = NULL, lambda_
 #' @param W_prime Numeric. Optional matrix for initialization.
 #' @return List. Contains loss, constraint, status, and current parameter values.
 #' @export
-objective <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = NULL, gamma = NULL, p_prime = NULL, W_prime = 0) {
+objective_opt <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = NULL, gamma = NULL, p_prime = NULL, W_prime = 0) {
 
   exp_dir <- ifelse(!is.null(config$exp), config$exp, ".")
 
@@ -94,8 +82,6 @@ objective <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = N
   }
 
   saveHpath <- exp_dir
-  message("Saving results in: ", saveHpath)
-
   result <- nmf_lbfgsb_hyperOpt(dataset = dataset, W_prime = W_prime, p_prime = p_prime, lambda_ = lambda_, gamma = gamma, path2save = saveHpath)
 
   result_dict <- lapply(result, function(x) {
@@ -118,7 +104,6 @@ objective <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = N
       status = "fail",
       p_prime_estm = NULL,
       current_params = list(
-        gamma_factor = gamma_factor,
         gamma = gamma,
         lambda_ = lambda_,
         p_prime = p_prime,
@@ -138,10 +123,9 @@ objective <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = N
     status = "OK",
     p_prime_estm = result_dict$p_prime,
     current_params = list(
-      gamma_factor = gamma_factor,
       gamma = gamma,
       lambda_ = lambda_,
-      p_prime = p_prime,
+      p_prime = p_prime[1, 1],
       frobNorm = result_dict$frobNorm,
       constNorm = result_dict$constNorm,
       c1 = result_dict$c1,
@@ -152,9 +136,153 @@ objective <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = N
   ))
 }
 
+#' Objective wrapper for hyperparameter optimization
+#'
+#' Wraps an objective function with error handling and automatic JSON result saving.
+#'
+#' @param objective_opt Function. Objective function to optimize. Must accept arguments `(dataset, config, params)` and return a list containing at least a `loss` element.
+#' @param dataset List. Dataset used for optimization (e.g., bulk matrix, reference signatures, precomputed proportions).
+#' @param config List. Parsed configuration object from JSON.
+#' @param report_path Character. Directory path where JSON results are saved.
+#' @param params List. Current hyperparameter set to evaluate.
+#' @return List containing objective function output, status, start time, duration, and error message (if any).
+#' @importFrom utils glob2rx
+#' @keywords internal
+objective_wrapper <- function(objective_opt, dataset, config, report_path, params, W_prime = NULL) {
+  tryCatch({
+    start_time <- Sys.time()
+
+    # Pass W_prime to objective
+    returned_dict <- objective_opt(dataset = dataset, config = config,
+                               lambda_ = params$lambda_,
+                               gamma_factor = params$gamma_factor,
+                               gamma = params$gamma,
+                               p_prime = params$p_prime,
+                               W_prime = W_prime)
+
+    end_time <- Sys.time()
+    duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
+
+    returned_dict$start_time <- as.numeric(start_time)
+    returned_dict$duration <- duration
+
+    save_file <- sprintf("%.7f_hyperopt_results", returned_dict$loss)
+    params$p_prime <- params$p_prime[1,1]
+    # Save results
+    json_dict <- list(returned_dict = returned_dict, current_params = params)
+    save_file_path <- file.path(report_path, save_file)
+    existing_files <- list.files(report_path, pattern = glob2rx(paste0(save_file, "*")))
+    save_file_path <- paste0(save_file_path, "_", length(existing_files) + 1, "call.json")
+
+    jsonlite::write_json(json_dict, save_file_path, auto_unbox = TRUE, pretty = TRUE)
+
+    return(returned_dict)
+  }, error = function(e) {
+    start_time <- Sys.time()
+    returned_dict <- list(
+      status = "FAIL",
+      start_time = as.numeric(start_time),
+      error = conditionMessage(e)
+    )
+
+    save_file <- paste0("ERR", as.numeric(start_time), "_hyperopt_results")
+    save_file_path <- file.path(report_path, save_file)
+    jsonlite::write_json(list(returned_dict = returned_dict), save_file_path, auto_unbox = TRUE)
+
+    return(returned_dict)
+  })
+}
+
+#' Hyperparameter optimization for DICEPRO
+#'
+#' Performs hyperparameter optimization using a specified objective function.
+#' Supports user-defined search spaces or configuration-defined search spaces.
+#'
+#' @param objective_opt Function. Objective function to optimize. Must return a list containing a numeric `loss`.
+#' @param dataset List. Dataset containing matrices such as bulk expression, reference signatures, and precomputed proportions.
+#' @param config_path Character. Path to JSON configuration file specifying experiment settings (exp path, hp_max_evals, hp_method, hp_space, seed).
+#' @param hp_space List (optional). User-defined hyperparameter search space. If `NULL`, parsed from configuration file.
+#' @param report_path Character (optional). Path to store intermediate results. If `NULL`, defaults to `config$exp/results`.
+#' @param W_prime Description of W_prime
+#'
+#' @return List with:
+#' \describe{
+#'   \item{best}{Best hyperparameter set found.}
+#'   \item{trials}{List of all trial results, each containing `params` and `result`.}
+#' }
+#'
+#' @details
+#' 1. Load configuration from JSON.
+#' 2. Create or parse hyperparameter search space.
+#' 3. Loop for `hp_max_evals` iterations:
+#'    - Sample a parameter set from the search space.
+#'    - Evaluate objective function with `objective_wrapper()` (handles errors and saves JSON).
+#'    - Track the best parameters based on the `loss`.
+#' 4. Return the best parameters and full trial history.
+#'
+#' @examples
+#' \dontrun{
+#' config_path <- "path/to/optim_config.json"
+#' dataset <- list(B = bulk_matrix, W = reference_matrix, P = precomputed_proportions)
+#' result <- research_v2(my_objective_function, dataset, config_path)
+#' }
+#'
+#' @export
+research_v2 <- function(objective_opt, dataset, config_path, hp_space = NULL, report_path = NULL, W_prime = NULL) {
+  # Load configuration
+  config <- .get_conf_from_json(config_path)
+  report_path <- .get_report_path(exp_dir = config$exp)
+
+  # Create search space
+  if (is.null(hp_space)) {
+    search_space <- list()
+    for (arg in names(config$hp_space)) {
+      search_space[[arg]] <- .parse_hyperopt_searchspace(arg, config$hp_space[[arg]])
+    }
+  } else {
+    search_space <- hp_space
+  }
+
+  # Optimization loop
+  trials <- list()
+  set.seed(config$seed %||% 42)
+
+  # Progress bar
+  pb <- progress::progress_bar$new(
+    format = "Hyperopt [:bar] :percent eta: :eta",
+    total = config$hp_max_evals,
+    clear = FALSE,
+    width = 60
+  )
+
+  for (i in 1:config$hp_max_evals) {
+    params <- .sample_from_space(space = search_space)
+
+    # Ensure p_prime is numeric and a matrix if needed
+    if (!is.null(params$p_prime) && is.numeric(params$p_prime) && is.vector(params$p_prime)) {
+      N_sample <- ncol(dataset$B)
+      N_unknownCT <- ifelse(!is.null(W_prime), length(W_prime), 1)
+      params$p_prime <- matrix(params$p_prime, nrow = N_sample, ncol = N_unknownCT)
+    }
+
+    # Pass W_prime to objective_wrapper
+    result <- objective_wrapper(
+      objective_opt   = objective_opt,
+      dataset     = dataset,
+      config      = config,
+      report_path = report_path,
+      params      = params,
+      W_prime     = W_prime
+    )
+
+    trials[[i]] <- list(params = params, result = result)
+
+    # Update progress bar
+    pb$tick()
+  }
+}
 
 
-# hypersearch.R ------------------------------------------------------------
 
 #' Parse configuration from JSON file
 #'
@@ -240,138 +368,4 @@ objective <- function(dataset, config = list(), lambda_ = NULL, gamma_factor = N
     dir.create(report_path, recursive = TRUE)
   }
   return(report_path)
-}
-
-
-
-#' Objective wrapper for hyperparameter optimization
-#'
-#' Wraps an objective function with error handling and automatic JSON result saving.
-#'
-#' @param objective Function. Objective function to optimize. Must accept arguments `(dataset, config, params)` and return a list containing at least a `loss` element.
-#' @param dataset List. Dataset used for optimization (e.g., bulk matrix, reference signatures, precomputed proportions).
-#' @param config List. Parsed configuration object from JSON.
-#' @param report_path Character. Directory path where JSON results are saved.
-#' @param params List. Current hyperparameter set to evaluate.
-#' @return List containing objective function output, status, start time, duration, and error message (if any).
-#' @keywords internal
-objective_wrapper <- function(objective, dataset, config, report_path, params, W_prime = NULL) {
-  tryCatch({
-    start_time <- Sys.time()
-
-    # Pass W_prime to objective
-    returned_dict <- objective(dataset = dataset, config = config,
-                               lambda_ = params$lambda_,
-                               gamma_factor = params$gamma_factor,
-                               gamma = params$gamma,
-                               p_prime = params$p_prime,
-                               W_prime = W_prime)
-
-    end_time <- Sys.time()
-    duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
-
-    returned_dict$start_time <- as.numeric(start_time)
-    returned_dict$duration <- duration
-
-    save_file <- sprintf("%.7f_hyperopt_results", returned_dict$loss)
-
-    # Save results
-    json_dict <- list(returned_dict = returned_dict, current_params = params)
-    save_file_path <- file.path(report_path, save_file)
-    existing_files <- list.files(report_path, pattern = glob2rx(paste0(save_file, "*")))
-    save_file_path <- paste0(save_file_path, "_", length(existing_files) + 1, "call.json")
-
-    jsonlite::write_json(json_dict, save_file_path, auto_unbox = TRUE, pretty = TRUE)
-
-    return(returned_dict)
-  }, error = function(e) {
-    start_time <- Sys.time()
-    returned_dict <- list(
-      status = "FAIL",
-      start_time = as.numeric(start_time),
-      error = conditionMessage(e)
-    )
-
-    save_file <- paste0("ERR", as.numeric(start_time), "_hyperopt_results")
-    save_file_path <- file.path(report_path, save_file)
-    jsonlite::write_json(list(returned_dict = returned_dict), save_file_path, auto_unbox = TRUE)
-
-    return(returned_dict)
-  })
-}
-
-
-#' Hyperparameter optimization for DICEPRO
-#'
-#' Performs hyperparameter optimization using a specified objective function.
-#' Supports user-defined search spaces or configuration-defined search spaces.
-#'
-#' @param objective Function. Objective function to optimize. Must return a list containing a numeric `loss`.
-#' @param dataset List. Dataset containing matrices such as bulk expression, reference signatures, and precomputed proportions.
-#' @param config_path Character. Path to JSON configuration file specifying experiment settings (exp path, hp_max_evals, hp_method, hp_space, seed).
-#' @param hp_space List (optional). User-defined hyperparameter search space. If `NULL`, parsed from configuration file.
-#' @param report_path Character (optional). Path to store intermediate results. If `NULL`, defaults to `config$exp/results`.
-#'
-#' @return List with:
-#' \describe{
-#'   \item{best}{Best hyperparameter set found.}
-#'   \item{trials}{List of all trial results, each containing `params` and `result`.}
-#' }
-#'
-#' @details
-#' 1. Load configuration from JSON.
-#' 2. Create or parse hyperparameter search space.
-#' 3. Loop for `hp_max_evals` iterations:
-#'    - Sample a parameter set from the search space.
-#'    - Evaluate objective function with `objective_wrapper()` (handles errors and saves JSON).
-#'    - Track the best parameters based on the `loss`.
-#' 4. Return the best parameters and full trial history.
-#'
-#' @examples
-#' \dontrun{
-#' config_path <- "path/to/optim_config.json"
-#' dataset <- list(B = bulk_matrix, W = reference_matrix, P = precomputed_proportions)
-#' result <- research_v2(my_objective_function, dataset, config_path)
-#' best_params <- result$best
-#' }
-#'
-#' @export
-research_v2 <- function(objective, dataset, config_path, hp_space = NULL, report_path = NULL, W_prime = NULL) {
-  # Load configuration
-  config <- .get_conf_from_json(config_path)
-  report_path <- .get_report_path(exp_dir = config$exp)
-
-  # Create search space
-  if (is.null(hp_space)) {
-    search_space <- list()
-    for (arg in names(config$hp_space)) {
-      search_space[[arg]] <- .parse_hyperopt_searchspace(arg, config$hp_space[[arg]])
-    }
-  } else {
-    search_space <- hp_space
-  }
-
-  # Optimization loop
-  trials <- list()
-  best_loss <- Inf
-  best_params <- NULL
-
-  set.seed(config$seed %||% 42)
-
-  for (i in 1:config$hp_max_evals) {
-    params <- .sample_from_space(search_space)
-
-    # Ensure p_prime is numeric and a matrix if needed
-    if (!is.null(params$p_prime) && is.numeric(params$p_prime) && is.vector(params$p_prime)) {
-      N_sample <- ncol(dataset$B)
-      N_unknownCT <- ifelse(!is.null(W_prime), length(W_prime), 1)
-      params$p_prime <- matrix(params$p_prime, nrow = N_sample, ncol = N_unknownCT)
-    }
-
-    # Pass W_prime to objective_wrapper
-    result <- objective_wrapper(objective = objective, dataset = dataset, config = config, report_path = report_path, params = params, W_prime = W_prime)
-    trials[[i]] <- list(params = params, result = result)
-  }
-
-  return(trials)
 }

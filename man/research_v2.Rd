@@ -5,7 +5,7 @@
 \title{Hyperparameter optimization for DICEPRO}
 \usage{
 research_v2(
-  objective,
+  objective_opt,
   dataset,
   config_path,
   hp_space = NULL,
@@ -14,7 +14,7 @@ research_v2(
 )
 }
 \arguments{
-\item{objective}{Function. Objective function to optimize. Must return a list containing a numeric \code{loss}.}
+\item{objective_opt}{Function. Objective function to optimize. Must return a list containing a numeric \code{loss}.}
 
 \item{dataset}{List. Dataset containing matrices such as bulk expression, reference signatures, and precomputed proportions.}
 
@@ -23,6 +23,8 @@ research_v2(
 \item{hp_space}{List (optional). User-defined hyperparameter search space. If \code{NULL}, parsed from configuration file.}
 
 \item{report_path}{Character (optional). Path to store intermediate results. If \code{NULL}, defaults to \code{config$exp/results}.}
+
+\item{W_prime}{Description of W_prime}
 }
 \value{
 List with:
@@ -53,7 +55,6 @@ Supports user-defined search spaces or configuration-defined search spaces.
 config_path <- "path/to/optim_config.json"
 dataset <- list(B = bulk_matrix, W = reference_matrix, P = precomputed_proportions)
 result <- research_v2(my_objective_function, dataset, config_path)
-best_params <- result$best
 }
 
 }

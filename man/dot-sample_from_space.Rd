@@ -2,17 +2,24 @@
 % Please edit documentation in R/lambda_gamma_initialize.R
 \name{.sample_from_space}
 \alias{.sample_from_space}
-\title{Sample from search space}
+\title{Sample hyperparameters from a defined search space}
 \usage{
 .sample_from_space(space)
 }
 \arguments{
-\item{space}{Search space definition (list of hyperparameters with type, low, high)}
+\item{space}{List. Each element is a vector of the form c(type, low, high).
+For example: list(lambda_ = c("loguniform", 1, 1e5))}
 }
 \value{
-List of sampled parameters
+List of sampled hyperparameters. Includes \code{gamma} if \code{gamma_factor} exists.
 }
 \description{
-Internal function to sample parameters from search space
+Internal function to sample a set of hyperparameters from a given search space.
+Each hyperparameter is defined as a vector: c(type, low, high), where \code{type}
+can be "uniform", "loguniform", or "randint".
+}
+\details{
+If \code{gamma_factor} exists in the search space, \code{gamma} will be automatically
+computed as \code{gamma = lambda_ * gamma_factor}.
 }
 \keyword{internal}

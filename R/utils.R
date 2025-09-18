@@ -73,31 +73,9 @@ generate_experiment_paths <- function(output_dir, bulkName, refName,
 #' @param b Default value if `a` is NULL
 #' @return `a` if not NULL, otherwise `b`
 #' @keywords internal
+#' @name or-default-operator
+#' @rdname or-default-operator
 `%||%` <- function(a, b) {
   if (is.null(a)) b else a
 }
 
-
-#' Hyperparameter Optimization Tools
-#'
-#' A complete R implementation of hyperparameter optimization tools for
-#' non-negative matrix factorization and other machine learning tasks.
-#'
-#' @details
-#' This package provides functions for hyperparameter optimization including:
-#' \itemize{
-#'   \item Configuration parsing and validation
-#'   \item Search space definition and sampling
-#'   \item Optimization algorithms (random search, TPE, etc.)
-#'   \item Result visualization and reporting
-#' }
-#'
-#' @seealso
-#' Useful links:
-#' \itemize{
-#'   \item \url{https://github.com/yourusername/hyperopt-r}
-#'   \item Report bugs at \url{https://github.com/yourusername/hyperopt-r/issues}
-#' }
-#'
-#' @name hyperopt-package
-"_PACKAGE"

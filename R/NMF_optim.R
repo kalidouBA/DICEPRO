@@ -62,6 +62,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     W[, N_cellsType] <- theta[1:N_gene]
     H <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
     sigma_par <- theta[length(theta)]
+
     obj_term1 <- compute_obj_term1_eigen_fast(W, H, B, sigma_par)
     obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
 
@@ -108,6 +109,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 
     sigma_par_opt <- result$par[length(result$par)]
     # Norme de Frob
+
     obj_term1_opt <- compute_obj_term1_eigen_fast(W_opt, H_opt, B, sigma_par)
     # Maximum de vraissemble
     obj_term2_opt <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
@@ -115,8 +117,17 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     obj_term3_opt <- as.double(lambda_par %*% h_H)
     obj_term4_opt <- (gamma_par / 2) * sum(h_H^2)
 
-    write.table(H, file = sprintf("%s/H_lambda_%s_gamma_%s.tsv", path2save, round(lambda_,2), round(gamma_par,2)),
-                sep = "\t", quote = FALSE, row.names = FALSE)
+    write.table(
+      H,
+      file = sprintf(
+        "%s/H_lambda_%.2f_gamma_%.2f.tsv",
+        path2save,
+        truncate2(lambda_),
+        truncate2(gamma_par)
+      ),
+      sep = "\t", quote = FALSE, row.names = FALSE
+    )
+
 
     results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value,
                     frobNorm = obj_term1_opt, constNorm = obj_term2_opt, c1 = obj_term3_opt, c2 = obj_term4_opt,
@@ -125,4 +136,22 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
                     constraint = abs(1 - constraints))
     return(results)
   }
+}
+
+
+#' Truncate numeric values to two decimal places
+#'
+#' This function truncates a numeric value to exactly two decimal places
+#' without rounding. For example, `119.149` becomes `119.14` instead of `119.15`.
+#'
+#' @param x A numeric vector.
+#'
+#' @return A numeric vector truncated to two decimal places.
+#' @examples
+#' truncate2(119.149) # Returns 119.14
+#' truncate2(c(3.456, 7.899)) # Returns c(3.45, 7.89)
+#'
+#' @export
+truncate2 <- function(x) {
+  floor(x * 100) / 100
 }

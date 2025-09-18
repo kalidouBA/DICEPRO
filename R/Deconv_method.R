@@ -21,6 +21,7 @@
 #' @importFrom FARDEEP fardeep
 #' @importFrom parallel detectCores
 #' @importFrom pcaMethods prep
+#' @importFrom MASS rlm
 #' @export
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email, cibersortx_token){
   dimname_ <- dimnames(reference)
@@ -57,6 +58,17 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
   }
   else if(methodDeconv == "FARDEEP")
     out_Dec <- t(fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta)
-
+  else if(methodDeconv == "abis"){
+    out_Dec <- do.call(
+      cbind.data.frame,
+      lapply(
+        apply(bulkIntersect, 2, function(x) rlm(x ~ as.matrix(refIntersect), maxit = 100)),
+        function(y) y$coefficients[-1]
+      )
+    )
+    rownames(out_Dec) <- unlist(lapply(strsplit(rownames(out_Dec), ")"), function(x) x[2]))
+    out_Dec[out_Dec < 0] <- 0
+  }
+  out_Dec <- sweep(out_Dec, 2, colSums(out_Dec), FUN = "/")
   return(out_Dec)
 }

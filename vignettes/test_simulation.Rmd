@@ -87,11 +87,43 @@ names(cellTypeOut) <- paste0(as.character(percs * 100), "%")
 
 
 
-```{r, message=FALSE}
+```{r}
 set.seed(2101)
 refDataIncomplet <- reference[,-cellTypeOut$`30%`]
 
-result <- DICEPRO(reference = refDataIncomplet, bulk = as.matrix(simulation$bulk), methodDeconv = "DCQ", W_prime = 0, p_prime = 0, gamma_par = 10^12)
-result
+reference = refDataIncomplet
+bulk = as.matrix(simulation$bulk)
+methodDeconv = "abis"
+W_prime = 0
+p_prime = 0
+cibersortx_email = NULL
+cibersortx_token = NULL
+bulkName = "Bulk"
+refName = "Reference"
+hp_max_evals = 100
+N_unknownCT = 1
+algo_select = "random"
+output_path = NULL
+hspaceTechniqueChoose = "restrictionEspace"
+out_Decon = NULL
+```
+
+
+```{r, message=FALSE}
+set.seed(2101)
+refDataIncomplet <- reference[,-cellTypeOut$`30%`]
+pathSave <- '/home/kba/Documents'
+result_OPT <- DICEPRO::DICEPRO(reference = refDataIncomplet,
+                               bulk = as.matrix(simulation$bulk),
+                               methodDeconv = "abis",
+                               hp_max_evals = 100,
+                               output_path = pathSave,
+                               hspaceTechniqueChoose = 'all')
+paths <- generate_experiment_paths(pathSave, bulkName, refName,
+                                     hspaceTechniqueChoose, algo_select)
+
+file_name <- paste0(paths$data_dir, "/result_OPT_", bulkName, "_", refName, ".RData")
+save(result_OPT, file = file_name)
+cat("Objet sauvegardé dans :", file_name, "\n")
 ```
 

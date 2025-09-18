@@ -44,7 +44,7 @@ DICEPRO <- function(reference, bulk,
                     out_Decon = NULL) {
 
   # --- Validate deconvolution method ---
-  stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism"))
+  stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism", "abis"))
   methodDeconv <- methodDeconv[1]
   if (methodDeconv == "CSx" && (is.null(cibersortx_token) || is.null(cibersortx_email))) {
     stop("CIBERSORTx token is required for method 'CSx'. Please provide 'cibersortx_token'.")
@@ -106,46 +106,88 @@ DICEPRO <- function(reference, bulk,
   tsv_DiceproOptCstrt <- optimization_results$optimal_tsv_data$DiceproOptCstrt
   tsv_DiceproOptCstrt_0.1 <- optimization_results$optimal_tsv_data$DiceproOptCstrt_0.1
 
-  # Extract final results from the primary optimal point (DiceproOptCstrt)
-  final_results_DiceproOptCstrt <- if (!is.null(tsv_DiceproOptCstrt)) {
-    extract_final_results(tsv_DiceproOptCstrt)
-  } else {
-    list()
-  }
-
-  # Extract final results from the secondary optimal point (DiceproOptCstrt_0.1)
-  final_results_DiceproOptCstrt_0.1 <- if (!is.null(tsv_DiceproOptCstrt_0.1)) {
-    extract_final_results(tsv_DiceproOptCstrt_0.1)
-  } else {
-    list()
-  }
-
-  # Build the comprehensive results list
+  # Use the private helper function to extract results with safe null handling
   final_results <- list(
-    # Primary results from DiceproOptCstrt
-    DiceproOptCstrt = list(Prediction = out_Dec, New_signature = final_results_DiceproOptCstrt$W_final %||% reference,
-                           W_prime = final_results_DiceproOptCstrt$W_prime_final %||% W_prime, P_prime = final_results_DiceproOptCstrt$P_prime_final,
-                           constraint = optimal_DiceproOptCstrt$constraint,
-                           lambda_ = optimal_DiceproOptCstrt$lambda_,
-                           gamma = optimal_DiceproOptCstrt$gamma,
-                           p_prime = optimal_DiceproOptCstrt$p_prime,
-                           frobNorm = optimal_DiceproOptCstrt$frobNorm),
-
-    # Secondary results from DiceproOptCstrt_0.1
-    DiceproOptCstrt_0.1 = list(secondary_Prediction = out_Dec,
-                              secondary_New_signature = final_results_DiceproOptCstrt_0.1$W_final %||% reference,
-                              secondary_W_prime = final_results_DiceproOptCstrt_0.1$W_prime_final %||% W_prime,
-                              secondary_P_prime = final_results_DiceproOptCstrt_0.1$P_prime_final,
-                              secondary_constraint = optimal_DiceproOptCstrt_0.1$constraint,
-                              secondary_lambda_ = optimal_DiceproOptCstrt_0.1$lambda_,
-                              secondary_gamma = optimal_DiceproOptCstrt_0.1$gamma,
-                              secondary_p_prime = optimal_DiceproOptCstrt_0.1$p_prime,
-                              secondary_frobNorm = optimal_DiceproOptCstrt_0.1$frobNorm),
-
-    # Complete optimization results
+    DiceproOptCstrt = if (!is.null(optimal_DiceproOptCstrt)) {
+      .get_optimal_results(optimal_DiceproOptCstrt, tsv_DiceproOptCstrt, out_Dec, reference, W_prime)
+    } else {
+      list()
+    },
+    DiceproOptCstrt_0.1 = if (!is.null(optimal_DiceproOptCstrt_0.1)) {
+      .get_optimal_results(optimal_DiceproOptCstrt_0.1, tsv_DiceproOptCstrt_0.1, out_Dec, reference, W_prime, prefix = "secondary_")
+    } else {
+      list()
+    },
     optimization_results = optimization_results
   )
 
+
   class(final_results) <- "DICEPRO"
   return(final_results)
+}
+
+
+#' @title Extract final results from a TSV dataset
+#' @description Private helper function to extract relevant final results from a TSV dataset.
+#'   This function assumes the TSV contains columns named `W_final`, `W_prime_final`, and `P_prime_final`.
+#'
+#' @param tsv_data A data frame read from the TSV file corresponding to an optimal point.
+#'
+#' @return A list with the following elements:
+#'   - `W_final`: final W matrix (or NULL if not present)
+#'   - `W_prime_final`: final W_prime values (or NULL if not present)
+#'   - `P_prime_final`: final P_prime values (or NULL if not present)
+#'
+#' @keywords internal
+.extract_final_results <- function(tsv_data) {
+  list(
+    W_final = tsv_data$W_final %||% NULL,
+    W_prime_final = tsv_data$W_prime_final %||% NULL,
+    P_prime_final = tsv_data$P_prime_final %||% NULL
+  )
+}
+
+
+# NULL coalescing operator
+`%||%` <- function(x, y) if (!is.null(x)) x else y
+
+#' @title Extract Results for a Single Optimal Point (Internal)
+#' @description
+#' Private helper function to extract final results for a given optimal point.
+#' It safely handles missing TSV data and optionally prefixes the names for secondary results.
+#'
+#' @param opt_point A list or data frame row representing the optimal point.
+#'   Must contain `constraint`, `lambda_`, `gamma`, `p_prime`, and `frobNorm`.
+#' @param tsv_data A data frame read from the corresponding TSV file, or `NULL`.
+#' @param out_Dec The deconvolution result matrix.
+#' @param reference The reference matrix.
+#' @param W_prime Initial W matrix for unknown cell types.
+#' @param prefix Optional string to prefix the result names (default `""`).
+#'
+#' @return A named list containing:
+#'   - `Prediction`: Default prediction object (`out_Dec`).
+#'   - `New_signature`: New signature matrix (from TSV or fallback `reference`).
+#'   - `W_prime`: Optimized W_prime value.
+#'   - `P_prime`: Optimized P_prime value.
+#'   - `constraint`, `lambda_`, `gamma`, `p_prime`, `frobNorm`: Values from the optimal point.
+#'
+#' @keywords internal
+#' @noRd
+.get_optimal_results <- function(opt_point, tsv_data, out_Dec, reference, W_prime, prefix = "") {
+  final_res <- if (!is.null(tsv_data)) .extract_final_results(tsv_data) else list()
+
+  res <- list(
+    Prediction = out_Dec,
+    New_signature = final_res$W_final %||% reference,
+    W_prime = final_res$W_prime_final %||% W_prime,
+    P_prime = final_res$P_prime_final,
+    constraint = opt_point$constraint,
+    lambda_ = opt_point$lambda_,
+    gamma = opt_point$gamma,
+    p_prime = opt_point$p_prime,
+    frobNorm = opt_point$frobNorm
+  )
+
+  if (prefix != "") names(res) <- paste0(prefix, names(res))
+  res
 }
