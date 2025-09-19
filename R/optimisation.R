@@ -37,40 +37,6 @@ contains_nan_or_inf <- function(value) {
   return(FALSE)
 }
 
-#' NMF LBFGSB Hyperparameter Optimization
-#'
-#' Calls the R function `nmf_lbfgsb` to perform NMF optimization with given hyperparameters.
-#'
-#' @param dataset List containing matrices `B`, `W`, and `P`.
-#' @param W_prime Optional numeric matrix. Initial W'.
-#' @param p_prime Optional numeric matrix. Initial P'.
-#' @param lambda_ Numeric. Regularization parameter lambda.
-#' @param gamma Numeric. Regularization parameter gamma.
-#' @param path2save Character. Path to save results.
-#' @return List. Output from `nmf_lbfgsb` including loss, constraints, and matrices.
-#' @import DICEPRO
-#' @export
-nmf_lbfgsb_hyperOpt <- function(dataset, W_prime = NULL, p_prime = NULL, lambda_ = 10, gamma = 100, path2save = "") {
-  library(DICEPRO)
-
-  B <- as.data.frame(dataset$B)
-  W_cb <- as.data.frame(dataset$W)
-  P_cb <- as.data.frame(dataset$P)
-
-  r_dataset <- list(B = B, W_cb = W_cb, P_cb = P_cb)
-
-  result <- nmf_lbfgsb(
-    r_dataset,
-    W_prime = W_prime,
-    p_prime = p_prime,
-    lambda = lambda_,
-    gamma = gamma,
-    path2save = path2save
-  )
-
-  return(result)
-}
-
 #' Run hyperparameter optimization experiment
 #'
 #' Performs hyperparameter optimization, saves trials and results, and generates reports.

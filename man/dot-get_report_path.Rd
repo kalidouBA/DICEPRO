@@ -7,9 +7,7 @@
 .get_report_path(exp_dir)
 }
 \arguments{
-\item{exp_name}{Experiment name}
-
-\item{base_path}{Base path}
+\item{exp_dir}{Experiment directory}
 }
 \value{
 Report path

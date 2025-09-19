@@ -49,6 +49,8 @@ DICEPRO <- function(reference, bulk,
   if (methodDeconv == "CSx" && (is.null(cibersortx_token) || is.null(cibersortx_email))) {
     stop("CIBERSORTx token is required for method 'CSx'. Please provide 'cibersortx_token'.")
   }
+  reference <- .normalize_median_per_gene(reference)
+  bulk <- .normalize_median_per_gene(bulk)
 
   # --- Match genes between reference and bulk ---
   geneIntersect <- intersect(rownames(reference), rownames(bulk))
@@ -148,9 +150,6 @@ DICEPRO <- function(reference, bulk,
 }
 
 
-# NULL coalescing operator
-`%||%` <- function(x, y) if (!is.null(x)) x else y
-
 #' @title Extract Results for a Single Optimal Point (Internal)
 #' @description
 #' Private helper function to extract final results for a given optimal point.
@@ -190,4 +189,37 @@ DICEPRO <- function(reference, bulk,
 
   if (prefix != "") names(res) <- paste0(prefix, names(res))
   res
+}
+
+
+#' Normalize a gene expression matrix by median and IQR (private function)
+#'
+#' This function normalizes each row (gene) of a numeric matrix by centering it
+#' on its median and scaling by its interquartile range (IQR). Rows with IQR = 0
+#' are automatically removed. This function is intended for internal use within
+#' a package (private function).
+#'
+#' @param mat A numeric matrix or data frame with genes as rows and samples as columns.
+#'
+#' @return A numeric matrix of the same dimensions (minus rows with IQR = 0),
+#'   normalized by median and IQR.
+#' @importFrom stats median IQR
+#' @keywords internal
+#' @noRd
+.normalize_median_per_gene <- function(mat) {
+  mat <- as.matrix(mat)
+
+  # Compute interquartile range per gene
+  gene_iqr <- apply(mat, 1, IQR, na.rm = TRUE)
+
+  # Keep only genes with IQR > 0
+  keep_genes <- gene_iqr > 0 & !is.na(gene_iqr)
+  mat_filtered <- mat[keep_genes, , drop = FALSE]
+
+  # Center by median and scale by IQR
+  mat_norm <- t(apply(mat_filtered, 1, function(x) {
+    (x - median(x, na.rm = TRUE)) / IQR(x, na.rm = TRUE)
+  }))
+
+  return(mat_norm)
 }

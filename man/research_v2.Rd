@@ -24,7 +24,7 @@ research_v2(
 
 \item{report_path}{Character (optional). Path to store intermediate results. If \code{NULL}, defaults to \code{config$exp/results}.}
 
-\item{W_prime}{Description of W_prime}
+\item{W_prime}{Matrix. Optional initial W matrix for NMF.}
 }
 \value{
 List with:
@@ -36,25 +36,4 @@ List with:
 \description{
 Performs hyperparameter optimization using a specified objective function.
 Supports user-defined search spaces or configuration-defined search spaces.
-}
-\details{
-\enumerate{
-\item Load configuration from JSON.
-\item Create or parse hyperparameter search space.
-\item Loop for \code{hp_max_evals} iterations:
-\itemize{
-\item Sample a parameter set from the search space.
-\item Evaluate objective function with \code{objective_wrapper()} (handles errors and saves JSON).
-\item Track the best parameters based on the \code{loss}.
-}
-\item Return the best parameters and full trial history.
-}
-}
-\examples{
-\dontrun{
-config_path <- "path/to/optim_config.json"
-dataset <- list(B = bulk_matrix, W = reference_matrix, P = precomputed_proportions)
-result <- research_v2(my_objective_function, dataset, config_path)
-}
-
 }

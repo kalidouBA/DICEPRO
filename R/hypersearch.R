@@ -22,12 +22,12 @@ contains_nan_or_inf <- function(value) {
 #' @param W_prime Optional numeric matrix. Initial W'.
 #' @param p_prime Optional numeric matrix. Initial P'.
 #' @param lambda_ Numeric. Regularization parameter lambda.
-#' @param gamma Numeric. Regularization parameter gamma.
+#' @param gamma_par Numeric. Regularization parameter gamma.
 #' @param path2save Character. Path to save results.
 #' @return List. Output from `nmf_lbfgsb` including loss, constraints, and matrices.
 #' @import DICEPRO
 #' @export
-nmf_lbfgsb_hyperOpt <- function(dataset, W_prime = NULL, p_prime = NULL, lambda_ = 10, gamma = 100, path2save = "") {
+nmf_lbfgsb_hyperOpt <- function(dataset, W_prime = NULL, p_prime = NULL, lambda_ = 10, gamma_par = 100, path2save = "") {
   B <- as.data.frame(dataset$B)
   W_cb <- as.data.frame(dataset$W)
   P_cb <- as.data.frame(dataset$P)
@@ -52,13 +52,12 @@ nmf_lbfgsb_hyperOpt <- function(dataset, W_prime = NULL, p_prime = NULL, lambda_
     W_cb = W_cb,
     P_cb = P_cb
   )
-
-  result <- nmf_lbfgsb(r_dataset = r_dataset, W_prime = W_prime, p_prime = p_prime, lambda_ = lambda_, gamma_par = gamma, path2save = path2save,
+  result <- nmf_lbfgsb(r_dataset = r_dataset, W_prime = W_prime, p_prime = p_prime,
+                       lambda_ = lambda_, gamma_par = gamma_par, path2save = path2save,
                        N_unknownCT = N_unknownCT)
 
   return(result)
 }
-
 
 #' Objective function for hyperparameter optimization
 #'
@@ -82,7 +81,7 @@ objective_opt <- function(dataset, config = list(), lambda_ = NULL, gamma_factor
   }
 
   saveHpath <- exp_dir
-  result <- nmf_lbfgsb_hyperOpt(dataset = dataset, W_prime = W_prime, p_prime = p_prime, lambda_ = lambda_, gamma = gamma, path2save = saveHpath)
+  result <- nmf_lbfgsb_hyperOpt(dataset = dataset, W_prime = W_prime, p_prime = p_prime, lambda_ = lambda_, gamma_par = gamma, path2save = saveHpath)
 
   result_dict <- lapply(result, function(x) {
     if (is.numeric(x)) {
@@ -94,8 +93,6 @@ objective_opt <- function(dataset, config = list(), lambda_ = NULL, gamma_factor
       x
     }
   })
-
-
 
   if (contains_nan_or_inf(result_dict$loss) || contains_nan_or_inf(result_dict$constraint)) {
     return(list(
@@ -145,6 +142,7 @@ objective_opt <- function(dataset, config = list(), lambda_ = NULL, gamma_factor
 #' @param config List. Parsed configuration object from JSON.
 #' @param report_path Character. Directory path where JSON results are saved.
 #' @param params List. Current hyperparameter set to evaluate.
+#' @param W_prime Matrix. Optional initial W matrix.
 #' @return List containing objective function output, status, start time, duration, and error message (if any).
 #' @importFrom utils glob2rx
 #' @keywords internal
@@ -154,11 +152,11 @@ objective_wrapper <- function(objective_opt, dataset, config, report_path, param
 
     # Pass W_prime to objective
     returned_dict <- objective_opt(dataset = dataset, config = config,
-                               lambda_ = params$lambda_,
-                               gamma_factor = params$gamma_factor,
-                               gamma = params$gamma,
-                               p_prime = params$p_prime,
-                               W_prime = W_prime)
+                                   lambda_ = params$lambda_,
+                                   gamma_factor = params$gamma_factor,
+                                   gamma = params$gamma,
+                                   p_prime = params$p_prime,
+                                   W_prime = W_prime)
 
     end_time <- Sys.time()
     duration <- as.numeric(difftime(end_time, start_time, units = "secs"))
@@ -168,6 +166,7 @@ objective_wrapper <- function(objective_opt, dataset, config, report_path, param
 
     save_file <- sprintf("%.7f_hyperopt_results", returned_dict$loss)
     params$p_prime <- params$p_prime[1,1]
+
     # Save results
     json_dict <- list(returned_dict = returned_dict, current_params = params)
     save_file_path <- file.path(report_path, save_file)
@@ -193,6 +192,97 @@ objective_wrapper <- function(objective_opt, dataset, config, report_path, param
   })
 }
 
+#' Sample from hyperparameter space
+#'
+#' Internal function to sample parameters from the search space definition
+#'
+#' @param space List defining the hyperparameter search space
+#' @return List of sampled parameter values
+#' @keywords internal
+.sample_from_space <- function(space) {
+  params <- list()
+
+  for (param_name in names(space)) {
+    spec <- space[[param_name]]
+
+    switch(spec$type,
+           "choice" = {
+             params[[param_name]] <- sample(spec$choices, 1)[[1]]
+           },
+           "randint" = {
+             params[[param_name]] <- sample(spec$low:spec$high, 1)
+           },
+           "uniform" = {
+             params[[param_name]] <- runif(1, spec$low, spec$high)
+           },
+           "quniform" = {
+             value <- runif(1, spec$low, spec$high)
+             params[[param_name]] <- round(value / spec$q) * spec$q
+           },
+           "loguniform" = {
+             params[[param_name]] <- exp(runif(1, log(spec$low), log(spec$high)))
+           },
+           "qloguniform" = {
+             value <- exp(runif(1, log(spec$low), log(spec$high)))
+             params[[param_name]] <- round(value / spec$q) * spec$q
+           },
+           "normal" = {
+             params[[param_name]] <- rnorm(1, spec$mu, spec$sigma)
+           },
+           "qnormal" = {
+             value <- rnorm(1, spec$mu, spec$sigma)
+             params[[param_name]] <- round(value / spec$q) * spec$q
+           },
+           "lognormal" = {
+             params[[param_name]] <- rlnorm(1, spec$mu, spec$sigma)
+           },
+           "qlognormal" = {
+             value <- rlnorm(1, spec$mu, spec$sigma)
+             params[[param_name]] <- round(value / spec$q) * spec$q
+           },
+           stop(paste("Unknown search space type:", spec$type))
+    )
+  }
+
+  return(params)
+}
+
+#' Custom progress bar implementation
+#'
+#' Simple progress bar without external dependencies
+#'
+#' @param total Total number of iterations
+#' @param format Format string
+#' @param width Width of progress bar
+#' @keywords internal
+.custom_progress_bar <- function(total, format = "Progress [:bar] :percent", width = 60) {
+  current <- 0
+
+  list(
+    tick = function() {
+      current <<- current + 1
+      percent <- current / total
+      bars <- round(width * percent)
+      spaces <- width - bars
+
+      bar_text <- paste0(
+        "[",
+        paste(rep("=", bars), collapse = ""),
+        paste(rep(" ", spaces), collapse = ""),
+        "] ",
+        sprintf("%3.0f%%", percent * 100)
+      )
+
+      # Use message() instead of cat() for better compatibility
+      message("\r", bar_text, appendLF = FALSE)
+
+      if (current == total) {
+        message()  # Final newline
+      }
+    }
+  )
+}
+
 #' Hyperparameter optimization for DICEPRO
 #'
 #' Performs hyperparameter optimization using a specified objective function.
@@ -203,28 +293,12 @@ objective_wrapper <- function(objective_opt, dataset, config, report_path, param
 #' @param config_path Character. Path to JSON configuration file specifying experiment settings (exp path, hp_max_evals, hp_method, hp_space, seed).
 #' @param hp_space List (optional). User-defined hyperparameter search space. If `NULL`, parsed from configuration file.
 #' @param report_path Character (optional). Path to store intermediate results. If `NULL`, defaults to `config$exp/results`.
-#' @param W_prime Description of W_prime
+#' @param W_prime Matrix. Optional initial W matrix for NMF.
 #'
 #' @return List with:
 #' \describe{
 #'   \item{best}{Best hyperparameter set found.}
 #'   \item{trials}{List of all trial results, each containing `params` and `result`.}
-#' }
-#'
-#' @details
-#' 1. Load configuration from JSON.
-#' 2. Create or parse hyperparameter search space.
-#' 3. Loop for `hp_max_evals` iterations:
-#'    - Sample a parameter set from the search space.
-#'    - Evaluate objective function with `objective_wrapper()` (handles errors and saves JSON).
-#'    - Track the best parameters based on the `loss`.
-#' 4. Return the best parameters and full trial history.
-#'
-#' @examples
-#' \dontrun{
-#' config_path <- "path/to/optim_config.json"
-#' dataset <- list(B = bulk_matrix, W = reference_matrix, P = precomputed_proportions)
-#' result <- research_v2(my_objective_function, dataset, config_path)
 #' }
 #'
 #' @export
@@ -245,13 +319,15 @@ research_v2 <- function(objective_opt, dataset, config_path, hp_space = NULL, re
 
   # Optimization loop
   trials <- list()
+  best_loss <- Inf
+  best_params <- NULL
+
   set.seed(config$seed %||% 42)
 
-  # Progress bar
-  pb <- progress::progress_bar$new(
-    format = "Hyperopt [:bar] :percent eta: :eta",
+  # Use custom progress bar instead of progress package
+  pb <- .custom_progress_bar(
     total = config$hp_max_evals,
-    clear = FALSE,
+    format = "Hyperopt [:bar] :percent",
     width = 60
   )
 
@@ -261,7 +337,7 @@ research_v2 <- function(objective_opt, dataset, config_path, hp_space = NULL, re
     # Ensure p_prime is numeric and a matrix if needed
     if (!is.null(params$p_prime) && is.numeric(params$p_prime) && is.vector(params$p_prime)) {
       N_sample <- ncol(dataset$B)
-      N_unknownCT <- ifelse(!is.null(W_prime), length(W_prime), 1)
+      N_unknownCT <- ifelse(!is.null(W_prime), ncol(W_prime), 1)
       params$p_prime <- matrix(params$p_prime, nrow = N_sample, ncol = N_unknownCT)
     }
 
@@ -277,12 +353,18 @@ research_v2 <- function(objective_opt, dataset, config_path, hp_space = NULL, re
 
     trials[[i]] <- list(params = params, result = result)
 
+    # Track best result
+    if (is.finite(result$loss) && result$loss < best_loss) {
+      best_loss <- result$loss
+      best_params <- params
+    }
+
     # Update progress bar
     pb$tick()
   }
+
+  return(list(best = best_params, trials = trials))
 }
-
-
 
 #' Parse configuration from JSON file
 #'
@@ -355,12 +437,10 @@ research_v2 <- function(objective_opt, dataset, config_path, hp_space = NULL, re
 #'
 #' Create and return report directory path
 #'
-#' @param exp_name Experiment name
-#' @param base_path Base path
+#' @param exp_dir Experiment directory
 #' @return Report path
 #' @keywords internal
 .get_report_path <- function(exp_dir) {
-  # exp_dir: directory where experiment results are saved (config$exp)
   report_path <- file.path(exp_dir, "results")
 
   # Create all parent directories if needed

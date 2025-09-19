@@ -111,7 +111,7 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     # Norme de Frob
 
     obj_term1_opt <- compute_obj_term1_eigen_fast(W_opt, H_opt, B, sigma_par)
-    # Maximum de vraissemble
+
     obj_term2_opt <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
 
     obj_term3_opt <- as.double(lambda_par %*% h_H)
@@ -139,10 +139,11 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 }
 
 
+
 #' Truncate numeric values to two decimal places
 #'
 #' This function truncates a numeric value to exactly two decimal places
-#' without rounding. For example, `119.149` becomes `119.14` instead of `119.15`.
+#' without rounding.
 #'
 #' @param x A numeric vector.
 #'

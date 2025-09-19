@@ -36,7 +36,6 @@ Imports:
     MASS,
     parallel,
     dplyr,
-    readr,
     plotly,
     htmlwidgets,
     purrr,
@@ -54,5 +53,4 @@ Imports:
     clusterGeneration,
     Rcpp,
     RcppEigen,
-    gridExtra,
-    viridis
+    gridExtra

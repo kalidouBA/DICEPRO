@@ -23,6 +23,8 @@ objective_wrapper(
 \item{report_path}{Character. Directory path where JSON results are saved.}
 
 \item{params}{List. Current hyperparameter set to evaluate.}
+
+\item{W_prime}{Matrix. Optional initial W matrix.}
 }
 \value{
 List containing objective function output, status, start time, duration, and error message (if any).

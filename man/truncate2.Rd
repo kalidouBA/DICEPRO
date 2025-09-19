@@ -14,7 +14,7 @@ A numeric vector truncated to two decimal places.
 }
 \description{
 This function truncates a numeric value to exactly two decimal places
-without rounding. For example, \code{119.149} becomes \code{119.14} instead of \code{119.15}.
+without rounding.
 }
 \examples{
 truncate2(119.149) # Returns 119.14
