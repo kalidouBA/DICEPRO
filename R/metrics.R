@@ -352,6 +352,7 @@ nrmse <- function(pred, obs, method = "sd", transformation = "none", trans_funct
 #' r2 <- r2_1dim(x, y)
 #' r2_adj <- r2_1dim(x, y, adjusted = TRUE)
 #'
+#' @importFrom stats cor
 #' @export
 r2_1dim <- function(x, y, adjusted = FALSE) {
 
@@ -401,12 +402,12 @@ full_icc_gaussian <- function(x, y) {
     method = factor(rep(c("obs", "pred"), each = n * p))
   )
 
-  model <- lme4::lmer(
+  model <- lmer(
     value ~ 1 + (1 | population/subject),
     data = df
   )
 
-  var <- lme4::VarCorr(model)
+  var <- VarCorr(model)
 
   var_r1 <- var$population[1, 1]
   var_r2 <- var$`subject:population`[1, 1]

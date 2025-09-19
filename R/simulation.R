@@ -24,7 +24,7 @@
 generateProp <- function(n_cell_types, nSample, nCell,scenario=NULL){
   if(scenario == "even")
     m <- round(matrix(abs(rnorm(n_cell_types, mean = 1 / n_cell_types,
-                                       sd = 0.01)),  ncol = n_cell_types), 3)
+                                sd = 0.01)),  ncol = n_cell_types), 3)
   else if(scenario == "uniform"){
     min.percentage = 1
     max.percentage = 99
@@ -103,11 +103,11 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
                                 nCell = 500, nCellsType = 10, nGenes = 500, lam = NULL,
                                 pois_eps = NULL,corr = NULL, method = "Polynomial",
                                 sparse = FALSE, prob_sparse=NULL){
- if(is.null(corr))
+  if(is.null(corr))
     corr <- rcorrmatrix(nCellsType)
 
   # rpois
- if(loi == "rpois"){
+  if(loi == "rpois"){
     Dist <- c("Logistic", "Weibull")
     Params <- list(c(0, 1), c(3, 5))
     Stcum1 <- calc_theory(Dist[1], Params[[1]])
@@ -149,10 +149,10 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
     })
 
   if(bloc){
-      listNGE <- seq(1,nGenes+1,nGenesByCellType)
-      for (ind in seq(nCellsType)){
-        counts[-(listNGE[ind]:(listNGE[ind+1]-1)),ind] <- 0
-      }
+    listNGE <- seq(1,nGenes+1,nGenesByCellType)
+    for (ind in seq(nCellsType)){
+      counts[-(listNGE[ind]:(listNGE[ind+1]-1)),ind] <- 0
+    }
   }
   if(tpm)
     counts <- t(1e6*t(counts)/colSums(counts))
@@ -189,6 +189,7 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #' @export
 #'
 #' @importFrom scater mockSCE
+#' @importFrom stats rpois rnorm
 #'
 #' @return A list data simulated.
 #' @details The function calculates and returns the simulations:
@@ -206,12 +207,12 @@ generate_ref_matrix <- function(loi="rpois", tpm = FALSE, bloc = FALSE, nGenesBy
 #'}
 
 simulation <- function(W = NULL, prop = NULL, nSample = 50, nCell = 500, nCellsType = 50,
-                        nGenes = 500, lam = NULL, pois_eps = NULL, corr = NULL,
-                        method = "Polynomial", scenario = NULL,
-                        loi = ' ', tpm = FALSE, bloc = FALSE,
-                        nGenesByCellType = 50, missCellTypes = NA,
-                        sparse=FALSE, prob_sparse=0.5,
-                        bias = FALSE, mu_bruit = 0, sigma_bruit = .025){
+                       nGenes = 500, lam = NULL, pois_eps = NULL, corr = NULL,
+                       method = "Polynomial", scenario = NULL,
+                       loi = ' ', tpm = FALSE, bloc = FALSE,
+                       nGenesByCellType = 50, missCellTypes = NA,
+                       sparse=FALSE, prob_sparse=0.5,
+                       bias = FALSE, mu_bruit = 0, sigma_bruit = .025){
 
   # Generate ref
   if(is.null(W)){
