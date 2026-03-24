@@ -64,12 +64,6 @@ install.packages("DICEPRO")
 remotes::install_github("kalidouBA/DICEPRO")
 ```
 
-### From Bioconductor
-
-``` r
-BiocManager::install("kalidouBA/DICEPRO")
-```
-
 ------------------------------------------------------------------------
 
 ## Quick Start
@@ -235,8 +229,8 @@ vignette("vignette-real-data",  package = "DICEPRO")
 
 If you use DICEPRO in your research, please cite:
 
-> Author et al. (2025). *When Less Is Not More\]{When Less Is Not More:
-> Mitigates the Impact of Incomplete Reference Matrices on Cellular
-> Frequency Deconvolution* Bioinformatics. <doi:XXXX>
+> *When Less Is Not More\]{When Less Is Not More: Mitigates the Impact
+> of Incomplete Reference Matrices on Cellular Frequency Deconvolution*
+> Bioinformatics. <doi:XXXX>
 
 ------------------------------------------------------------------------
