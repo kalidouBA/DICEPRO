@@ -2,22 +2,28 @@
 % Please edit documentation in R/Heatmap_error.R
 \name{heatmap_abundances}
 \alias{heatmap_abundances}
-\title{Create a Heatmap of Cell Abundances}
+\title{Heatmap of Cell Abundances Across Iterations}
 \usage{
-heatmap_abundances(res2plot)
+heatmap_abundances(res2plot, base_size = 9)
 }
 \arguments{
-\item{res2plot}{A data frame containing the results to be plotted, including Iteration, Cell_Type, and Abundances.}
+\item{res2plot}{A data.frame with one column named \code{Iterate} (iteration
+index) and one column per cell type containing numeric abundance values.}
+
+\item{base_size}{Numeric. Base font size in points (default \code{9}).}
 }
 \value{
-A heatmap of cell abundances.
+A \code{ggplot} object. Print it or save it with
+\code{ggplot2::ggsave()}.
 }
 \description{
-This function generates a heatmap to visualize cell abundances across different iterations and cell types.
+Generates a raster heatmap showing the abundance of each cell type at every
+NMF iteration. Colour encodes abundance level using the viridis scale
+(reversed: dark = high abundance).
 }
-\details{
-This function uses the ggplot2 package to create a heatmap. It plots cell abundances across iterations and cell types, with colors representing the abundance levels.
+\examples{
+\dontrun{
+heatmap_abundances(df)
 }
-\seealso{
-Other functions for data visualization: \code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_raster}}.
+
 }

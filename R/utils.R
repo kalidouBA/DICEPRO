@@ -32,36 +32,20 @@ utils::globalVariables(c(
 #' @param output_dir Output directory
 #' @param bulkName Bulk name
 #' @param refName Reference name
-#' @param hspaceTechniqueChoose Hyperparameter space technique
-#' @param algo_select Algorithm selection
 #' @return List of paths
 #' @export
-generate_experiment_paths <- function(output_dir, bulkName, refName,
-                                      hspaceTechniqueChoose, algo_select) {
+.generate_experiment_paths <- function(output_dir, bulkName, refName) {
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
-  data_dir <- file.path(output_dir, paste0(bulkName, "_", refName, "_",
-                                           hspaceTechniqueChoose, "_", algo_select))
+  data_dir <- file.path(output_dir, paste0("DICEPRO_",bulkName, "_", refName))
   dir.create(data_dir, showWarnings = FALSE, recursive = TRUE)
 
-  optim_dir <- file.path(data_dir, "optim")
-  dir.create(optim_dir, showWarnings = FALSE, recursive = TRUE)
 
-  report_dir <- file.path(optim_dir, "report")
-  dir.create(report_dir, showWarnings = FALSE, recursive = TRUE)
-
-  exp_name <- "optim"
-  config_path <- file.path(optim_dir, paste0(exp_name, ".config.json"))
-  trials_json_path <- file.path(optim_dir, paste0(exp_name, ".trials.json"))
-  report_path <- file.path(report_dir, paste0(exp_name, ".report.png"))
+  config_path <- file.path(data_dir, "optim.config.json")
 
   list(
     data_dir = data_dir,
-    optim_dir = optim_dir,
-    report_dir = report_dir,
-    config_path = config_path,
-    trials_json_path = trials_json_path,
-    report_path = report_path
+    config_path = config_path
   )
 }
 

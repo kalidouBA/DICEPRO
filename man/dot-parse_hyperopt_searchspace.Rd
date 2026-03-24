@@ -2,19 +2,11 @@
 % Please edit documentation in R/hypersearch.R
 \name{.parse_hyperopt_searchspace}
 \alias{.parse_hyperopt_searchspace}
-\title{Parse hyperopt search space}
+\title{Parse hyperopt search space specification}
 \usage{
 .parse_hyperopt_searchspace(arg, specs)
 }
-\arguments{
-\item{arg}{Parameter name}
-
-\item{specs}{Specification list}
-}
-\value{
-Search space definition
-}
 \description{
-Internal function to parse hyperparameter search space definitions
+Parse hyperopt search space specification
 }
 \keyword{internal}

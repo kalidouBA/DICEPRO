@@ -6,13 +6,7 @@
 \usage{
 .get_report_path(exp_dir)
 }
-\arguments{
-\item{exp_dir}{Experiment directory}
-}
-\value{
-Report path
-}
 \description{
-Create and return report directory path
+Get report path
 }
 \keyword{internal}

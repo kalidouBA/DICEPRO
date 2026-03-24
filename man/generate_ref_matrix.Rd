@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulation.R
 \name{generate_ref_matrix}
 \alias{generate_ref_matrix}
-\title{Generate a Reference Matrix}
+\title{Generate a Reference Signature Matrix}
 \usage{
 generate_ref_matrix(
   loi = "rpois",
@@ -21,44 +21,62 @@ generate_ref_matrix(
 )
 }
 \arguments{
-\item{loi}{The law of integration to use: "rpois" for Poisson}
+\item{loi}{Character. Expression model: \code{"rpois"} for
+Poisson-based simulation or any other value for
+log-normal simulation. Default: \code{"rpois"}.}
 
-\item{tpm}{Logical indicating whether to convert the counts to transcripts per million (TPM).}
+\item{tpm}{Logical. If \code{TRUE}, columns are TPM-normalized.
+Default: \code{FALSE}.}
 
-\item{bloc}{Logical indicating whether to introduce block sparsity.}
+\item{bloc}{Logical. If \code{TRUE}, introduces block sparsity
+so that each cell type expresses only a subset of
+genes. Default: \code{FALSE}.}
 
-\item{nGenesByCellType}{Number of genes per cell type (used for block sparsity).}
+\item{nGenesByCellType}{Integer. Number of genes per cell-type block
+(used when \code{bloc = TRUE}).}
 
-\item{nCell}{Total number of cells.}
+\item{nCell}{Integer. Total number of cells (unused directly;
+retained for API compatibility).}
 
-\item{nCellsType}{Number of cell types.}
+\item{nCellsType}{Integer. Number of cell types. Default: \code{10}.}
 
-\item{nGenes}{Number of genes.}
+\item{nGenes}{Integer. Number of genes. Default: \code{500}.}
 
-\item{lam}{The lambda parameter for the Poisson distribution (used when loi = "rpois").}
+\item{lam}{Numeric vector. Lambda parameters for Poisson
+simulation (passed to
+\code{SimMultiCorrData::rcorrvar2}).}
 
-\item{pois_eps}{The epsilon parameter for the Poisson distribution (used when loi = "rpois").}
+\item{pois_eps}{Numeric vector. Epsilon parameters for Poisson
+simulation.}
 
-\item{corr}{The correlation matrix for generating gene expressions (used when loi = "rpois" is FALSE).}
+\item{corr}{Numeric matrix. Inter-cell-type correlation matrix.
+If \code{NULL}, generated via
+\code{clusterGeneration::rcorrmatrix}.}
 
-\item{method}{The method for generating data: "Polynomial" or other.}
+\item{method}{Character. Simulation method passed to
+\code{rcorrvar2}. Default: \code{"Polynomial"}.}
 
-\item{sparse}{Logical indicating whether to introduce sparsity.}
+\item{sparse}{Logical. If \code{TRUE}, introduces random sparsity
+by zeroing entries with probability
+\code{1 - prob_sparse}. Default: \code{FALSE}.}
 
-\item{prob_sparse}{Probability of sparsity (used when sparse = TRUE).}
+\item{prob_sparse}{Numeric. Probability of a non-zero entry when
+\code{sparse = TRUE}. Default: \code{NULL}.}
 }
 \value{
-A reference matrix with cell types as columns and genes as rows.
+A numeric matrix of dimensions \code{nGenes x nCellsType}.
+Row names are \code{Gene_1}, ..., \code{Gene_nGenes};
+column names are \code{CellType_1}, ..., \code{CellType_nCellsType}.
 }
 \description{
-This function generates a reference matrix for use in simulating single-cell RNA-seq data.
+Constructs a synthetic gene-by-cell-type reference matrix using either
+Poisson-based or log-normal gene expression models, with optional block
+sparsity and TPM normalization.
 }
 \examples{
-if(interactive()){
-set.seed(2101)
-ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
+if (interactive()) {
+  set.seed(2101)
+  ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
+  dim(ref)  # 50 x 5
 }
-}
-\seealso{
-\code{\link[SimMultiCorrData]{rcorrvar2}}, \code{\link[MASS]{mvrnorm}}
 }

@@ -1,0 +1,194 @@
+---
+title: "DICEPRO — Simulated Data Workflow"
+author: "DICEPRO Team"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{DICEPRO — Simulated Data Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  warning    = FALSE,
+  message    = FALSE,
+  eval       = FALSE
+)
+```
+
+> **Note:** All code chunks have `eval = FALSE` and are shown for
+> illustration only. To run them interactively:
+> ```r
+> library(DICEPRO)
+> # copy-paste the chunks below into your R session
+> ```
+
+# Overview
+
+This vignette demonstrates a complete DICEPRO deconvolution workflow on
+**fully synthetic data**, enabling end-to-end reproducibility without
+requiring access to proprietary datasets.
+
+The pipeline proceeds in four stages:
+
+1. **Simulate** a reference signature matrix and ground-truth cell-type
+   proportions using the built-in simulation framework.
+2. **Generate** a noisy bulk RNA-seq matrix from the simulated mixture.
+3. **Deconvolve** using the main `DICEPRO()` function with automated
+   hyperparameter optimisation.
+4. **Evaluate** the recovered proportions against the ground truth.
+
+---
+
+# Data Simulation
+
+`simulation()` generates a self-consistent triplet -- reference matrix
+`$W`, proportion matrix `$p`, and noisy bulk matrix `$B` -- in a single
+call, guaranteeing column-name alignment across all three outputs.
+
+```{r simulate}
+library(DICEPRO)
+set.seed(2101L)
+
+sim_data <- simulation(
+  loi        = "gauss",
+  scenario   = "hierarchical",
+  nSample    = 30L,
+  nGenes     = 200L,
+  nCellsType = 10L,
+  sigma_bio  = 0.07,
+  sigma_tech = 0.07,
+  seed       = 2101L
+)
+
+cat("Reference  :", dim(sim_data$W), "\n")
+cat("Proportions:", dim(sim_data$p), "\n")
+cat("Bulk       :", dim(sim_data$B), "\n")
+cat("Row sums   :", round(range(rowSums(sim_data$p)), 4), "\n")
+```
+
+```{r sanity-check}
+bulk_clean <- as.matrix(sim_data$W) %*% t(as.matrix(sim_data$p))
+
+plot(
+  bulk_clean[seq_len(500L)],
+  as.matrix(sim_data$B)[seq_len(500L)],
+  xlab = "Clean bulk (first 500 entries)",
+  ylab = "Noisy bulk",
+  pch  = 19, cex = 0.4, col = "#2c7bb6",
+  main = "Noise model: clean vs noisy bulk"
+)
+abline(0, 1, col = "firebrick", lwd = 1.5)
+```
+
+
+# Deconvolution with `DICEPRO()`
+
+```{r run-dicepro}
+out <- DICEPRO(
+  reference             = as.matrix(sim_data$W),
+  bulk                  = as.matrix(sim_data$B),
+  methodDeconv          = "FARDEEP",
+  W_prime               = 0,
+  bulkName              = "SimBulk",
+  refName               = "SimRef",
+  hp_max_evals          = 150L,
+  algo_select           = "random",
+  output_path           = tempdir(),
+  hspaceTechniqueChoose = "all",
+  normalize = FALSE
+)
+```
+
+---
+
+# Results
+
+## Optimal Hyperparameters
+
+```{r best-hp}
+cat("Best lambda :", out$hyperparameters$lambda, "\n")
+cat("Best gamma  :", out$hyperparameters$gamma,  "\n")
+cat("Loss        :", out$metrics$loss,            "\n")
+cat("Constraint  :", out$metrics$constraint,      "\n")
+```
+
+## Hyperparameter Optimisation Report
+
+```{r plot-hyperopt, fig.height = 9}
+out$plot_hyperopt
+```
+
+## Pareto Frontier
+
+```{r plot-pareto}
+out$plot
+```
+
+## Recovered vs True Proportions
+
+```{r compare-props}
+true_prop <- as.matrix(sim_data$p)
+pred_prop <- as.matrix(out$H)
+
+common_ct   <- intersect(colnames(pred_prop), colnames(true_prop))
+true_common <- true_prop[, common_ct, drop = FALSE]
+pred_common <- pred_prop[, common_ct, drop = FALSE]
+
+r_overall <- cor(as.vector(true_common), as.vector(pred_common))
+cat(sprintf("Overall Pearson r: %.3f\n", r_overall))
+
+plot(
+  as.vector(true_common),
+  as.vector(pred_common),
+  xlab = "True proportions",
+  ylab = "Predicted proportions",
+  pch  = 19, cex = 0.5, col = "#2c7bb6aa",
+  main = sprintf("True vs Predicted  (r = %.3f)", r_overall)
+)
+abline(0, 1, col = "firebrick", lwd = 1.5)
+```
+
+## Per-Cell-Type Correlation
+
+```{r per-ct-cor, fig.height = 4}
+ct_cors <- vapply(common_ct, function(ct) {
+  cor(true_common[, ct], pred_common[, ct])
+}, numeric(1L))
+
+par(mar = c(5, 10, 3, 1))
+barplot(
+  sort(ct_cors),
+  horiz = TRUE, las = 1,
+  col   = ifelse(sort(ct_cors) > 0.7, "#2c7bb6", "#d7191c"),
+  xlab  = "Pearson r",
+  main  = "Per-cell-type correlation",
+  xlim  = c(-0.2, 1)
+)
+abline(v = 0.7, lty = 2, col = "gray40")
+```
+
+## Quantitative Performance Metrics
+
+```{r perf-metrics}
+perf <- MakeTable1Tool(pred_mat = pred_common, obs_mat = true_common)
+knitr::kable(perf$Perf, digits = 3,
+             caption = "Performance metrics -- simulated data")
+```
+
+---
+
+# Session Info
+
+```{r session-info}
+sessionInfo()
+```

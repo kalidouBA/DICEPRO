@@ -1,0 +1,268 @@
+---
+title: "DICEPRO — Real Data Workflow (BlueCode + CellMixtures)"
+author: "DICEPRO Team"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{DICEPRO — Real Data Workflow (BlueCode + CellMixtures)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  warning    = FALSE,
+  message    = FALSE,
+  eval       = FALSE   # never executed during R CMD check / CRAN build
+)
+```
+
+> **Note:** All code chunks have `eval = FALSE` and are shown for
+> illustration only. To run them interactively:
+> ```r
+> library(DICEPRO)
+> # copy-paste the chunks below into your R session
+> ```
+
+# Overview
+
+This vignette demonstrates a complete DICEPRO deconvolution workflow on
+**real RNA-seq data** using:
+
+- **BlueCode** -- the 34-cell-type reference signature matrix bundled with
+  the package, spanning five major tissue compartments (immune, stromal,
+  endothelial, epithelial, and muscle).
+- **CellMixtures** -- a bulk RNA-seq dataset of experimentally mixed cell
+  populations (12 samples, ~31 000 genes).
+
+---
+
+# Data Loading
+
+## BlueCode Reference Signature Matrix
+
+```{r load-bluecode}
+library(DICEPRO)
+
+data(BlueCode)
+
+cat("BlueCode dimensions     :", dim(BlueCode), "\n")
+cat("Number of cell types    :", ncol(BlueCode), "\n")
+cat("Number of genes         :", nrow(BlueCode), "\n")
+print(head(colnames(BlueCode), 5L))
+```
+
+```{r bluecode-compartments}
+compartments <- list(
+  Immune      = colnames(BlueCode)[1:9],
+  Stromal     = colnames(BlueCode)[10:17],
+  Endothelial = colnames(BlueCode)[18:20],
+  Epithelial  = colnames(BlueCode)[21:25],
+  Muscle      = colnames(BlueCode)[26:34]
+)
+for (comp in names(compartments)) {
+  cat(sprintf("  %s (%d): %s\n",
+              comp,
+              length(compartments[[comp]]),
+              paste(compartments[[comp]], collapse = ", ")))
+}
+```
+
+## CellMixtures Bulk Dataset
+
+```{r load-cellmixtures}
+data(CellMixtures)
+
+cat("CellMixtures dimensions :", dim(CellMixtures), "\n")
+cat("Sample names            :", colnames(CellMixtures), "\n")
+cat("First 5 gene names      :", head(rownames(CellMixtures), 5L), "\n")
+```
+
+---
+
+# Data Inspection
+
+## Gene Overlap
+
+```{r gene-overlap}
+n_ref    <- nrow(BlueCode)
+n_bulk   <- nrow(CellMixtures)
+n_common <- length(intersect(rownames(BlueCode), rownames(CellMixtures)))
+
+cat(sprintf(
+  "Reference genes  : %d\nBulk genes       : %d\nCommon genes     : %d (%.1f%% of reference)\n",
+  n_ref, n_bulk, n_common, 100 * n_common / n_ref
+))
+```
+
+## Expression Distribution
+
+```{r expr-dist}
+log2_bulk <- log2(as.matrix(CellMixtures) + 1)
+boxplot(
+  log2_bulk,
+  las  = 2,
+  col  = "#2c7bb680",
+  ylab = expression(log[2](counts + 1)),
+  main = "CellMixtures: expression distribution per sample"
+)
+```
+
+---
+
+# Deconvolution with `DICEPRO()`
+
+```{r run-dicepro}
+out <- DICEPRO(
+  reference             = as.matrix(BlueCode),
+  bulk                  = as.matrix(CellMixtures),
+  methodDeconv          = "FARDEEP",
+  W_prime               = 0,
+  bulkName              = "CellMixtures",
+  refName               = "BlueCode",
+  hp_max_evals          = 150L,
+  algo_select           = "random",
+  output_path           = tempdir(),
+  hspaceTechniqueChoose = "all"
+)
+```
+
+---
+
+# Results
+
+## Optimal Hyperparameters
+
+```{r best-hp}
+cat("Best lambda :", out$hyperparameters$lambda, "\n")
+cat("Best gamma  :", out$hyperparameters$gamma,  "\n")
+cat("Loss        :", out$metrics$loss,            "\n")
+cat("Constraint  :", out$metrics$constraint,      "\n")
+```
+
+## Hyperparameter Optimisation Report
+
+```{r plot-hyperopt, fig.height = 9}
+out$plot_hyperopt
+```
+
+## Pareto Frontier
+
+```{r plot-pareto}
+out$plot
+```
+
+## Estimated Cell-Type Proportions
+
+```{r proportion-heatmap, fig.height = 6}
+prop_mat    <- as.matrix(out$H)
+prop_sorted <- prop_mat[, order(colMeans(prop_mat), decreasing = TRUE)]
+
+heatmap(
+  prop_sorted,
+  Rowv    = NA,
+  Colv    = NA,
+  col     = colorRampPalette(c("white", "#2c7bb6", "#d7191c"))(50L),
+  scale   = "none",
+  margins = c(12, 6),
+  main    = "Estimated cell-type proportions -- CellMixtures",
+  xlab    = "Cell type",
+  ylab    = "Sample"
+)
+```
+
+## Top Contributing Cell Types
+
+```{r top-ct, fig.height = 4}
+mean_props <- sort(colMeans(prop_mat), decreasing = TRUE)
+
+par(mar = c(10, 4, 3, 1))
+barplot(
+  mean_props,
+  las       = 2,
+  col       = "#2c7bb6",
+  ylab      = "Mean proportion",
+  main      = "Mean estimated proportions across samples",
+  cex.names = 0.65
+)
+```
+
+## Per-Sample Composition
+
+```{r stacked-bar, fig.height = 5}
+top10      <- names(sort(colMeans(prop_mat), decreasing = TRUE))[seq_len(10L)]
+prop_top10 <- prop_mat[, top10, drop = FALSE]
+
+cols <- colorRampPalette(
+  c("#2c7bb6", "#abd9e9", "#ffffbf", "#fdae61", "#d7191c",
+    "#1a9641", "#a6d96a", "#762a83", "#c2a5cf", "#e7d4e8")
+)(10L)
+
+barplot(
+  t(prop_top10),
+  col         = cols,
+  legend      = colnames(prop_top10),
+  args.legend = list(x = "topright", cex = 0.55, ncol = 2L),
+  las         = 1,
+  ylab        = "Proportion",
+  xlab        = "Sample",
+  main        = "Per-sample cell composition (top 10 cell types)",
+  border      = NA
+)
+```
+
+## Compartment-Level Summary
+
+```{r compartment-summary, fig.height = 4}
+ct_to_comp <- c(
+  setNames(rep("Immune",      9L), compartments$Immune),
+  setNames(rep("Stromal",     8L), compartments$Stromal),
+  setNames(rep("Endothelial", 3L), compartments$Endothelial),
+  setNames(rep("Epithelial",  5L), compartments$Epithelial),
+  setNames(rep("Muscle",      9L), compartments$Muscle)
+)
+
+shared_ct  <- intersect(colnames(prop_mat), names(ct_to_comp))
+comp_props <- vapply(
+  unique(ct_to_comp),
+  function(comp) {
+    cts <- names(ct_to_comp)[ct_to_comp == comp & names(ct_to_comp) %in% shared_ct]
+    if (length(cts) == 0L) return(NA_real_)
+    mean(rowSums(prop_mat[, cts, drop = FALSE]))
+  },
+  numeric(1L)
+)
+
+comp_cols <- c(
+  Immune      = "#2c7bb6",
+  Stromal     = "#fdae61",
+  Endothelial = "#1a9641",
+  Epithelial  = "#d7191c",
+  Muscle      = "#762a83"
+)
+
+barplot(
+  sort(comp_props, decreasing = TRUE),
+  col    = comp_cols[names(sort(comp_props, decreasing = TRUE))],
+  ylab   = "Mean proportion",
+  las    = 1,
+  main   = "Mean estimated proportion by tissue compartment",
+  border = NA
+)
+```
+
+---
+
+# Session Info
+
+```{r session-info}
+sessionInfo()
+```

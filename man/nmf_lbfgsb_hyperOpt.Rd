@@ -27,8 +27,8 @@ nmf_lbfgsb_hyperOpt(
 \item{path2save}{Character. Path to save results.}
 }
 \value{
-List. Output from \code{nmf_lbfgsb} including loss, constraints, and matrices.
+List. Output from \code{nmf_lbfgsb}.
 }
 \description{
-Calls the R function \code{nmf_lbfgsb} to perform NMF optimization with given hyperparameters.
+NMF LBFGSB Hyperparameter Optimization
 }

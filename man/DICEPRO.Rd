@@ -2,12 +2,13 @@
 % Please edit documentation in R/DICEPRO.R
 \name{DICEPRO}
 \alias{DICEPRO}
-\title{DICEPRO: Deconvolution and Inference of Cell Proportions with Optimization}
+\title{Semi-supervised bulk RNA-seq deconvolution with NMF hyperparameter
+optimisation}
 \usage{
 DICEPRO(
   reference,
   bulk,
-  methodDeconv = "DCQ",
+  methodDeconv = "CSx",
   cibersortx_email = NULL,
   cibersortx_token = NULL,
   W_prime = 0,
@@ -17,51 +18,187 @@ DICEPRO(
   N_unknownCT = 1,
   algo_select = "random",
   output_path = NULL,
-  hspaceTechniqueChoose = "restrictionEspace",
-  out_Decon = NULL
+  hspaceTechniqueChoose = "all",
+  out_Decon = NULL,
+  normalize = TRUE
 )
 }
 \arguments{
-\item{reference}{Numeric matrix of reference gene expression data (genes x cell types).}
+\item{reference}{Numeric matrix of reference gene expression profiles,
+dimensions \eqn{G \times K} (genes \eqn{\times} known cell types).
+Row names must be gene symbols.}
 
-\item{bulk}{Numeric matrix of bulk gene expression data (genes x samples).}
+\item{bulk}{Numeric matrix of bulk RNA-seq expression,
+dimensions \eqn{G \times N} (genes \eqn{\times} samples).
+Row names must be gene symbols matching \code{reference}.}
 
-\item{methodDeconv}{Deconvolution method: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".}
+\item{methodDeconv}{Character scalar. Deconvolution method to use for
+the supervised step. One of \code{"CSx"}, \code{"DCQ"},
+\code{"CDSeq"}, or \code{"FARDEEP"} (default \code{"CSx"}).}
 
-\item{cibersortx_email}{Email for CIBERSORTx (optional).}
+\item{cibersortx_email}{Character scalar. Registered email for the
+CIBERSORTx web service. Required when \code{methodDeconv = "CSx"};
+ignored otherwise.}
 
-\item{cibersortx_token}{Token for CIBERSORTx (optional).}
+\item{cibersortx_token}{Character scalar. API token for the CIBERSORTx
+web service. Required when \code{methodDeconv = "CSx"};
+ignored otherwise.}
 
-\item{W_prime}{Initial W matrix for unknown cell types (default 0).}
+\item{W_prime}{Either \code{0} (default, initialise a single unknown
+cell-type column automatically) or a numeric matrix of dimensions
+\eqn{G \times U} providing initial signatures for \eqn{U} unknown cell
+types.}
 
-\item{bulkName}{Name of bulk dataset.}
+\item{bulkName}{Character scalar. Label for the bulk dataset, used in
+the output directory name and plot titles (default \code{"Bulk"}).}
 
-\item{refName}{Name of reference dataset.}
+\item{refName}{Character scalar. Label for the reference dataset,
+used in the output directory name and plot titles
+(default \code{"Reference"}).}
 
-\item{hp_max_evals}{Max evaluations for optimization (default 100).}
+\item{hp_max_evals}{Positive integer. Number of hyperparameter
+configurations to evaluate during the search
+(default \code{100}). Increase to \eqn{\geq 200} for production use.}
 
-\item{N_unknownCT}{Number of unknown cell types to estimate (default 1).}
+\item{N_unknownCT}{Positive integer. Number of unknown cell types to
+estimate when \code{W_prime = 0} (default \code{1}).}
 
-\item{algo_select}{Optimization algorithm: "random", "tpe", "atpe" (default "random").}
+\item{algo_select}{Character scalar. Hyperparameter sampling strategy.
+\describe{
+\item{\code{"random"}}{Pure random search (default). Fast and robust
+for any budget.}
+\item{\code{"tpe"}}{Tree-structured Parzen Estimator. Uses past
+evaluations to guide the search; more sample-efficient than random
+search when \code{hp_max_evals} \eqn{\geq 30}. Implemented in pure
+base R with no additional dependencies.}
+\item{\code{"atpe"}}{Accepted alias for \code{"tpe"}.}
+\item{\code{"anneal"}}{Accepted in config; currently falls back to
+\code{"random"}.}
+}}
 
-\item{output_path}{Path to save results (default current working directory).}
+\item{output_path}{Character scalar. Root directory for all outputs.
+Results are saved under
+\code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
+Defaults to \code{getwd()} when \code{NULL}.}
 
-\item{hspaceTechniqueChoose}{Hyperparameter search space: "restrictionEspace", "all" (default "restrictionEspace").}
+\item{hspaceTechniqueChoose}{Character scalar. Hyperparameter space
+parameterisation.
+\describe{
+\item{\code{"all"}}{Searches \eqn{\gamma} and \eqn{\lambda}
+independently, each loguniform on (1, 1e8).}
+\item{\code{"restrictionEspace"}}{(default) \eqn{\gamma} is the base
+variable; \eqn{\lambda} is derived as
+\eqn{\lambda = \gamma \times \lambda_{factor}} with
+\eqn{\lambda_{factor}} in (2, 100), ensuring
+\eqn{\lambda \geq 2\gamma}.}
+}}
 
-\item{out_Decon}{Precomputed deconvolution matrix (optional).}
+\item{out_Decon}{Optional numeric matrix. Pre-computed deconvolution
+result (samples \eqn{\times} cell types). When provided,
+\code{\link{running_method}} is skipped entirely.}
+
+\item{normalize}{Logical scalar. When \code{TRUE} (default), both
+\code{reference} and \code{bulk} are z-score normalised per gene
+before deconvolution. Set to \code{FALSE} when matrices have already
+been normalised upstream.}
 }
 \value{
-List of class "DICEPRO" containing:
-\item{Prediction}{Estimated cell type proportions (excluding unknowns).}
-\item{New_signature}{Optimized gene expression signatures including unknown cell types.}
-\item{W_prime}{Optimized W matrix for unknown cell types.}
-\item{P_prime}{Estimated proportions for unknown cell types.}
-\item{constraint}{Final constraint value from optimization.}
-\item{optimization_results}{Complete optimization results including both optimal points and TSV data.}
+An object of class \code{"DICEPRO"} (a named list), or
+\code{invisible(NULL)} when no valid hyperparameter configuration is
+found. The list contains:
+\describe{
+\item{hyperparameters}{Named list with \code{lambda} and \code{gamma}
+scalars of the selected configuration.}
+\item{metrics}{Named list with \code{loss} and \code{constraint}
+scalars of the selected configuration.}
+\item{trials}{data.frame of all successful trial results, one row per
+evaluated configuration.}
+\item{W}{Signature matrix \eqn{W} of the selected trial.}
+\item{H}{Proportion matrix \eqn{H} of the selected trial
+(samples \eqn{\times} cell types).}
+\item{plot}{Interactive Plotly figure of the Pareto frontier.}
+\item{plot_hyperopt}{Static \code{gtable} scatter-matrix of all
+evaluated hyperparameter configurations.}
+}
 }
 \description{
-This function performs cell type deconvolution of bulk gene expression data
-using a combination of a deconvolution method and Non-Negative Matrix
-Factorization (NMF) with L-BFGS-B optimization. It can integrate known
-cell type signatures and estimate the proportions of unknown cell types.
+\code{DICEPRO} performs cell-type deconvolution of bulk RNA-seq data by
+combining a supervised deconvolution step (estimating proportions of
+\emph{known} cell types) with an unsupervised NMF step (discovering and
+quantifying \emph{unknown} cell types). Hyperparameters
+\eqn{(\lambda, \gamma, p')} are selected automatically via Pareto-frontier
+analysis and knee-point detection.
+}
+\section{Pipeline}{
+
+\enumerate{
+\item \strong{Normalisation} (optional): z-score per gene applied to
+both \code{reference} and \code{bulk} via
+\code{.normalize_zscore_per_gene()}.
+\item \strong{Gene intersection}: only genes present in both matrices
+are retained.
+\item \strong{Supervised deconvolution}: \code{\link{running_method}}
+estimates known cell-type proportions.
+\item \strong{Hyperparameter search}: \code{\link{run_experiment}}
+evaluates \code{hp_max_evals} configurations using the chosen
+\code{algo_select} strategy.
+\item \strong{Best configuration}: \code{\link{best_hyperParams}}
+selects the knee point on the Pareto frontier.
+\item \strong{Report}: plots are saved under
+\code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
+}
+}
+
+\examples{
+\dontrun{
+data(BlueCode)
+data(CellMixtures)
+
+# Random search (default)
+out <- DICEPRO(
+  reference             = BlueCode,
+  bulk                  = CellMixtures,
+  methodDeconv          = "FARDEEP",
+  bulkName              = "CellMixtures",
+  refName               = "BlueCode",
+  hp_max_evals          = 100L,
+  output_path           = tempdir(),
+  hspaceTechniqueChoose = "all"
+)
+
+# TPE search — more efficient when budget >= 30 trials
+out_tpe <- DICEPRO(
+  reference             = BlueCode,
+  bulk                  = CellMixtures,
+  methodDeconv          = "FARDEEP",
+  hp_max_evals          = 50L,
+  algo_select           = "tpe",
+  hspaceTechniqueChoose = "restrictionEspace",
+  output_path           = tempdir()
+)
+
+# Skip normalisation when data are already z-scored
+out2 <- DICEPRO(
+  reference    = BlueCode,
+  bulk         = CellMixtures,
+  normalize    = FALSE,
+  methodDeconv = "FARDEEP"
+)
+
+# CIBERSORTx backend
+out3 <- DICEPRO(
+  reference        = BlueCode,
+  bulk             = CellMixtures,
+  methodDeconv     = "CSx",
+  cibersortx_email = "you@example.com",
+  cibersortx_token = "YOUR_TOKEN"
+)
+}
+
+}
+\seealso{
+\code{\link{running_method}} for the supervised deconvolution step,
+\code{\link{run_experiment}} for the hyperparameter search,
+\code{\link{best_hyperParams}} for Pareto selection,
+\code{\link{plot_hyperopt}} for the optimisation report plot.
 }

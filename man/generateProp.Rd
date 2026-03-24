@@ -2,33 +2,57 @@
 % Please edit documentation in R/simulation.R
 \name{generateProp}
 \alias{generateProp}
-\title{This function is used for generating synthetic data representing the proportions of different cell
-types in biological samples for various scenarios, which can be useful in various data analysis and
-modeling tasks in the field of biology and genetics.}
+\title{Generate Cell-Type Proportion Matrix}
 \usage{
-generateProp(n_cell_types, nSample, nCell, scenario = NULL)
+generateProp(n_cell_types, nSample, nCell = 500, scenario = NULL)
 }
 \arguments{
-\item{n_cell_types}{The number of different cell types.}
+\item{n_cell_types}{Integer. Number of distinct cell types.}
 
-\item{nSample}{The number of samples to generate.}
+\item{nSample}{Integer. Number of samples to generate.}
 
-\item{nCell}{The total number of cells in each sample.}
+\item{nCell}{Integer. Total number of cells per sample (used for
+rounding precision in the uniform scenario).}
 
-\item{scenario}{A scenario that determines how the proportions are generated.
-It can be one of three values: "even," "uniform," or any other value.}
+\item{scenario}{Character. Proportion generation strategy. One of:
+\code{"even"} for near-equal proportions,
+\code{"uniform"} for random uniform sampling, or
+\code{"hierarchical"} for two-level Dirichlet sampling
+reflecting tissue compartment structure.
+Any other value defaults to a flat Dirichlet draw.}
 }
 \value{
-a matrix representing proportions of different cell types in samples
+A numeric matrix of dimensions \code{nSample x n_cell_types},
+where each row sums to 1. Row names are \code{Sample_1}, ...,
+\code{Sample_nSample}; column names are \code{CellType_1}, ...,
+\code{CellType_n_cell_types}.
 }
 \description{
-This function is used for generating synthetic data representing the proportions of different cell
-types in biological samples for various scenarios, which can be useful in various data analysis and
-modeling tasks in the field of biology and genetics.
+Simulates cell-type proportion matrices for bulk RNA-seq deconvolution
+benchmarking. Three scenarios are supported: equal proportions across
+cell types, uniform random sampling, or hierarchical Dirichlet sampling
+reflecting realistic tissue compartment organization.
+}
+\details{
+The \code{"hierarchical"} scenario implements the two-level Dirichlet model
+described in the DicePro simulation framework. At the first level, samples
+are drawn from five major tissue compartments (Immune, Stromal, Endothelial,
+Epithelial, Muscle) using compartment-specific concentration parameters
+reflecting expected relative abundances. At the second level, each
+compartment is further decomposed into its constituent cell sub-populations.
+This hierarchical structure produces realistic covariance patterns between
+cell types that are absent from flat Dirichlet draws.
 }
 \examples{
-if(interactive()){
-set.seed(2101)
-prop <- generateProp(nSample = 20, n_cell_types = 22, scenario = "even")
+if (interactive()) {
+  set.seed(2101)
+  # Equal proportions
+  prop_even <- generateProp(nSample = 20, n_cell_types = 10,
+                            scenario = "even")
+
+  # Hierarchical Dirichlet (recommended for realistic benchmarking)
+  prop_hier <- generateProp(nSample = 20, n_cell_types = 34,
+                            scenario = "hierarchical")
+  all(abs(rowSums(prop_hier) - 1) < 1e-8)  # TRUE
 }
 }

@@ -2,23 +2,25 @@
 % Please edit documentation in R/plot.DICEPRO.R
 \name{plot.DICEPRO}
 \alias{plot.DICEPRO}
-\title{Plot Cell Abundance Heatmap and Error Plot}
+\title{Plot cell abundance heatmap and error plot}
 \usage{
 \method{plot}{DICEPRO}(x, ...)
 }
 \arguments{
-\item{x}{A list containing the results of both the cell abundance heatmap and error plot between folds.}
+\item{x}{A \code{DICEPRO} object as returned by
+\code{best_hyperParams}.}
 
-\item{...}{Additional arguments to customize the appearance of the plots.}
+\item{...}{Additional arguments (currently unused; reserved for future use).}
 }
 \value{
-A combined plot showing the cell abundance heatmap and error plot.
+A \pkg{patchwork} figure, or \code{invisible(NULL)} with a warning
+when only one iteration is present.
 }
 \description{
-This function combines the results of a cell abundance heatmap and an error plot for visualization.
-It takes a list \code{x} containing the results of both plots and generates the combined plot.
-You can pass additional arguments to customize the appearance of the plots.
+Combines a cell-abundance heatmap with a fold-error plot using
+\pkg{patchwork}. Requires at least two unique iterations in
+\code{x$Matrix_prediction}.
 }
 \seealso{
-Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{metric_plot}}.
+\code{heatmap_abundances}, \code{metric_plot}
 }

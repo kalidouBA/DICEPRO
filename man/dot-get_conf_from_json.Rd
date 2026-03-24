@@ -2,17 +2,11 @@
 % Please edit documentation in R/hypersearch.R
 \name{.get_conf_from_json}
 \alias{.get_conf_from_json}
-\title{Get configuration from JSON file}
+\title{Load and parse configuration from JSON file}
 \usage{
 .get_conf_from_json(confpath)
 }
-\arguments{
-\item{confpath}{Path to JSON configuration file}
-}
-\value{
-Configuration list
-}
 \description{
-Load and parse hyperparameter optimization configuration
+Load and parse configuration from JSON file
 }
 \keyword{internal}

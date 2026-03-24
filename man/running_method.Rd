@@ -2,38 +2,36 @@
 % Please edit documentation in R/Deconv_method.R
 \name{running_method}
 \alias{running_method}
-\title{Run Deconvolution Method}
+\title{Run Cell Deconvolution}
 \usage{
 running_method(
   bulk,
   reference,
   methodDeconv = "CSx",
-  cibersortx_email,
-  cibersortx_token
+  cibersortx_email = NULL,
+  cibersortx_token = NULL
 )
 }
 \arguments{
-\item{bulk}{A matrix of bulk RNA-seq data where rows are genes and columns are samples.}
+\item{bulk}{A numeric matrix of bulk RNA-seq data (rows = genes, columns = samples).}
 
-\item{reference}{A matrix of reference cell type gene expression profiles where rows are genes and columns are cell types.}
+\item{reference}{A numeric matrix of reference cell type gene expression profiles (rows = genes, columns = cell types).}
 
-\item{methodDeconv}{The method to use for deconvolution. Options include "CSx", "DCQ", "DeconRNASeq", "FARDEEP", and "BayesPrism".}
+\item{methodDeconv}{Character. The deconvolution method to use: "CSx", "DCQ", "FARDEEP", or "BayesPrism".}
 
-\item{cibersortx_email}{The CIBERSORTx account email (used if \code{methodDeconv} is "CSx").}
+\item{cibersortx_email}{Optional. Email for CIBERSORTx account (required if \code{methodDeconv = "CSx"}).}
 
-\item{cibersortx_token}{The CIBERSORTx account token (used if \code{methodDeconv} is "CSx").}
+\item{cibersortx_token}{Optional. Token for CIBERSORTx account (required if \code{methodDeconv = "CSx"}).}
 }
 \value{
-A matrix containing the estimated cell proportions for each cell type.
+A numeric matrix with estimated cell type proportions for each sample.
 }
 \description{
-This function performs cell deconvolution using various methods, including CSx, DCQ, DeconRNASeq, FARDEEP, etc.
+Performs cell deconvolution on bulk RNA-seq data using multiple methods such as CSx, DCQ, FARDEEP, and BayesPrism.
 }
 \details{
-This function allows you to run cell deconvolution using different methods. The choice of method is specified by the \code{methodDeconv} parameter.
-Each method runs its corresponding deconvolution procedure and returns the estimated proportions of the cell types in the bulk data.
+This function allows selection among different deconvolution algorithms. The output is a matrix with normalized estimated cell fractions per sample.
 }
 \seealso{
-Documentation of the methods used for cell deconvolution: \code{\link{run_CSx}}, \code{\link{dcq}}, \code{\link{DeconRNASeq}},
-\code{\link{fardeep}}.
+\code{run_CSx}, \code{dcq}, \code{fardeep}
 }

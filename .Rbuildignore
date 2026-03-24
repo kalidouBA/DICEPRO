@@ -7,3 +7,4 @@ NMF_optim_Lag.R
 test_simulation.Rmd
 ^doc$
 ^Meta$
+^README\.html$

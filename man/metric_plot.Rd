@@ -2,24 +2,37 @@
 % Please edit documentation in R/Heatmap_error.R
 \name{metric_plot}
 \alias{metric_plot}
-\title{Create an Error/Performance Plot}
+\title{Performance Metric Line Plot Across Iterations}
 \usage{
-metric_plot(perf2plot)
+metric_plot(perf2plot, ylab = "Error between folds", base_size = 9)
 }
 \arguments{
-\item{perf2plot}{A data frame containing the metric values to be plotted, including \code{Iterate}, and \code{metric}.}
+\item{perf2plot}{A data.frame with at least two columns:
+\itemize{
+\item \code{Iterate} — iteration index (numeric or integer).
+\item \code{metric}  — scalar performance value at each iteration.
+}}
+
+\item{ylab}{Character. Y-axis label (default \code{"Error between folds"}).}
+
+\item{base_size}{Numeric. Base font size in points (default \code{9}).}
 }
 \value{
-A metric plot showing the mean metric values with confidence intervals.
+A \code{ggplot} object.
 }
 \description{
-This function generates a metric plot to visualize metric values between folds across different iterations.
+Plots the evolution of a scalar performance metric (e.g., NRMSE, R²) over
+NMF iterations. Useful for monitoring convergence and diagnosing early
+stopping.
 }
-\details{
-This function calculates the mean and confidence intervals of metric values between folds and creates a line plot with shaded confidence intervals.
-It is useful for visualizing the variation in metric across iterations.
+\examples{
+\dontrun{
+df <- data.frame(
+  Iterate = 1:50,
+  metric  = cumsum(runif(50, -0.01, 0.1))
+)
+metric_plot(df)
+metric_plot(df, ylab = "NRMSE")
 }
-\seealso{
-Other functions for data visualization:
-\code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_line}}, \code{\link[ggplot2]{geom_ribbon}}, \code{\link[ggplot2]{facet_wrap}}.
+
 }

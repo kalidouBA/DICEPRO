@@ -1,156 +1,132 @@
-#' Redirect output to a log file
+#' Run a DICEPRO hyperparameter optimisation experiment
 #'
-#' Redirects standard output and messages to a specified log file.
+#' Builds the hyperparameter search space from \code{hspaceTechniqueChoose},
+#' writes the configuration to disk, runs \code{research_hyperOpt()}, and returns
+#' the collected trials.
 #'
-#' @param log_file Character. Path to the log file.
-#' @return None. Output is redirected to the log file.
+#' @param dataset              List containing at least \code{$B}, \code{$W},
+#'   and \code{$P} matrices.
+#' @param W_prime              Numeric matrix (or \code{0}). Passed verbatim to
+#'   \code{research_hyperOpt()} as the initial \eqn{W} for NMF.
+#' @param bulkName             Character scalar. Identifier for the bulk dataset
+#'   (used in output path construction).
+#' @param refName              Character scalar. Identifier for the reference
+#'   dataset (used in output path construction).
+#' @param hp_max_evals         Positive integer. Number of hyperparameter trials
+#'   to run.
+#' @param algo_select          Character scalar. Sampling algorithm passed to
+#'   the config (e.g. \code{"random"}).
+#' @param output_base_dir      Character scalar. Root directory for all outputs
+#'   (default \code{"."}).
+#' @param hspaceTechniqueChoose Character scalar. Search-space strategy:
+#'   \describe{
+#'     \item{\code{"all"}}{Full independent log-uniform grid for
+#'       \code{lambda_}, \code{gamma}, \code{p_prime}.}
+#'     \item{\code{"restrictionEspace"}}{Restricted space where \code{gamma}
+#'       is the base variable and \code{lambda_} is derived as
+#'       \code{lambda_ = gamma * lambda_factor} with
+#'       \code{lambda_factor} in (2, 100).}
+#'   }
+#'
+#' @return The list returned by \code{\link{research_hyperOpt}}: \code{trials},
+#'   \code{W}, and \code{H}.
+#'
 #' @export
-redirect_output_to_file <- function(log_file) {
-  sink(log_file, append = TRUE, type = "output")
-  sink(log_file, append = TRUE, type = "message")
-}
+run_experiment <- function(dataset,
+                           W_prime = 0,
+                           bulkName,
+                           refName,
+                           hp_max_evals,
+                           algo_select,
+                           output_base_dir= ".",
+                           hspaceTechniqueChoose) {
 
-#' Reset output to console
-#'
-#' Resets standard output and messages to the R console.
-#'
-#' @return None. Output is reset.
-#' @export
-reset_output <- function() {
-  sink(type = "output")
-  sink(type = "message")
-}
-
-#' Check if a value contains NaN or Inf
-#'
-#' Checks whether a numeric value, vector, matrix, or data frame contains NaN or Inf.
-#'
-#' @param value Numeric, vector, matrix, or data frame to check.
-#' @return Logical. TRUE if NaN or Inf is present, FALSE otherwise.
-#' @export
-contains_nan_or_inf <- function(value) {
-  if (is.numeric(value)) {
-    return(any(is.nan(value) | is.infinite(value)))
-  } else if (is.matrix(value) || is.data.frame(value)) {
-    return(any(is.nan(as.matrix(value)) | is.infinite(as.matrix(value))))
-  }
-  return(FALSE)
-}
-
-#' Run hyperparameter optimization experiment
-#'
-#' Performs hyperparameter optimization, saves trials and results, and generates reports.
-#'
-#' @param dataset List. Dataset containing matrices B, W, and P.
-#' @param W_prime Numeric. Additional parameter for objective function.
-#' @param bulkName Character. Name identifier for bulk data.
-#' @param refName Character. Name identifier for reference data.
-#' @param hp_max_evals Integer. Maximum number of hyperparameter evaluations.
-#' @param algo_select Character. Algorithm selection, e.g., "random".
-#' @param output_base_dir Character. Base directory for saving outputs.
-#' @param hspaceTechniqueChoose Character. Hyperparameter space technique ("all" or "restrictionEspace").
-#' @return A list with results, plots, and TSV data.
-#' @export
-run_experiment <- function(dataset, W_prime = 0, bulkName = "", refName = "",
-                           hp_max_evals = 100, algo_select = "random",
-                           output_base_dir = ".", hspaceTechniqueChoose = "restrictionEspace") {
-
-  paths <- generate_experiment_paths(output_base_dir, bulkName, refName,
-                                     hspaceTechniqueChoose, algo_select)
-  list2env(paths, envir = environment())
-
-  # ---- Hyperparameter configuration ----
-  if (hspaceTechniqueChoose == "all") {
-    hyperopt_config <- list(
-      exp = paths$optim_dir,
-      hp_max_evals = hp_max_evals,
-      hp_method = algo_select,
-      seed = 4,
-      hp_space = list(
-        lambda_ = c("loguniform", 1, 1e+8),
-        gamma = c("loguniform", 1, 1e+8),
-        p_prime = c("loguniform", 1e-6, 1)
-      )
-    )
-    hp_params <- c("gamma", "lambda_", "p_prime")
-  } else if (hspaceTechniqueChoose == "restrictionEspace") {
-    hyperopt_config <- list(
-      exp = paths$optim_dir,
-      hp_max_evals = hp_max_evals,
-      hp_method = algo_select,
-      seed = 4,
-      hp_space = custom_space()
-    )
-    hp_params <- c("gamma_factor", "lambda_", "p_prime")
-  } else {
-    stop(sprintf("Technique '%s' not available. Choose 'all' or 'restrictionEspace'.",
-                 hspaceTechniqueChoose))
-  }
-
-  # ---- Save config JSON ----
-  jsonlite::write_json(hyperopt_config, paths$config_path, auto_unbox = TRUE, pretty = TRUE)
-
-
-  # ---- Run hyperparameter search ----
-  research_v2(objective_opt, dataset, config_path = paths$config_path, hp_space = hyperopt_config$hp_space,
-              report_path = paths$report_dir, W_prime = W_prime)
-
-  # ---- Plot Kraljic ----
-  fp_plot <- plot_kraljic(outputDir = paths$data_dir, mixName = bulkName, refName = refName)
-
-  # Points optimaux
-  optimal_DiceproOptCstrt <- fp_plot$optimal_points$DiceproOptCstrt
-  optimal_DiceproOptCstrt_0.1 <- fp_plot$optimal_points$DiceproOptCstrt_0.1
-
-  # TSV correspondants
-  tsv_data_DiceproOptCstrt <- fp_plot$optimal_tsv_data$DiceproOptCstrt
-  tsv_data_DiceproOptCstrt_0.1 <- fp_plot$optimal_tsv_data$DiceproOptCstrt_0.1
-
-  # ---- Generate hyperparameter optimization report ----
-  fig_constraint <- plot_hyperopt_report_v2(
-    exp = paths$optim_dir,
-    params = hp_params,
-    metric = "constraint",
-    loss_metric = "constraint",
-    loss_behaviour = "min",
-    not_log = NULL,
-    categorical = NULL,
-    max_deviation = NULL,
-    title = paste0("Hyperparameter Optimization - ", bulkName)
+  # ---- Output paths ----------------------------------------------------------
+  paths <- .generate_experiment_paths(
+    output_base_dir,
+    bulkName,
+    refName
   )
 
-  # Save report plot
-  ggsave(
-    filename = file.path(paths$report_dir, paste0("hyperopt_report_", bulkName, ".png")),
-    plot = fig_constraint,
-    width = 14, height = 10
+  # ---- Search-space configuration --------------------------------------------
+  hspaceTechniqueChoose <- match.arg(
+    hspaceTechniqueChoose,
+    c("all", "restrictionEspace")
   )
 
-  return(list(
-    optimal_points = list(
-      DiceproOptCstrt = optimal_DiceproOptCstrt,
-      DiceproOptCstrt_0.1 = optimal_DiceproOptCstrt_0.1
+  base_config <- list(
+    exp          = paths$data_dir,
+    hp_max_evals = hp_max_evals,
+    hp_method    = algo_select,
+    seed         = 4L
+  )
+
+  # FIX: both spaces are now defined as named lists compatible with
+  # .parse_hyperopt_searchspace() / .sample_from_space() in hypersearch.R.
+  #
+  # "all"               — lambda_ and gamma are independent (no constraint).
+  # "restrictionEspace" — gamma is the base variable; lambda_ is derived
+  #                       inside .sample_from_space() as:
+  #                           lambda_ = gamma * lambda_factor
+  #                       lambda_factor in [2, 100] ensures lambda_ >= 2*gamma.
+  raw_space <- switch(
+    hspaceTechniqueChoose,
+    all = list(
+      lambda_ = c("loguniform", 1,    1e8),
+      gamma   = c("loguniform", 1,    1e8),
+      p_prime = c("loguniform", 1e-6, 1)
     ),
-    optimal_tsv_data = list(
-      DiceproOptCstrt = tsv_data_DiceproOptCstrt,
-      DiceproOptCstrt_0.1 = tsv_data_DiceproOptCstrt_0.1
-    ),
-    pareto_frontier = fp_plot$frontier_points,
-    plot = fp_plot$plot,
-    hyperopt_plot = fig_constraint
-  ))
+    restrictionEspace = .custom_space()   # list(gamma, lambda_factor, p_prime)
+  )
+
+  # Convert the raw atomic-vector specs to the named-list format that
+  # .sample_from_space() in hypersearch.R expects.
+  parsed_space <- lapply(
+    stats::setNames(names(raw_space), names(raw_space)),
+    function(arg) .parse_hyperopt_searchspace(arg, raw_space[[arg]])
+  )
+
+  hyperopt_config <- c(base_config, list(hp_space = raw_space))
+
+  # ---- Persist configuration -------------------------------------------------
+  jsonlite::write_json(hyperopt_config,
+                       path       = paths$config_path,
+                       auto_unbox = TRUE,
+                       pretty     = TRUE)
+
+  # ---- Run search ------------------------------------------------------------
+  # Pass parsed_space directly so research_hyperOpt() skips re-parsing from
+  # the JSON file (which would see the raw atomic-vector format).
+  research_hyperOpt(
+    objective_opt = objective_opt,
+    dataset       = dataset,
+    config_path   = paths$config_path,
+    hp_space      = parsed_space,          # FIX: pass already-parsed space
+    W_prime       = W_prime
+  )
 }
 
-#' Define custom hyperparameter search space
+
+#' Define custom (restricted) hyperparameter search space
 #'
-#' Returns a restricted hyperparameter space compatible with hyperopt/research_v2.
+#' Returns the \code{restrictionEspace} search space where \code{gamma} is
+#' the base variable and \code{lambda_} is derived as
+#' \code{lambda_ = gamma * lambda_factor}.
 #'
-#' @return List of vectors for lambda_, gamma_factor, and p_prime.
-#' @export
-custom_space <- function() {
+#' Compatible with both:
+#' \itemize{
+#'   \item \code{.sample_from_space()} in \code{lambda_gamma_initialize.R}
+#'     (expects atomic vectors).
+#'   \item \code{run_experiment()} which converts these to named lists before
+#'     passing to \code{research_hyperOpt()}.
+#' }
+#'
+#' @return Named list of atomic vectors \code{c(type, low, high)}.
+#' @keywords internal
+.custom_space <- function() {
   list(
-    lambda_      = c("loguniform", 1, 1e5),
-    gamma_factor = c("loguniform", 2, 1e2),
-    p_prime      = c("loguniform", 1e-1, 1)
+    gamma         = c("loguniform", 1,    1e5),   # base variable
+    lambda_factor = c("loguniform", 2,    1e2),   # min=2: lambda_ >= 2*gamma
+    p_prime       = c("loguniform", 1e-1, 1)      # log-scale, median ~0.31
   )
 }

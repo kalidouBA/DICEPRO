@@ -100,40 +100,48 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
     H_opt <- matrix(theta[(N_gene + 1):(length(theta) - 1)], nrow = N_sample, ncol = N_cellsType)
 
     dimnames(H_opt) <- dimnames(H)
+    frob_H <- .norm_frob(H_opt)
+    var_H  <- var(as.vector(H_opt[, N_cellsType]))
+    frob_W <- .norm_frob(W_opt)
+    var_W  <- var(as.vector(W_opt[, N_cellsType]))
+
+    if (
+      any(is.na(c(frob_H, var_H, frob_W, var_W))) ||
+      any(c(var_H, var_W) == 0)
+    ) {
+      return(NULL)
+    }
     h_H <- abs(rowSums(H_opt) - 1)
     constraints <- sum(h_H)
 
-    H <- as.data.frame(H_opt[, 1:(N_cellsType - N_unknownCT)])
-    H <- cbind(Mixture = rownames(H), H)
-    p_prime <- H_opt[, N_unknownCT]
+    H_df <- as.data.frame(H_opt)
+    H_df <- cbind(Mixture = rownames(H_df), H_df)
 
-    sigma_par_opt <- result$par[length(result$par)]
-    # Norme de Frob
+    sigma_par_opt <- theta[length(theta)]
 
-    obj_term1_opt <- compute_obj_term1_eigen_fast(W_opt, H_opt, B, sigma_par)
+    obj_term1 <- compute_obj_term1_eigen_fast(W_opt, H_opt, B, sigma_par_opt)
+    obj_term2 <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par_opt^2)
+    obj_term3 <- sum(lambda_par * h_H)
+    obj_term4 <- (gamma_par / 2) * sum(h_H^2)
 
-    obj_term2_opt <- (N_sample * N_gene / 2) * log(2 * pi * sigma_par^2)
-
-    obj_term3_opt <- as.double(lambda_par %*% h_H)
-    obj_term4_opt <- (gamma_par / 2) * sum(h_H^2)
-
-    write.table(
-      H,
-      file = sprintf(
-        "%s/H_lambda_%.2f_gamma_%.2f.tsv",
-        path2save,
-        truncate2(lambda_),
-        truncate2(gamma_par)
-      ),
-      sep = "\t", quote = FALSE, row.names = FALSE
+    results <- list(
+      W              = W_opt,
+      frob_W         = frob_W,
+      var_W          = var_W,
+      H              = H_df,
+      frob_H         = frob_H,
+      var_H          = var_H,
+      loss           = obj_term1 + obj_term2,
+      frobNorm       = obj_term1,
+      constNorm      = obj_term2,
+      c1             = obj_term3,
+      c2             = obj_term4,
+      objectiveValue = obj_term1 + obj_term2,
+      penalty        = obj_term3 + obj_term4,
+      cvrge          = result$convergence,
+      constraint     = abs(1 - constraints)
     )
 
-
-    results <- list(w = as.vector(W_opt[, N_cellsType]), H = H, p_prime = p_prime, loss = result$value,
-                    frobNorm = obj_term1_opt, constNorm = obj_term2_opt, c1 = obj_term3_opt, c2 = obj_term4_opt,
-                    objectiveValue = obj_term1_opt+obj_term2_opt, penalty = obj_term3_opt + obj_term4_opt,
-                    cvrge = result$convergence,
-                    constraint = abs(1 - constraints))
     return(results)
   }
 }
@@ -148,11 +156,24 @@ nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_
 #' @param x A numeric vector.
 #'
 #' @return A numeric vector truncated to two decimal places.
-#' @examples
-#' truncate2(119.149) # Returns 119.14
-#' truncate2(c(3.456, 7.899)) # Returns c(3.45, 7.89)
-#'
-#' @export
-truncate2 <- function(x) {
+.truncate2 <- function(x) {
   floor(x * 100) / 100
 }
+
+
+
+# -----------------------------------------------------------------------------
+# .norm_frob  [private]
+# -----------------------------------------------------------------------------
+
+#' Compute the Frobenius Norm of a Matrix
+#'
+#' @param H A numeric matrix.
+#' @return A single numeric value.
+#' @keywords internal
+#' @noRd
+.norm_frob <- function(H) {
+  H <- as.matrix(H)
+  sqrt(sum(H^2))
+}
+

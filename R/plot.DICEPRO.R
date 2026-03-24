@@ -1,230 +1,299 @@
-#' Plot Cell Abundance Heatmap and Error Plot
+# =============================================================================
+# Plot methods for DICEPRO objects
+#
+# Public API : plot.DICEPRO(), plot_hyperopt(), plot_hyperopt.DICEPRO()
+# Private    : .param_labels, .loss_label, .get_label(), .make_plot()
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# plot.DICEPRO
+# -----------------------------------------------------------------------------
+
+#' Plot cell abundance heatmap and error plot
 #'
-#' This function combines the results of a cell abundance heatmap and an error plot for visualization.
-#' It takes a list `x` containing the results of both plots and generates the combined plot.
-#' You can pass additional arguments to customize the appearance of the plots.
+#' Combines a cell-abundance heatmap with a fold-error plot using
+#' \pkg{patchwork}. Requires at least two unique iterations in
+#' \code{x$Matrix_prediction}.
 #'
-#' @param x A list containing the results of both the cell abundance heatmap and error plot between folds.
-#' @param ... Additional arguments to customize the appearance of the plots.
+#' @param x   A \code{DICEPRO} object as returned by
+#'   \code{best_hyperParams}.
+#' @param ... Additional arguments (currently unused; reserved for future use).
 #'
-#' @return A combined plot showing the cell abundance heatmap and error plot.
+#' @return A \pkg{patchwork} figure, or \code{invisible(NULL)} with a warning
+#'   when only one iteration is present.
 #'
 #' @method plot DICEPRO
-#' @import patchwork
-#'
-#' @seealso Functions for generating individual plots: \code{\link{heatmap_abundances}}, \code{\link{metric_plot}}.
-#'
+#' @importFrom patchwork wrap_plots
+#' @seealso \code{heatmap_abundances}, \code{metric_plot}
 #' @export
-plot.DICEPRO <- function(x, ...){
+plot.DICEPRO <- function(x, ...) {
 
-  if(length(unique(x$Matrix_prediction$Iterate)) > 1){
-    # Combine the heatmap and error between folds
-    heatmap_abundances(x$Matrix_prediction) /
-      metric_plot(x$performs2plot)
+  if (length(unique(x$Matrix_prediction$Iterate)) > 1L) {
+    patchwork::wrap_plots(
+      heatmap_abundances(x$Matrix_prediction),
+      metric_plot(x$performs2plot),
+      ncol = 1L
+    )
   } else {
-    warning("Only one unique iteration found. No plot generated.")
+    warning("Only one unique iteration found -- no plot generated.")
+    invisible(NULL)
   }
-
 }
 
-#' Plot Hyperparameter Optimization Report
+
+# ---- Parameter label mapping ------------------------------------------------
+.param_labels <- list(
+  lambda_      = expression(lambda),
+  gamma        = expression(gamma),
+  gamma_factor = expression(gamma[f]),
+  p_prime      = expression(p*minute)
+)
+
+.loss_label <- expression(L[obs])
+
+.get_label <- function(p) {
+  lab <- .param_labels[[p]]
+  if (is.null(lab)) p else lab
+}
+
+
+# -----------------------------------------------------------------------------
+# plot_hyperopt  generic
+# -----------------------------------------------------------------------------
+
+#' Plot hyperparameter optimisation report
 #'
-#' This function visualizes hyperparameter optimization results as a scatter matrix
-#' and violin plots for the best parameters.
+#' Generic function for plotting the hyperparameter search report stored in a
+#' \code{DICEPRO} object. Dispatches to \code{plot_hyperopt.DICEPRO}.
 #'
-#' @param exp Path to the experiment results folder
-#' @param params Vector of parameters to visualize
-#' @param metric Metric for point size (default: "loss")
-#' @param loss_metric Loss metric (default: "loss")
-#' @param loss_behaviour Loss behaviour ("min" or "max")
-#' @param not_log Parameters not to log-scale
-#' @param categorical Categorical parameters
-#' @param max_deviation Maximum deviation for outlier detection
-#' @param title Plot title
-#' @return Combined ggplot object with scatter matrix and violin plots
+#' @param x   An object for which a \code{plot_hyperopt} method exists
+#'   (currently only \code{DICEPRO}).
+#' @param ... Arguments passed to the method; see
+#'   \code{plot_hyperopt.DICEPRO} for the full list.
+#'
+#' @return Whatever the dispatched method returns (a \code{gtable} for
+#'   \code{DICEPRO} objects).
+#'
+#' @seealso \code{plot_hyperopt.DICEPRO}
 #' @export
-#' @import ggplot2
-#' @importFrom purrr map map_dbl compact
-#' @importFrom jsonlite read_json
+plot_hyperopt <- function(x, ...) UseMethod("plot_hyperopt")
+
+
+# -----------------------------------------------------------------------------
+# plot_hyperopt.DICEPRO  method
+# -----------------------------------------------------------------------------
+
+#' Plot hyperparameter optimisation report for a DICEPRO object
+#'
+#' Builds a scatter-matrix of all evaluated \eqn{(\lambda, \gamma, p')}
+#' configurations, colour-coded by loss value, with violin/bar marginals for
+#' the top 5\% of trials. Reads all data from \code{x$trials} -- no file I/O.
+#'
+#' @param x              A \code{DICEPRO} object. Trials are read from
+#'   \code{x$trials}.
+#' @param params         Character vector of hyperparameter column names to
+#'   display (e.g. \code{c("lambda_", "gamma", "p_prime")}).
+#' @param metric         Character scalar. Column used for point size
+#'   (default \code{"loss"}).
+#' @param loss_metric    Character scalar. Column used as the loss axis
+#'   (default \code{"loss"}).
+#' @param loss_behaviour Character scalar. Direction of the loss:
+#'   \code{"min"} (default) or \code{"max"}.
+#' @param not_log        Character vector of parameter names that should
+#'   \emph{not} be log-scaled on their axis (default \code{NULL}).
+#' @param categorical    Character vector of categorical parameter names;
+#'   these are displayed as bar charts in the marginal row
+#'   (default \code{NULL}).
+#' @param max_deviation  Numeric scalar. Trials with
+#'   \eqn{|loss - mean(loss)|} above this value are excluded as outliers
+#'   (default \code{NULL}, no exclusion).
+#' @param title          Character scalar. Optional title printed above the
+#'   combined figure (default \code{NULL}).
+#' @param ...            Currently unused. Reserved for future extensions.
+#'
+#' @return A \code{gtable} produced by \code{gridExtra::grid.arrange},
+#'   which can be printed, saved with \code{ggplot2::ggsave()}, or embedded
+#'   in R Markdown documents.
+#'
+#' @examples
+#' \dontrun{
+#' out <- DICEPRO(reference = BlueCode, bulk = CellMixtures,
+#'                methodDeconv = "FARDEEP", hp_max_evals = 50L)
+#' plot_hyperopt(out, params = c("lambda_", "gamma", "p_prime"))
+#' }
+#'
+#' @rdname plot_hyperopt
+#' @import  ggplot2
 #' @importFrom gridExtra grid.arrange
-plot_hyperopt_report_v2 <- function(exp, params, metric = "loss", loss_metric = "loss",
-                                    loss_behaviour = "min", not_log = NULL,
-                                    categorical = NULL, max_deviation = NULL,
-                                    title = NULL) {
+#' @export
+plot_hyperopt.DICEPRO <- function(x,
+                                  params,
+                                  metric         = "loss",
+                                  loss_metric    = "loss",
+                                  loss_behaviour = "min",
+                                  not_log        = NULL,
+                                  categorical    = NULL,
+                                  max_deviation  = NULL,
+                                  title          = NULL,
+                                  ...) {
 
-  # ---- Internal functions ----
-  get_results <- function(exp) {
-    report_path <- file.path(exp, "results")
-    if (!dir.exists(report_path)) stop(paste("The folder", report_path, "does not exist"))
+  trials <- x$trials
+  if (is.null(trials) || nrow(trials) == 0L)
+    stop("x$trials is NULL or empty.")
 
-    files <- list.files(report_path, full.names = TRUE)
-    results <- list()
+  missing_cols <- setdiff(c(params, loss_metric, metric), names(trials))
+  if (length(missing_cols) > 0L)
+    stop("Columns not found in x$trials: ", paste(missing_cols, collapse = ", "))
 
-    for (file in files) {
-      if (file.info(file)$isdir) next
-      res <- tryCatch(jsonlite::read_json(file), error = function(e) {
-        warning(paste("Error reading file", file, ":", e$message))
-        NULL
-      })
-      if (!is.null(res)) results[[length(results) + 1]] <- res
-    }
-
-    if (length(results) == 0) stop("No results found")
-    return(results)
+  .scale_01 <- function(v) {
+    rng <- range(v, na.rm = TRUE)
+    if (diff(rng) == 0) return(rep(0, length(v)))
+    (v - rng[1L]) / diff(rng)
   }
 
-  scale_01 <- function(x) {
-    rng <- range(x, na.rm = TRUE)
-    if (diff(rng) == 0) return(rep(0, length(x)))
-    (x - rng[1]) / diff(rng)
-  }
-
-  filter_outliers <- function(values, max_dev) {
-    mean_val <- mean(values, na.rm = TRUE)
-    abs(values - mean_val) < (mean_val + max_dev)
-  }
-
-  # ---- Load results ----
-  results <- get_results(exp)
-
-  loss <- sapply(results, function(x) x$returned_dict[[loss_metric]] %||% NA_real_)
-  scores <- sapply(results, function(x) x$returned_dict[[metric]] %||% NA_real_)
-  keep <- !is.na(scores) & !is.na(loss)
+  loss   <- trials[[loss_metric]]
+  scores <- trials[[metric]]
+  keep   <- !is.na(scores) & !is.na(loss)
+  loss   <- loss[keep]
   scores <- scores[keep]
-  loss <- loss[keep]
+  trials <- trials[keep, , drop = FALSE]
 
-  values <- list()
-  for (p in params) {
-    values[[p]] <- sapply(results, function(x) {
-      if (!is.null(x$current_params[[p]])) x$current_params[[p]] else NA_real_
-    })
-  }
+  values <- lapply(stats::setNames(params, params), function(p) trials[[p]])
 
-  # ---- Outlier filtering ----
   if (!is.null(max_deviation)) {
-    keep <- filter_outliers(loss, max_deviation)
-    loss <- loss[keep]
-    scores <- scores[keep]
-    for (p in params) values[[p]] <- values[[p]][keep]
+    ok     <- abs(loss - mean(loss, na.rm = TRUE)) < max_deviation
+    loss   <- loss[ok]
+    scores <- scores[ok]
+    values <- lapply(values, `[`, ok)
   }
 
-  categorical <- categorical %||% character()
-  if (length(categorical) > 0) {
-    for (p in categorical) values[[p]] <- as.character(values[[p]])
-  }
+  categorical <- categorical %||% character(0L)
+  for (p in categorical) values[[p]] <- as.character(values[[p]])
 
-  # ---- Sorting ----
-  all_numerical <- lapply(values[setdiff(params, categorical)], unlist)
-  all_categorical <- lapply(values[categorical], unlist)
-  sorted_idx <- do.call(order, c(all_numerical, all_categorical, list(loss, scores)))
-
-  loss <- loss[sorted_idx]
+  sorted_idx <- do.call(order, c(
+    lapply(values[setdiff(params, categorical)], unlist),
+    lapply(values[categorical], unlist),
+    list(loss, scores)
+  ))
+  loss   <- loss[sorted_idx]
   scores <- scores[sorted_idx]
-  for (p in params) values[[p]] <- values[[p]][sorted_idx]
+  values <- lapply(values, `[`, sorted_idx)
 
-  scores_scaled <- scale_01(scores)
-
-  # ---- Best points ----
-  if (loss_behaviour == "min") {
-    lmaxs <- loss > min(loss, na.rm = TRUE)
+  scores_scaled <- .scale_01(scores)
+  lmaxs <- if (loss_behaviour == "min") {
+    loss > min(loss, na.rm = TRUE)
   } else {
-    lmaxs <- loss < max(loss, na.rm = TRUE)
+    loss < max(loss, na.rm = TRUE)
   }
+  top_n         <- max(1L, ceiling(length(scores) * 0.05))
+  smaxs         <- order(scores, decreasing = TRUE)[seq_len(top_n)]
+  cmaxs         <- rep(NA_real_, length(scores))
+  cmaxs[smaxs]  <- .scale_01(scores[smaxs])
 
-  top_pct <- ceiling(length(scores) * 0.05)
-  smaxs <- order(scores, decreasing = TRUE)[1:top_pct]
-  cmaxs <- rep(NA, length(scores))
-  cmaxs[smaxs] <- scale_01(scores[smaxs])
-
-  # ---- Prepare data frame ----
-  df <- as.data.frame(values)
-  df$loss <- loss
+  df        <- as.data.frame(values)
+  df$loss   <- loss
   df$scores <- scores_scaled
-  df$smaxs <- seq_along(scores) %in% smaxs
-  df$lmaxs <- lmaxs
-  df$cmaxs <- cmaxs
+  df$smaxs  <- seq_along(scores) %in% smaxs
+  df$lmaxs  <- lmaxs
+  df$cmaxs  <- cmaxs
+  not_log   <- not_log %||% character(0L)
 
-  # ---- Plot function ----
-  make_plot <- function(x, y, diag = FALSE) {
+  # ---- Per-panel plot factory -----------------------------------------------
+  .make_plot <- function(x_var, y_var, diag = FALSE) {
     if (diag) {
-      p <- ggplot(df, aes(x = .data[[x]], y = loss)) +
-        geom_point(aes(size = scores, color = lmaxs), alpha = 0.7) +
-        geom_point(data = df[df$smaxs, ], aes(size = scores, fill = cmaxs),
-                   shape = 21, color = "black") +
+      p <- ggplot(df, aes(x = .data[[x_var]], y = loss)) +
+        geom_point(aes(size = scores, colour = lmaxs), alpha = 0.7) +
+        geom_point(data = df[df$smaxs, ],
+                   aes(size = scores, fill = cmaxs),
+                   shape = 21, colour = "black") +
         scale_size_continuous(range = c(1, 10)) +
-        scale_color_manual(values = c("TRUE" = "orange", "FALSE" = "red")) +
+        scale_colour_manual(values = c("TRUE" = "orange", "FALSE" = "red")) +
         scale_fill_viridis_c() +
-        theme_minimal() + theme(legend.position = "none")
-      if (!(x %in% not_log)) p <- p + scale_x_log10()
+        xlab(.get_label(x_var)) +
+        ylab(.loss_label) +
+        theme_minimal() +
+        theme(legend.position = "none")
+      if (!x_var %in% not_log) p <- p + scale_x_log10()
     } else {
-      p <- ggplot(df, aes(x = .data[[x]], y = .data[[y]])) +
-        geom_point(aes(size = scores, color = loss), alpha = 0.7) +
-        geom_point(data = df[df$smaxs, ], aes(size = scores, fill = cmaxs),
-                   shape = 21, color = "black") +
+      p <- ggplot(df, aes(x = .data[[x_var]], y = .data[[y_var]])) +
+        geom_point(aes(size = scores, colour = loss), alpha = 0.7) +
+        geom_point(data = df[df$smaxs, ],
+                   aes(size = scores, fill = cmaxs),
+                   shape = 21, colour = "black") +
         scale_size_continuous(range = c(1, 10)) +
-        scale_color_viridis_c() +
+        scale_colour_viridis_c() +
         scale_fill_viridis_c() +
-        theme_minimal() + theme(legend.position = "none")
-      if (!(x %in% not_log)) p <- p + scale_x_log10()
-      if (!(y %in% not_log)) p <- p + scale_y_log10()
+        xlab(.get_label(x_var)) +
+        ylab(.get_label(y_var)) +
+        theme_minimal() +
+        theme(legend.position = "none")
+      if (!x_var %in% not_log) p <- p + scale_x_log10()
+      if (!y_var %in% not_log) p <- p + scale_y_log10()
     }
-    return(p)
+    p
   }
 
-  # ---- Scatter matrix ----
-  plots <- list()
-  for (i in seq_along(params)) {
-    row_plots <- list()
+  # ---- Scatter matrix -------------------------------------------------------
+  scatter_grobs <- vector("list", length(params)^2L)
+  k <- 1L
+  for (i in seq_along(params))
     for (j in seq_along(params)) {
-      p1 <- params[i]
-      p2 <- params[j]
-      row_plots[[j]] <- make_plot(p2, p1, diag = p1 == p2)
+      scatter_grobs[[k]] <- .make_plot(params[j], params[i],
+                                       diag = params[i] == params[j])
+      k <- k + 1L
     }
-    plots[[i]] <- row_plots
-  }
 
-  plots_flat <- unlist(plots, recursive = FALSE)
-  plot_matrix <- gridExtra::grid.arrange(
-    grobs = plots_flat,
-    nrow = length(params),
-    ncol = length(params)
-  )
+  # ---- Violin / bar row -----------------------------------------------------
+  df_best           <- df[df$smaxs, ]
+  enough_for_violin <- nrow(df_best) >= 3L
 
-  # ---- Violin / bar plots for top points ----
-  violin_plots <- list()
-  for (i in seq_along(params)) {
-    p <- params[i]
-    df_best <- df[df$smaxs, ]
+  violin_grobs <- lapply(params, function(p) {
+    p_lab <- .get_label(p)
+
     if (p %in% categorical) {
-      violin_plots[[i]] <- ggplot(df_best, aes(x = .data[[p]])) +
+      ggplot(df_best, aes(x = .data[[p]])) +
         geom_bar(fill = "forestgreen", alpha = 0.3) +
-        theme_minimal() + labs(x = p, y = "Count")
+        xlab(p_lab) +
+        ylab("Count") +
+        theme_minimal()
+
     } else {
-      p_plot <- ggplot(df_best, aes(x = 1, y = .data[[p]])) +
-        geom_violin(fill = "forestgreen", alpha = 0.3) +
-        geom_boxplot(width = 0.1, fill = "orange", alpha = 0.7) +
-        geom_point(aes(color = cmaxs), position = position_jitter(width = 0.1)) +
-        scale_color_viridis_c() +
-        theme_minimal() + labs(x = p, y = "") +
+      vp <- ggplot(df_best, aes(x = 1, y = .data[[p]]))
+
+      if (enough_for_violin) {
+        vp <- vp +
+          geom_violin(fill = "forestgreen", alpha = 0.3) +
+          geom_boxplot(width = 0.1, fill = "orange", alpha = 0.7)
+      }
+
+      vp <- vp +
+        geom_point(aes(colour = cmaxs),
+                   position = position_jitter(width = 0.1, seed = 1L)) +
+        scale_colour_viridis_c() +
+        xlab(p_lab) +
+        ylab("") +
+        theme_minimal() +
         theme(axis.text.x = element_blank())
-      if (!(p %in% not_log)) p_plot <- p_plot + scale_y_log10()
-      violin_plots[[i]] <- p_plot
+
+      if (!enough_for_violin)
+        vp <- vp + labs(subtitle = "(<3 pts - violin omitted)")
+
+      if (!p %in% not_log) vp <- vp + scale_y_log10()
+      vp
     }
-  }
+  })
 
-  violin_grid <- gridExtra::grid.arrange(
-    grobs = violin_plots,
-    nrow = 1,
-    ncol = length(params)
+  # ---- Combine --------------------------------------------------------------
+  gridExtra::grid.arrange(
+    gridExtra::grid.arrange(grobs = scatter_grobs,
+                            nrow  = length(params),
+                            ncol  = length(params)),
+    gridExtra::grid.arrange(grobs = violin_grobs,
+                            nrow  = 1L,
+                            ncol  = length(params)),
+    nrow    = 2L,
+    heights = c(3, 1),
+    top     = title
   )
-
-  # ---- Combine plots ----
-  final_plot <- gridExtra::grid.arrange(
-    plot_matrix, violin_grid,
-    nrow = 2, heights = c(3, 1),
-    top = title
-  )
-
-  return(final_plot)
 }
-

@@ -2,39 +2,57 @@
 % Please edit documentation in R/optimisation.R
 \name{run_experiment}
 \alias{run_experiment}
-\title{Run hyperparameter optimization experiment}
+\title{Run a DICEPRO hyperparameter optimisation experiment}
 \usage{
 run_experiment(
   dataset,
   W_prime = 0,
-  bulkName = "",
-  refName = "",
-  hp_max_evals = 100,
-  algo_select = "random",
+  bulkName,
+  refName,
+  hp_max_evals,
+  algo_select,
   output_base_dir = ".",
-  hspaceTechniqueChoose = "restrictionEspace"
+  hspaceTechniqueChoose
 )
 }
 \arguments{
-\item{dataset}{List. Dataset containing matrices B, W, and P.}
+\item{dataset}{List containing at least \code{$B}, \code{$W},
+and \code{$P} matrices.}
 
-\item{W_prime}{Numeric. Additional parameter for objective function.}
+\item{W_prime}{Numeric matrix (or \code{0}). Passed verbatim to
+\code{research_hyperOpt()} as the initial \eqn{W} for NMF.}
 
-\item{bulkName}{Character. Name identifier for bulk data.}
+\item{bulkName}{Character scalar. Identifier for the bulk dataset
+(used in output path construction).}
 
-\item{refName}{Character. Name identifier for reference data.}
+\item{refName}{Character scalar. Identifier for the reference
+dataset (used in output path construction).}
 
-\item{hp_max_evals}{Integer. Maximum number of hyperparameter evaluations.}
+\item{hp_max_evals}{Positive integer. Number of hyperparameter trials
+to run.}
 
-\item{algo_select}{Character. Algorithm selection, e.g., "random".}
+\item{algo_select}{Character scalar. Sampling algorithm passed to
+the config (e.g. \code{"random"}).}
 
-\item{output_base_dir}{Character. Base directory for saving outputs.}
+\item{output_base_dir}{Character scalar. Root directory for all outputs
+(default \code{"."}).}
 
-\item{hspaceTechniqueChoose}{Character. Hyperparameter space technique ("all" or "restrictionEspace").}
+\item{hspaceTechniqueChoose}{Character scalar. Search-space strategy:
+\describe{
+\item{\code{"all"}}{Full independent log-uniform grid for
+\code{lambda_}, \code{gamma}, \code{p_prime}.}
+\item{\code{"restrictionEspace"}}{Restricted space where \code{gamma}
+is the base variable and \code{lambda_} is derived as
+\code{lambda_ = gamma * lambda_factor} with
+\code{lambda_factor} in (2, 100).}
+}}
 }
 \value{
-A list with results, plots, and TSV data.
+The list returned by \code{\link{research_hyperOpt}}: \code{trials},
+\code{W}, and \code{H}.
 }
 \description{
-Performs hyperparameter optimization, saves trials and results, and generates reports.
+Builds the hyperparameter search space from \code{hspaceTechniqueChoose},
+writes the configuration to disk, runs \code{research_hyperOpt()}, and returns
+the collected trials.
 }

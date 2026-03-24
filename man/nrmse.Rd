@@ -2,7 +2,7 @@
 % Please edit documentation in R/metrics.R
 \name{nrmse}
 \alias{nrmse}
-\title{Calculate Normalized Root Mean Square Error (NRMSE)}
+\title{Normalised Root Mean Square Error (NRMSE)}
 \usage{
 nrmse(
   pred,
@@ -13,33 +13,38 @@ nrmse(
 )
 }
 \arguments{
-\item{pred}{Numeric vector of predicted values}
+\item{pred}{Numeric vector of predicted values (on the
+transformed scale).}
 
-\item{obs}{Numeric vector of observed values}
+\item{obs}{Numeric vector of observed values (same scale as
+\code{pred}; same length).}
 
-\item{method}{Character string specifying the normalization method:
-"sd" (standard deviation), "mean", "maxmin" (range), or "iq" (interquartile range)}
+\item{method}{Normalisation denominator: \code{"sd"} (default),
+\code{"mean"}, \code{"maxmin"}, or \code{"iq"} (interquartile range).}
 
-\item{transformation}{Character string specifying data transformation:
-"none", "sqrt", "4thrt", "log", "log10", "log2", "log1p", "arcsine", or "other"}
+\item{transformation}{Back-transformation applied before computing RMSE.
+One of \code{"none"} (default), \code{"sqrt"}, \code{"4thrt"},
+\code{"log"}, \code{"log10"}, \code{"log2"}, \code{"log1p"},
+\code{"arcsine"}, or \code{"other"}.}
 
-\item{trans_function}{Character string specifying custom transformation function
-(required when transformation = "other")}
+\item{trans_function}{R expression string used when
+\code{transformation = "other"} (the variable inside the expression
+must be named \code{x}).}
 }
 \value{
-The NRMSE value as a numeric scalar
+Non-negative numeric scalar, or \code{NA_real_} (with a message)
+when NRMSE is undefined (fewer than 2 complete observations, or zero
+denominator).
 }
 \description{
-This function calculates the Normalized Root Mean Square Error (NRMSE)
-between predicted and observed values with various normalization options.
-}
-\details{
-The function supports various data transformations and normalization methods.
-Back-transformation is applied before calculating NRMSE when using transformations.
+Computes RMSE between back-transformed \code{pred} and \code{obs} vectors,
+then normalises by a summary statistic of the observations.
 }
 \examples{
-pred <- rnorm(100)
-obs <- pred + rnorm(100, sd = 0.1)
-nrmse_value <- nrmse(pred, obs, method = "sd", transformation = "none")
+set.seed(1)
+obs  <- rnorm(100)
+pred <- obs + rnorm(100, sd = 0.1)
+nrmse(pred, obs)
+nrmse(pred, obs, method = "maxmin")
 
 }

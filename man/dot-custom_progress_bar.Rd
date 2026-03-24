@@ -2,18 +2,11 @@
 % Please edit documentation in R/hypersearch.R
 \name{.custom_progress_bar}
 \alias{.custom_progress_bar}
-\title{Custom progress bar implementation}
+\title{Custom progress bar}
 \usage{
 .custom_progress_bar(total, format = "Progress [:bar] :percent", width = 60)
 }
-\arguments{
-\item{total}{Total number of iterations}
-
-\item{format}{Format string}
-
-\item{width}{Width of progress bar}
-}
 \description{
-Simple progress bar without external dependencies
+Custom progress bar
 }
 \keyword{internal}

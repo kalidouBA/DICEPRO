@@ -17,21 +17,21 @@ objective_opt(
 \arguments{
 \item{dataset}{List. Dataset containing matrices \code{B}, \code{W}, and \code{P}.}
 
-\item{config}{List. Configuration for the experiment, e.g., directories.}
+\item{config}{List. Configuration for the experiment.}
 
 \item{lambda_}{Numeric. Regularization parameter lambda.}
 
-\item{gamma_factor}{Numeric. Optional multiplier for gamma.}
+\item{gamma_factor}{Numeric or NULL. If provided: gamma = lambda_ * gamma_factor.}
 
-\item{gamma}{Numeric. Regularization parameter gamma.}
+\item{gamma}{Numeric. Regularization parameter gamma (used directly when gamma_factor is NULL).}
 
-\item{p_prime}{Numeric. Optional matrix for initialization.}
+\item{p_prime}{Numeric matrix (nrow = n_samples, ncol = n_unknown_ct).}
 
 \item{W_prime}{Numeric. Optional matrix for initialization.}
 }
 \value{
-List. Contains loss, constraint, status, and current parameter values.
+List with loss, constraint, status, current_params, W, H. NULL if invalid.
 }
 \description{
-Defines the objective function to minimize for hyperparameter tuning.
+Objective function for hyperparameter optimization
 }

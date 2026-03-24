@@ -1,66 +1,248 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+# DICEPRO
 
-## **DICEPRO (Deconvolution with Iterative Completion for Estimating cellular Proportion from RNA-seq data)**
+<!-- badges -->
+[![R-CMD-check](https://github.com/kalidouBA/DICEPRO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/kalidouBA/DICEPRO/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/DICEPRO)](https://CRAN.R-project.org/package=DICEPRO)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- badges -->
 
-Is a software package that has been meticulously designed to address the
-persistent challenges that cellular deconvolution methods have faced for
-years. One of its key features is its ability to overcome the
-limitations posed by incomplete reference matrix, which have hampered
-the accuracy and efficiency of many existing methodologies. In doing so,
-`DICEPRO` hopes to contribute to the advancement of RNA-seq analysis,
-offering a more complete and reliable solution for better elucidating
-the complexities of cell composition and gene expression.
+**D**econvolution with **I**terative **C**ompletion for **E**stimating
+cellular **Pro**portions from RNA-seq data.
 
-`DICEPRO`’s core functionality lies in its iterative deconvolution
-process, which continues until convergence is reached. This approach
-involves joint updates of the reference matrix, which may contain
-missing cell populations, and the cell population abundance matrix,
-which contains newly discovered populations. Like other deconvolution
-methods, `DICEPRO` starts by fundamentally modelling the deconvolution
-problem. It relies on established techniques such as `CiberSortX`, `DCQ`
-or others for the supervised aspect, while using
-`non-negative matrix factorization (NMF)` decomposition for the
-unsupervised component. This hybrid approach enables `DICEPRO` to
-provide a robust and versatile solution for unravelling complex RNA-seq
-data.
+------------------------------------------------------------------------
+
+## Overview
+
+Bulk RNA-seq deconvolution infers the proportions of distinct cell types
+from a mixed gene expression profile. Most existing methods assume that
+the reference signature matrix is *complete* — i.e., that every cell
+population present in the bulk sample is represented. In practice this
+assumption rarely holds, leading to biased estimates.
+
+**DICEPRO** addresses this limitation through an iterative joint
+optimisation that simultaneously:
+
+- estimates cell-type proportions for *known* populations (supervised
+  step, via CIBERSORTx, FARDEEP, DCQ, CDSeq, or BayesPrism), and
+- discovers and quantifies *unknown* populations using Non-Negative
+  Matrix Factorisation (NMF) with L-BFGS-B optimisation (unsupervised
+  step).
+
+Hyperparameters $(\lambda, \gamma, p')$ controlling the NMF
+regularisation are selected automatically via a Pareto-frontier +
+knee-point procedure, so no manual tuning is required.
+
+------------------------------------------------------------------------
+
+## Key Features
+
+- **Incomplete-reference robustness** — recovers cell types absent from
+  the reference matrix.
+- **Method-agnostic supervised step** — plug in any supported
+  deconvolution backend.
+- **Automated hyperparameter search** — random search over a log-uniform
+  grid with Pareto-optimal selection.
+- **Bundled benchmark data** — `BlueCode` (34-cell-type reference) and
+  `CellMixtures` (12 experimentally mixed bulk samples) included.
+- **Rich diagnostics** — interactive Pareto plot (Plotly) and
+  hyperparameter scatter matrix saved automatically to
+  `output_path/report/`.
+
+------------------------------------------------------------------------
 
 ## Installation
+
+### From CRAN (stable)
+
+``` r
+install.packages("DICEPRO")
+```
+
+### From GitHub (development)
+
+``` r
+# install.packages("remotes")
+remotes::install_github("kalidouBA/DICEPRO")
+```
+
+### From Bioconductor
 
 ``` r
 BiocManager::install("kalidouBA/DICEPRO")
 ```
 
-#### Running cibersortx to deduce the fractions of the different cell populations requires convigurations following the steps below:
+------------------------------------------------------------------------
 
-`Step 1:`
+## Quick Start
 
-Install `Docker Desktop` :
-(<https://www.docker.com/products/docker-desktop>)
+### Simulated Data
 
-Open Docker Desktop on your local computer and log in. Then, you open a
-terminal, and you type the following command:
-`\> docker pull cibersortx/fractions`
+``` r
+library(DICEPRO)
+set.seed(2101)
 
-`Step 2:`
+# 1. Simulate reference, proportions, and noisy bulk
+sim <- simulation(
+  scenario   = "hierarchical",
+  nSample    = 30,
+  nGenes     = 200,
+  nCellsType = 10,
+  sigma_bio  = 0.07,
+  sigma_tech = 0.07
+)
 
-The next thing you need is a token that you will provide every time you
-run the CIBERSORTx executables.
+# 2. Run DICEPRO
+out <- DICEPRO(
+  reference             = as.matrix(sim$W),
+  bulk                  = as.matrix(sim$B),
+  methodDeconv          = "FARDEEP",
+  bulkName              = "SimBulk",
+  refName               = "SimRef",
+  hp_max_evals          = 100L,
+  hspaceTechniqueChoose = "all",
+  output_path           = tempdir()
+)
 
-You can obtain the token from the CIBERSORTx website:
-(<https://cibersortx.stanford.edu/getoken.php>).
+# 3. Inspect results
+class(out)
+out$hyperparameters    # best lambda / gamma
+head(out$H)            # estimated proportions
+out$plot               # interactive Pareto plot
+out$plot_hyperopt      # hyperparameter scatter matrix
+```
 
-Please note that each token is uniquely tied to your user account, and
-tokens are good for a specific time interval from date of request, so
-you will need to request a new token when an existing one has expired.
+### Real Data (BlueCode + CellMixtures)
 
-`Step 3:`
+``` r
+library(DICEPRO)
 
-Once you have pulled the CIBERSORTx executable from Docker, and you have
-obtained a token from the CIBERSORTx website, you now have access to the
-CIBERSORTx Fractions executable and can run it following the
-instructions below.
+data(BlueCode)      # 34-cell-type reference (G x 34)
+data(CellMixtures)  # 12 mixed bulk samples  (G x 12)
 
-##### Once the configuration is complete and docker is running, you can run `DICEPRO` with the token from the CIBERSORTx website `cibersortx_email` and `cibersortx_token` using the main function `DICEPRO()`.
+out <- DICEPRO(
+  reference             = BlueCode,
+  bulk                  = CellMixtures,
+  methodDeconv          = "FARDEEP",
+  bulkName              = "CellMixtures",
+  refName               = "BlueCode",
+  hp_max_evals          = 100L,
+  hspaceTechniqueChoose = "all",
+  output_path           = tempdir()
+)
 
-##### Other cell deconvolution methods are available to see with the help of the function `running_method()`.
+head(out$H)
+```
+
+------------------------------------------------------------------------
+
+## CIBERSORTx Setup (optional)
+
+CIBERSORTx (`methodDeconv = "CSx"`) requires Docker and a personal
+token.
+
+**Step 1 — Install Docker Desktop**
+
+Download from <https://www.docker.com/products/docker-desktop>, open it,
+log in, then pull the CIBERSORTx image from a terminal:
+
+``` bash
+docker pull cibersortx/fractions
+```
+
+**Step 2 — Obtain a token**
+
+Request a token at <https://cibersortx.stanford.edu/getoken.php>. Tokens
+are tied to your account and expire periodically; request a new one when
+the existing token has expired.
+
+**Step 3 — Run DICEPRO with CIBERSORTx**
+
+``` r
+out <- DICEPRO(
+  reference        = BlueCode,
+  bulk             = CellMixtures,
+  methodDeconv     = "CSx",
+  cibersortx_email = "your@email.com",
+  cibersortx_token = "your_token_here",
+  bulkName         = "CellMixtures",
+  refName          = "BlueCode",
+  output_path      = tempdir()
+)
+```
+
+Other supported deconvolution backends can be listed with
+`?running_method`.
+
+------------------------------------------------------------------------
+
+## Output Structure
+
+`DICEPRO()` returns an S3 object of class `"DICEPRO"` with the following
+elements:
+
+| Element | Description |
+|----|----|
+| `$hyperparameters` | Best $\lambda$ and $\gamma$ found by the search |
+| `$metrics` | Loss and constraint value at the optimum |
+| `$trials` | data.frame of all evaluated hyperparameter configurations |
+| `$W` | Optimised reference matrix (including unknown cell types) |
+| `$H` | Estimated cell-type proportions (samples x cell types) |
+| `$plot` | Interactive Pareto frontier (Plotly) |
+| `$plot_hyperopt` | Hyperparameter scatter matrix (ggplot2 / gridExtra) |
+
+------------------------------------------------------------------------
+
+## Bundled Datasets
+
+### BlueCode
+
+A gene x 34 cell-type reference signature matrix derived from sorted
+bulk RNA-seq profiles spanning five major tissue compartments: Immune
+(9), Stromal (8), Endothelial (3), Epithelial (5), and Muscle (9).
+
+``` r
+data(BlueCode)
+dim(BlueCode)
+colnames(BlueCode)
+```
+
+### CellMixtures
+
+A gene x 12 bulk RNA-seq matrix of experimentally constructed cell
+mixtures (samples A–L), paired with BlueCode for benchmarking.
+
+``` r
+data(CellMixtures)
+dim(CellMixtures)
+colnames(CellMixtures)
+```
+
+See `?BlueCode` and `?CellMixtures` for full documentation.
+
+------------------------------------------------------------------------
+
+## Vignettes
+
+Two vignettes provide step-by-step walkthroughs:
+
+``` r
+vignette("vignette-simulation", package = "DICEPRO")
+vignette("vignette-real-data",  package = "DICEPRO")
+```
+
+------------------------------------------------------------------------
+
+## Citation
+
+If you use DICEPRO in your research, please cite:
+
+> Author et al. (2025). *DICEPRO: Deconvolution with Iterative
+> Completion for Estimating Cellular Proportions from RNA-seq Data.*
+> Journal Name. <doi:XXXX>
+
+------------------------------------------------------------------------
+
+## License
+
+MIT © DICEPRO Team

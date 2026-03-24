@@ -9,23 +9,16 @@
 .sample_from_space(space)
 }
 \arguments{
-\item{space}{List. Each element is a vector of the form c(type, low, high).
-For example: list(lambda_ = c("loguniform", 1, 1e5))}
+\item{space}{Named list. Each element is \code{c(type, low, high)}.}
 }
 \value{
-List of sampled parameter values
+List of sampled parameter values.
 
-List of sampled hyperparameters. Includes \code{gamma} if \code{gamma_factor} exists.
+Named list of sampled values, including derived \code{lambda_}.
 }
 \description{
-Internal function to sample parameters from the search space definition
-
-Internal function to sample a set of hyperparameters from a given search space.
-Each hyperparameter is defined as a vector: c(type, low, high), where \code{type}
-can be "uniform", "loguniform", or "randint".
-}
-\details{
-If \code{gamma_factor} exists in the search space, \code{gamma} will be automatically
-computed as \code{gamma = lambda_ * gamma_factor}.
+Each hyperparameter is defined as an atomic vector \code{c(type, low, high)}.
+When \code{lambda_factor} is present, \code{lambda_} is automatically
+derived as \code{lambda_ = gamma * lambda_factor}.
 }
 \keyword{internal}

@@ -1,114 +1,164 @@
-#' Create a Heatmap of Cell Abundances
+# =============================================================================
+# Visualization Functions — Cell Abundances & Performance Metrics
+#
+# Public  API : heatmap_abundances(), metric_plot()
+# Private fns : .theme_dicepro()
+# -----------------------------------------------------------------------------
+# .theme_dicepro  [private]
+# -----------------------------------------------------------------------------
+
+#' Shared ggplot2 Theme for DICEPRO Plots
 #'
-#' This function generates a heatmap to visualize cell abundances across different iterations and cell types.
+#' A clean, publication-ready theme based on \code{theme_bw}, with blank panels,
+#' visible axis lines, and consistent text sizing. Used internally by all
+#' plotting functions to avoid duplication.
 #'
-#' @param res2plot A data frame containing the results to be plotted, including Iteration, Cell_Type, and Abundances.
+#' @param base_size   Numeric. Base font size in points (default \code{9}).
+#' @param base_family Character. Font family (default \code{"Helvetica"}).
 #'
-#' @return A heatmap of cell abundances.
+#' @return A \code{ggplot2} theme object.
 #'
-#' @details This function uses the ggplot2 package to create a heatmap. It plots cell abundances across iterations and cell types, with colors representing the abundance levels.
+#' @importFrom ggplot2 theme_bw theme element_text element_blank element_line
+#'   element_rect unit %+replace%
+#' @keywords internal
+#' @noRd
+.theme_dicepro <- function(base_size = 9, base_family = "Helvetica") {
+
+  ggplot2::theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    ggplot2::theme(
+      # Strip labels
+      strip.text.x     = ggplot2::element_text(size = base_size),
+      strip.text.y     = ggplot2::element_text(size = base_size, angle = 90),
+      strip.background = ggplot2::element_blank(),
+
+      # Axes
+      axis.text.x      = ggplot2::element_text(size = base_size),
+      axis.text.y      = ggplot2::element_text(size = base_size, hjust = 1),
+      axis.ticks       = ggplot2::element_line(colour = "black"),
+      axis.title.x     = ggplot2::element_text(size = base_size),
+      axis.title.y     = ggplot2::element_text(size = base_size, angle = 90),
+      # FIX: size = 1 deprecated since ggplot2 3.4 → linewidth
+      axis.line.x      = ggplot2::element_line(color = "black", linewidth = 0.5),
+      axis.line.y      = ggplot2::element_line(color = "black", linewidth = 0.5),
+
+      # Panel
+      panel.background = ggplot2::element_blank(),
+      panel.border     = ggplot2::element_blank(),
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+
+      # Plot
+      plot.background  = ggplot2::element_blank(),
+      plot.margin      = ggplot2::unit(c(0.5, 1, 1, 1), "lines"),
+      plot.title       = ggplot2::element_text(hjust = 0.5),
+
+      # Legend
+      legend.text      = ggplot2::element_text(size = base_size),
+      legend.key.size  = ggplot2::unit(0.5, "cm")
+    )
+}
+
+
+# -----------------------------------------------------------------------------
+# heatmap_abundances  [public]
+# -----------------------------------------------------------------------------
+
+#' Heatmap of Cell Abundances Across Iterations
 #'
-#' @seealso Other functions for data visualization: \code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_raster}}.
+#' Generates a raster heatmap showing the abundance of each cell type at every
+#' NMF iteration. Colour encodes abundance level using the viridis scale
+#' (reversed: dark = high abundance).
 #'
+#' @param res2plot  A data.frame with one column named \code{Iterate} (iteration
+#'   index) and one column per cell type containing numeric abundance values.
+#' @param base_size Numeric. Base font size in points (default \code{9}).
+#'
+#' @return A \code{ggplot} object. Print it or save it with
+#'   \code{ggplot2::ggsave()}.
+#'
+#' @examples
+#' \dontrun{
+# df <- data.frame(
+#   Iterate  = 1:10,
+#   CellTypeA = runif(10),
+#   CellTypeB = runif(10)
+# )
+#' heatmap_abundances(df)
+#' }
+#'
+#' @importFrom tidyr pivot_longer
+#' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c labs
 #' @export
-#'
-#' @importFrom reshape2 melt
-#' @import ggplot2
-heatmap_abundances <- function(res2plot){
+heatmap_abundances <- function(res2plot, base_size = 9) {
+
   Iterate <- Cell_Type <- Abundances <- NULL
-  data2plot <- reshape2::melt(res2plot, id.vars = "Iterate")
-  colnames(data2plot) <- c("Iterate",  "Cell_Type", "Abundances")
 
-  # Create a heatmap using ggplot2
-  p <- ggplot(data2plot, aes(Iterate,Cell_Type, fill=Abundances)) +
-    geom_raster() +
-    scale_fill_viridis_c(direction=-1) +
-    theme_bw(base_size = 9, base_family = "Helvetica") %+replace%
-    theme(
-      strip.text.x = element_text(size = 9),
-      strip.text.y = element_text(size = 9,angle = 90),
-      strip.background = element_blank(),
-      axis.text.x = element_text(size = 9),
-      axis.text.y = element_text(size = 9,hjust=1),
-      axis.ticks =  element_line(colour = "black"),
-      axis.title.x = element_text(size = 9),
-      axis.title.y = element_text(size = 9,angle=90),
-      panel.background = element_blank(),
-      panel.border = element_blank(),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      plot.background = element_blank(),
-      plot.margin = unit(c(0.5,  1, 1, 1), "lines"),
-      axis.line.x = element_line(color="black", size = 1),
-      axis.line.y = element_line(color="black", size = 1),
-      plot.title = element_text(hjust = 0.5),
-      legend.text = element_text(size=9),
-      legend.key.size = unit(0.5, 'cm')
-    )
-  return(p)
+  # Remplace tidyr::pivot_longer() — base R, pas de dépendance
+  iter_col   <- res2plot$Iterate
+  ct_cols    <- setdiff(names(res2plot), "Iterate")
+
+  data2plot <- data.frame(
+    Iterate    = rep(iter_col, times = length(ct_cols)),
+    Cell_Type  = rep(ct_cols,  each  = length(iter_col)),
+    Abundances = unlist(res2plot[ct_cols], use.names = FALSE),
+    stringsAsFactors = FALSE
+  )
+
+  ggplot2::ggplot(
+    data2plot,
+    ggplot2::aes(x = Iterate, y = Cell_Type, fill = Abundances)
+  ) +
+    ggplot2::geom_raster() +
+    ggplot2::scale_fill_viridis_c(direction = -1) +
+    ggplot2::labs(x = "Iteration", y = "Cell Type", fill = "Abundance") +
+    .theme_dicepro(base_size = base_size)
 }
 
 
-#' Create an Error/Performance Plot
+# -----------------------------------------------------------------------------
+# metric_plot  [public]
+# -----------------------------------------------------------------------------
+
+#' Performance Metric Line Plot Across Iterations
 #'
-#' This function generates a metric plot to visualize metric values between folds across different iterations.
+#' Plots the evolution of a scalar performance metric (e.g., NRMSE, R²) over
+#' NMF iterations. Useful for monitoring convergence and diagnosing early
+#' stopping.
 #'
-#' @param perf2plot A data frame containing the metric values to be plotted, including `Iterate`, and `metric`.
+#' @param perf2plot A data.frame with at least two columns:
+#'   \itemize{
+#'     \item \code{Iterate} — iteration index (numeric or integer).
+#'     \item \code{metric}  — scalar performance value at each iteration.
+#'   }
+#' @param ylab      Character. Y-axis label (default \code{"Error between folds"}).
+#' @param base_size Numeric. Base font size in points (default \code{9}).
 #'
-#' @return A metric plot showing the mean metric values with confidence intervals.
+#' @return A \code{ggplot} object.
 #'
-#' @details This function calculates the mean and confidence intervals of metric values between folds and creates a line plot with shaded confidence intervals.
-#' It is useful for visualizing the variation in metric across iterations.
+#' @examples
+#' \dontrun{
+#' df <- data.frame(
+#'   Iterate = 1:50,
+#'   metric  = cumsum(runif(50, -0.01, 0.1))
+#' )
+#' metric_plot(df)
+#' metric_plot(df, ylab = "NRMSE")
+#' }
 #'
-#' @seealso Other functions for data visualization:
-#' \code{\link[ggplot2]{ggplot}}, \code{\link[ggplot2]{geom_line}}, \code{\link[ggplot2]{geom_ribbon}}, \code{\link[ggplot2]{facet_wrap}}.
-#'
+#' @importFrom ggplot2 ggplot aes geom_line labs
 #' @export
-#'
-#' @import ggplot2
+metric_plot <- function(perf2plot,
+                        ylab      = "Error between folds",
+                        base_size = 9) {
 
-metric_plot <- function(perf2plot){
-  metric <- Iterate <- NULL
-  # Calculate mean and confidence intervals of metric values
-  # perf2plot_mean <- perf2plot %>%
-  #   filter(!is.na(metric)) %>%
-  #   group_by(Iterate) %>%
-  #   summarise(n = n(),
-  #             mean = mean(metric),
-  #             median = median(metric),
-  #             sd = sd(metric)) %>%
-  #   mutate(sem = sd / sqrt(n - 1),
-  #          CI_lower = mean + qt((1 - 0.95) / 2, n - 1) * sem,
-  #          CI_upper = mean - qt((1 - 0.95) / 2, n - 1) * sem)
+  # Silence R CMD CHECK notes for NSE column names
+  Iterate <- metric <- NULL
 
-  # Create the metric plot using ggplot2
-  p <- ggplot(perf2plot, aes(x=Iterate, y=metric)) +
-    geom_line() +
-    # geom_ribbon(aes(ymin=CI_lower,ymax=CI_upper),color="grey70",alpha=0.4)+
-    labs(x = "Iteration", y = "Error between folds") +
-    theme_bw(base_size = 9, base_family = "Helvetica") %+replace%
-    theme(
-      strip.text.x = element_text(size = 9),
-      strip.text.y = element_text(size = 9,angle = 90),
-      strip.background = element_blank(),
-      axis.text.x = element_text(size = 9),
-      axis.text.y = element_text(size = 9,hjust=1),
-      axis.ticks =  element_line(colour = "black"),
-      axis.title.x = element_text(size = 9),
-      axis.title.y = element_text(size = 9,angle=90),
-      panel.background = element_blank(),
-      panel.border = element_blank(),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      plot.background = element_blank(),
-      plot.margin = unit(c(0.5,  1, 1, 1), "lines"),
-      axis.line.x = element_line(color="black", size = 1),
-      axis.line.y = element_line(color="black", size = 1),
-      plot.title = element_text(hjust = 0.5),
-      legend.text = element_text(size=9),
-      legend.key.size = unit(0.5, 'cm')
-    )
-  return(p)
+  ggplot2::ggplot(
+    perf2plot,
+    ggplot2::aes(x = Iterate, y = metric)
+  ) +
+    ggplot2::geom_line(colour = "black") +
+    ggplot2::labs(x = "Iteration", y = ylab) +
+    .theme_dicepro(base_size = base_size)
 }
-
-

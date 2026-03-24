@@ -2,19 +2,47 @@
 % Please edit documentation in R/lambda_gamma_initialize.R
 \name{create_gamma_lambda_plot}
 \alias{create_gamma_lambda_plot}
-\title{Create gamma-lambda interactive plot}
+\title{Create an interactive gamma-lambda hyperparameter plot}
 \usage{
-create_gamma_lambda_plot()
+create_gamma_lambda_plot(
+  hspaceTechniqueChoose = c("all", "restrictionEspace"),
+  n_samples = 200L
+)
+}
+\arguments{
+\item{hspaceTechniqueChoose}{Character scalar. Search-space strategy:
+\describe{
+\item{\code{"all"}}{Full independent log-uniform grid for
+\code{lambda_}, \code{gamma}, \code{p_prime}.
+No constraint between \eqn{\lambda} and \eqn{\gamma} — the feasibility
+bounds are not shown.}
+\item{\code{"restrictionEspace"}}{Restricted space where \code{gamma}
+is the base variable and \code{lambda_} is derived as
+\code{lambda_ = gamma * lambda_factor} with
+\code{lambda_factor} in \eqn{[2, 100]}.
+The lower (\eqn{\lambda = 2\gamma}) and upper
+(\eqn{\lambda = 100\gamma}) feasibility bounds are drawn.}
+}}
+
+\item{n_samples}{Positive integer. Number of configurations to draw.
+Default: \code{200L}.}
 }
 \value{
-plotly object
+A Plotly figure object (invisibly also saved as
+\code{gamma_lambda_interactive_plot.html} in the working directory).
 }
 \description{
-Generates an interactive plot showing the relationship between
-gamma and lambda hyperparameters
+Generates an interactive Plotly scatter plot showing the relationship
+between \eqn{\gamma} and \eqn{\lambda} sampled from the search space
+defined by \code{hspaceTechniqueChoose}, overlaid with the feasibility
+bounds when applicable.
 }
 \examples{
 \dontrun{
-create_gamma_lambda_plot()
+# Independent sampling — no constraint lines
+create_gamma_lambda_plot(hspaceTechniqueChoose = "all")
+
+# Restricted space — lambda_ = gamma * lambda_factor, factor in [2, 100]
+create_gamma_lambda_plot(hspaceTechniqueChoose = "restrictionEspace")
 }
 }

@@ -1,56 +1,61 @@
 Package: DICEPRO
-Title: Deconvolution with Iterative Completion for Estimating cellular Proportion from RNA-seq data
-Version: 0.0.1.8
-Authors@R: c(person("Kalidou", "BA", role = c("aut","cre"),
-	                  email = "kalidou.ba@u-bordeaux.fr"),
-	           person("Boris P.", "Hejblum", role = c("aut"),
-	                  email = "boris.hejblum@u-bordeaux.fr"))
-Description: This package performs semi-supervised deconvolution of bulk RNA-seq data using the CIBERSORTx or others method. 
-            It iteratively estimates cell type proportions and refines reference data using non-negative matrix 
-            factorization (NMF) for to solve incomplete reference matrix problems.
+Title: Deconvolution with Iterative Completion for Estimating Cellular Proportions from RNA-seq Data
+Version: 0.0.1.9
+Authors@R: c(
+    person("Kalidou", "BA",
+           role  = c("aut", "cre"),
+           email = "kalidou.ba@u-bordeaux.fr"),
+    person("Boris P.", "Hejblum",
+           role  = "aut",
+           email = "boris.hejblum@u-bordeaux.fr"))
+Description: Performs semi-supervised deconvolution of bulk RNA-seq data.
+    Known cell-type proportions are estimated via a supervised step
+    (CIBERSORTx, FARDEEP, DCQ, CDSeq, or BayesPrism) while unknown
+    populations are discovered and quantified through Non-Negative Matrix
+    Factorisation (NMF) with L-BFGS-B optimisation. Hyperparameters are
+    selected automatically via Pareto-frontier and knee-point detection,
+    making the method applicable even when the reference signature matrix
+    is incomplete.
 License: GPL (>= 3)
-Depends: R (>= 3.6)
+Depends: R (>= 4.1.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Suggests: 
-    knitr,
-    rmarkdown,
-    ADAPTS,
-    testthat (>= 3.0.0),
-    NMF,
-    irr,
-    insight,
-    Metrics
-VignetteBuilder: knitr
+RoxygenNote: 7.3.3
 LazyData: true
+LazyDataCompression: xz
 Config/testthat/edition: 3
-LinkingTo: 
+VignetteBuilder: knitr
+LinkingTo:
     Rcpp,
     RcppEigen
 Imports:
+    Rcpp,
+    RcppEigen,
     lme4,
     lbfgsb3c,
     KraljicMatrix,
-    matrixStats,
-    MASS,
-    parallel,
-    dplyr,
+    jsonlite,
+    ggplot2,
     plotly,
     htmlwidgets,
-    purrr,
-    jsonlite,
-    rBeta2009,
-    reshape2,
-    scater,
-    ggplot2,
+    gridExtra,
+    MASS,
+    stats,
+    utils,
+    dplyr,
+    tidyr,
+    matrixStats,
     patchwork,
+    MCMCpack,
     SimMultiCorrData,
-    ComICS,
-    DeconRNASeq,
-    FARDEEP,
-    pcaMethods,
     clusterGeneration,
-    Rcpp,
-    RcppEigen,
-    gridExtra
+    FARDEEP,
+    ComICS
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    NMF,
+    ADAPTS,
+    insight,
+    Metrics

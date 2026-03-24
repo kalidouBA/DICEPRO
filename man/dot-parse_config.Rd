@@ -2,17 +2,11 @@
 % Please edit documentation in R/hypersearch.R
 \name{.parse_config}
 \alias{.parse_config}
-\title{Parse configuration from JSON file}
+\title{Parse configuration list}
 \usage{
 .parse_config(config)
 }
-\arguments{
-\item{config}{Configuration list}
-}
-\value{
-Parsed configuration list
-}
 \description{
-Internal function to parse hyperparameter optimization configuration
+Parse configuration list
 }
 \keyword{internal}

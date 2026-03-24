@@ -4,32 +4,23 @@
 \alias{objective_wrapper}
 \title{Objective wrapper for hyperparameter optimization}
 \usage{
-objective_wrapper(
-  objective_opt,
-  dataset,
-  config,
-  report_path,
-  params,
-  W_prime = NULL
-)
+objective_wrapper(objective_opt, dataset, config, params, W_prime = NULL)
 }
 \arguments{
-\item{objective_opt}{Function. Objective function to optimize. Must accept arguments \verb{(dataset, config, params)} and return a list containing at least a \code{loss} element.}
+\item{objective_opt}{Function. The objective function to optimize.}
 
-\item{dataset}{List. Dataset used for optimization (e.g., bulk matrix, reference signatures, precomputed proportions).}
+\item{dataset}{List. Dataset used for optimization.}
 
-\item{config}{List. Parsed configuration object from JSON.}
+\item{config}{List. Parsed configuration object.}
 
-\item{report_path}{Character. Directory path where JSON results are saved.}
+\item{params}{List. Must contain \code{lambda_}, \code{gamma}, \code{p_prime}; optionally \code{gamma_factor}.}
 
-\item{params}{List. Current hyperparameter set to evaluate.}
-
-\item{W_prime}{Matrix. Optional initial W matrix.}
+\item{W_prime}{Matrix or scalar. Optional initial W matrix for NMF.}
 }
 \value{
-List containing objective function output, status, start time, duration, and error message (if any).
+list(df, W, H) or NULL if trial failed.
 }
 \description{
-Wraps an objective function with error handling and automatic JSON result saving.
+Objective wrapper for hyperparameter optimization
 }
 \keyword{internal}

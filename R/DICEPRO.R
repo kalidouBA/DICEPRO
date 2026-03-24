@@ -1,225 +1,391 @@
-#' DICEPRO: Deconvolution and Inference of Cell Proportions with Optimization
+# =============================================================================
+# DICEPRO Main Function
+#
+# Public API  : DICEPRO()
+# Private fns : .normalize_zscore_per_gene()
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# .normalize_zscore_per_gene  [private]
+# -----------------------------------------------------------------------------
+
+#' Z-score normalisation per gene
 #'
-#' This function performs cell type deconvolution of bulk gene expression data
-#' using a combination of a deconvolution method and Non-Negative Matrix
-#' Factorization (NMF) with L-BFGS-B optimization. It can integrate known
-#' cell type signatures and estimate the proportions of unknown cell types.
+#' Normalises each row (gene) of a numeric matrix by centering on its mean
+#' and scaling by its standard deviation. Genes with SD = 0 or \code{NA}
+#' are silently removed.
 #'
-#' @param reference Numeric matrix of reference gene expression data (genes x cell types).
-#' @param bulk Numeric matrix of bulk gene expression data (genes x samples).
-#' @param methodDeconv Deconvolution method: "CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism".
-#' @param cibersortx_email Email for CIBERSORTx (optional).
-#' @param cibersortx_token Token for CIBERSORTx (optional).
-#' @param W_prime Initial W matrix for unknown cell types (default 0).
-#' @param bulkName Name of bulk dataset.
-#' @param refName Name of reference dataset.
-#' @param hp_max_evals Max evaluations for optimization (default 100).
-#' @param N_unknownCT Number of unknown cell types to estimate (default 1).
-#' @param algo_select Optimization algorithm: "random", "tpe", "atpe" (default "random").
-#' @param output_path Path to save results (default current working directory).
-#' @param hspaceTechniqueChoose Hyperparameter search space: "restrictionEspace", "all" (default "restrictionEspace").
-#' @param out_Decon Precomputed deconvolution matrix (optional).
+#' @param mat A numeric matrix or data frame with genes as rows and samples
+#'   as columns.
 #'
-#' @return List of class "DICEPRO" containing:
-#' \item{Prediction}{Estimated cell type proportions (excluding unknowns).}
-#' \item{New_signature}{Optimized gene expression signatures including unknown cell types.}
-#' \item{W_prime}{Optimized W matrix for unknown cell types.}
-#' \item{P_prime}{Estimated proportions for unknown cell types.}
-#' \item{constraint}{Final constraint value from optimization.}
-#' \item{optimization_results}{Complete optimization results including both optimal points and TSV data.}
+#' @return A numeric matrix with the same columns as \code{mat} but
+#'   potentially fewer rows (genes with SD = 0 removed). Each remaining
+#'   row has mean = 0 and SD = 1.
 #'
-#' @export
-DICEPRO <- function(reference, bulk,
-                    methodDeconv = "DCQ",
-                    cibersortx_email = NULL,
-                    cibersortx_token = NULL,
-                    W_prime = 0,
-                    bulkName = "Bulk",
-                    refName = "Reference",
-                    hp_max_evals = 100,
-                    N_unknownCT = 1,
-                    algo_select = "random",
-                    output_path = NULL,
-                    hspaceTechniqueChoose = "restrictionEspace",
-                    out_Decon = NULL) {
-
-  # --- Validate deconvolution method ---
-  stopifnot(methodDeconv %in% c("CSx", "DCQ", "CDSeq", "DeconRNASeq", "FARDEEP", "BayesPrism", "abis"))
-  methodDeconv <- methodDeconv[1]
-  if (methodDeconv == "CSx" && (is.null(cibersortx_token) || is.null(cibersortx_email))) {
-    stop("CIBERSORTx token is required for method 'CSx'. Please provide 'cibersortx_token'.")
-  }
-  reference <- .normalize_median_per_gene(reference)
-  bulk <- .normalize_median_per_gene(bulk)
-
-  # --- Match genes between reference and bulk ---
-  geneIntersect <- intersect(rownames(reference), rownames(bulk))
-  if (is.matrix(reference)) {
-    stopifnot(is.numeric(reference))
-    reference <- reference[geneIntersect, ]
-  } else {
-    reference <- apply(reference[geneIntersect, ], 2, as.numeric)
-  }
-
-  if (is.matrix(bulk)) {
-    stopifnot(is.numeric(bulk))
-    bulk <- bulk[geneIntersect, ]
-  } else {
-    bulk <- apply(bulk[geneIntersect, ], 2, as.numeric)
-  }
-
-  rownames(reference) <- rownames(bulk) <- geneIntersect
-
-  # --- Run deconvolution if out_Decon not provided ---
-  if (is.null(out_Decon)) {
-    out_Dec <- t(running_method(bulk, reference, methodDeconv, cibersortx_email, cibersortx_token))
-  } else {
-    message("Using provided 'out_Decon', skipping running_method().")
-    out_Dec <- out_Decon
-    if (!is.matrix(out_Dec)) stop("The 'out_Decon' object must be a matrix.")
-  }
-
-  # Build dataset list
-  dataset <- list(B = bulk, W = reference, P = out_Dec)
-
-  # Determine output directory
-  dirName <- paste0(bulkName, "_", refName, "_", hspaceTechniqueChoose, "_", algo_select)
-  if (is.null(output_path)) output_path <- getwd()
-  output_dir <- file.path(output_path, dirName)
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
-
-  # Run hyperparameter optimization (R-native)
-  optimization_results <- run_experiment(
-    dataset = dataset,
-    W_prime = W_prime,
-    bulkName = bulkName,
-    refName = refName,
-    hp_max_evals = hp_max_evals,
-    algo_select = algo_select,
-    output_base_dir = output_path,
-    hspaceTechniqueChoose = hspaceTechniqueChoose
-  )
-
-  # Extract both optimal points
-  optimal_DiceproOptCstrt <- optimization_results$optimal_points$DiceproOptCstrt
-  optimal_DiceproOptCstrt_0.1 <- optimization_results$optimal_points$DiceproOptCstrt_0.1
-
-  # Extract both TSV datasets
-  tsv_DiceproOptCstrt <- optimization_results$optimal_tsv_data$DiceproOptCstrt
-  tsv_DiceproOptCstrt_0.1 <- optimization_results$optimal_tsv_data$DiceproOptCstrt_0.1
-
-  # Use the private helper function to extract results with safe null handling
-  final_results <- list(
-    DiceproOptCstrt = if (!is.null(optimal_DiceproOptCstrt)) {
-      .get_optimal_results(optimal_DiceproOptCstrt, tsv_DiceproOptCstrt, out_Dec, reference, W_prime)
-    } else {
-      list()
-    },
-    DiceproOptCstrt_0.1 = if (!is.null(optimal_DiceproOptCstrt_0.1)) {
-      .get_optimal_results(optimal_DiceproOptCstrt_0.1, tsv_DiceproOptCstrt_0.1, out_Dec, reference, W_prime, prefix = "secondary_")
-    } else {
-      list()
-    },
-    optimization_results = optimization_results
-  )
-
-
-  class(final_results) <- "DICEPRO"
-  return(final_results)
-}
-
-
-#' @title Extract final results from a TSV dataset
-#' @description Private helper function to extract relevant final results from a TSV dataset.
-#'   This function assumes the TSV contains columns named `W_final`, `W_prime_final`, and `P_prime_final`.
-#'
-#' @param tsv_data A data frame read from the TSV file corresponding to an optimal point.
-#'
-#' @return A list with the following elements:
-#'   - `W_final`: final W matrix (or NULL if not present)
-#'   - `W_prime_final`: final W_prime values (or NULL if not present)
-#'   - `P_prime_final`: final P_prime values (or NULL if not present)
-#'
-#' @keywords internal
-.extract_final_results <- function(tsv_data) {
-  list(
-    W_final = tsv_data$W_final %||% NULL,
-    W_prime_final = tsv_data$W_prime_final %||% NULL,
-    P_prime_final = tsv_data$P_prime_final %||% NULL
-  )
-}
-
-
-#' @title Extract Results for a Single Optimal Point (Internal)
-#' @description
-#' Private helper function to extract final results for a given optimal point.
-#' It safely handles missing TSV data and optionally prefixes the names for secondary results.
-#'
-#' @param opt_point A list or data frame row representing the optimal point.
-#'   Must contain `constraint`, `lambda_`, `gamma`, `p_prime`, and `frobNorm`.
-#' @param tsv_data A data frame read from the corresponding TSV file, or `NULL`.
-#' @param out_Dec The deconvolution result matrix.
-#' @param reference The reference matrix.
-#' @param W_prime Initial W matrix for unknown cell types.
-#' @param prefix Optional string to prefix the result names (default `""`).
-#'
-#' @return A named list containing:
-#'   - `Prediction`: Default prediction object (`out_Dec`).
-#'   - `New_signature`: New signature matrix (from TSV or fallback `reference`).
-#'   - `W_prime`: Optimized W_prime value.
-#'   - `P_prime`: Optimized P_prime value.
-#'   - `constraint`, `lambda_`, `gamma`, `p_prime`, `frobNorm`: Values from the optimal point.
-#'
+#' @importFrom stats sd
 #' @keywords internal
 #' @noRd
-.get_optimal_results <- function(opt_point, tsv_data, out_Dec, reference, W_prime, prefix = "") {
-  final_res <- if (!is.null(tsv_data)) .extract_final_results(tsv_data) else list()
+.normalize_zscore_per_gene <- function(mat) {
 
-  res <- list(
-    Prediction = out_Dec,
-    New_signature = final_res$W_final %||% reference,
-    W_prime = final_res$W_prime_final %||% W_prime,
-    P_prime = final_res$P_prime_final,
-    constraint = opt_point$constraint,
-    lambda_ = opt_point$lambda_,
-    gamma = opt_point$gamma,
-    p_prime = opt_point$p_prime,
-    frobNorm = opt_point$frobNorm
-  )
-
-  if (prefix != "") names(res) <- paste0(prefix, names(res))
-  res
-}
-
-
-#' Normalize a gene expression matrix by median and IQR (private function)
-#'
-#' This function normalizes each row (gene) of a numeric matrix by centering it
-#' on its median and scaling by its interquartile range (IQR). Rows with IQR = 0
-#' are automatically removed. This function is intended for internal use within
-#' a package (private function).
-#'
-#' @param mat A numeric matrix or data frame with genes as rows and samples as columns.
-#'
-#' @return A numeric matrix of the same dimensions (minus rows with IQR = 0),
-#'   normalized by median and IQR.
-#' @importFrom stats median IQR
-#' @keywords internal
-#' @noRd
-.normalize_median_per_gene <- function(mat) {
   mat <- as.matrix(mat)
 
-  # Compute interquartile range per gene
-  gene_iqr <- apply(mat, 1, IQR, na.rm = TRUE)
+  gene_sd    <- apply(mat, 1L, sd, na.rm = TRUE)
+  keep_genes <- !is.na(gene_sd) & gene_sd > 0
+  mat        <- mat[keep_genes, , drop = FALSE]
 
-  # Keep only genes with IQR > 0
-  keep_genes <- gene_iqr > 0 & !is.na(gene_iqr)
-  mat_filtered <- mat[keep_genes, , drop = FALSE]
-
-  # Center by median and scale by IQR
-  mat_norm <- t(apply(mat_filtered, 1, function(x) {
-    (x - median(x, na.rm = TRUE)) / IQR(x, na.rm = TRUE)
+  t(apply(mat, 1L, function(x) {
+    (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
   }))
+}
 
-  return(mat_norm)
+
+# -----------------------------------------------------------------------------
+# DICEPRO  [public]
+# -----------------------------------------------------------------------------
+
+#' Semi-supervised bulk RNA-seq deconvolution with NMF hyperparameter
+#' optimisation
+#'
+#' \code{DICEPRO} performs cell-type deconvolution of bulk RNA-seq data by
+#' combining a supervised deconvolution step (estimating proportions of
+#' \emph{known} cell types) with an unsupervised NMF step (discovering and
+#' quantifying \emph{unknown} cell types). Hyperparameters
+#' \eqn{(\lambda, \gamma, p')} are selected automatically via Pareto-frontier
+#' analysis and knee-point detection.
+#'
+#' @section Pipeline:
+#' \enumerate{
+#'   \item \strong{Normalisation} (optional): z-score per gene applied to
+#'     both \code{reference} and \code{bulk} via
+#'     \code{.normalize_zscore_per_gene()}.
+#'   \item \strong{Gene intersection}: only genes present in both matrices
+#'     are retained.
+#'   \item \strong{Supervised deconvolution}: \code{\link{running_method}}
+#'     estimates known cell-type proportions.
+#'   \item \strong{Hyperparameter search}: \code{\link{run_experiment}}
+#'     evaluates \code{hp_max_evals} configurations using the chosen
+#'     \code{algo_select} strategy.
+#'   \item \strong{Best configuration}: \code{\link{best_hyperParams}}
+#'     selects the knee point on the Pareto frontier.
+#'   \item \strong{Report}: plots are saved under
+#'     \code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
+#' }
+#'
+#' @param reference    Numeric matrix of reference gene expression profiles,
+#'   dimensions \eqn{G \times K} (genes \eqn{\times} known cell types).
+#'   Row names must be gene symbols.
+#' @param bulk         Numeric matrix of bulk RNA-seq expression,
+#'   dimensions \eqn{G \times N} (genes \eqn{\times} samples).
+#'   Row names must be gene symbols matching \code{reference}.
+#' @param methodDeconv Character scalar. Deconvolution method to use for
+#'   the supervised step. One of \code{"CSx"}, \code{"DCQ"},
+#'   \code{"CDSeq"}, or \code{"FARDEEP"} (default \code{"CSx"}).
+#' @param cibersortx_email Character scalar. Registered email for the
+#'   CIBERSORTx web service. Required when \code{methodDeconv = "CSx"};
+#'   ignored otherwise.
+#' @param cibersortx_token Character scalar. API token for the CIBERSORTx
+#'   web service. Required when \code{methodDeconv = "CSx"};
+#'   ignored otherwise.
+#' @param W_prime      Either \code{0} (default, initialise a single unknown
+#'   cell-type column automatically) or a numeric matrix of dimensions
+#'   \eqn{G \times U} providing initial signatures for \eqn{U} unknown cell
+#'   types.
+#' @param bulkName     Character scalar. Label for the bulk dataset, used in
+#'   the output directory name and plot titles (default \code{"Bulk"}).
+#' @param refName      Character scalar. Label for the reference dataset,
+#'   used in the output directory name and plot titles
+#'   (default \code{"Reference"}).
+#' @param hp_max_evals Positive integer. Number of hyperparameter
+#'   configurations to evaluate during the search
+#'   (default \code{100}). Increase to \eqn{\geq 200} for production use.
+#' @param N_unknownCT  Positive integer. Number of unknown cell types to
+#'   estimate when \code{W_prime = 0} (default \code{1}).
+#' @param algo_select  Character scalar. Hyperparameter sampling strategy.
+#'   \describe{
+#'     \item{\code{"random"}}{Pure random search (default). Fast and robust
+#'       for any budget.}
+#'     \item{\code{"tpe"}}{Tree-structured Parzen Estimator. Uses past
+#'       evaluations to guide the search; more sample-efficient than random
+#'       search when \code{hp_max_evals} \eqn{\geq 30}. Implemented in pure
+#'       base R with no additional dependencies.}
+#'     \item{\code{"atpe"}}{Accepted alias for \code{"tpe"}.}
+#'     \item{\code{"anneal"}}{Accepted in config; currently falls back to
+#'       \code{"random"}.}
+#'   }
+#' @param output_path  Character scalar. Root directory for all outputs.
+#'   Results are saved under
+#'   \code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
+#'   Defaults to \code{getwd()} when \code{NULL}.
+#' @param hspaceTechniqueChoose Character scalar. Hyperparameter space
+#'   parameterisation.
+#'   \describe{
+#'     \item{\code{"all"}}{Searches \eqn{\gamma} and \eqn{\lambda}
+#'       independently, each loguniform on (1, 1e8).}
+#'     \item{\code{"restrictionEspace"}}{(default) \eqn{\gamma} is the base
+#'       variable; \eqn{\lambda} is derived as
+#'       \eqn{\lambda = \gamma \times \lambda_{factor}} with
+#'       \eqn{\lambda_{factor}} in (2, 100), ensuring
+#'       \eqn{\lambda \geq 2\gamma}.}
+#'   }
+#' @param out_Decon    Optional numeric matrix. Pre-computed deconvolution
+#'   result (samples \eqn{\times} cell types). When provided,
+#'   \code{\link{running_method}} is skipped entirely.
+#' @param normalize    Logical scalar. When \code{TRUE} (default), both
+#'   \code{reference} and \code{bulk} are z-score normalised per gene
+#'   before deconvolution. Set to \code{FALSE} when matrices have already
+#'   been normalised upstream.
+#'
+#' @return An object of class \code{"DICEPRO"} (a named list), or
+#'   \code{invisible(NULL)} when no valid hyperparameter configuration is
+#'   found. The list contains:
+#' \describe{
+#'   \item{hyperparameters}{Named list with \code{lambda} and \code{gamma}
+#'     scalars of the selected configuration.}
+#'   \item{metrics}{Named list with \code{loss} and \code{constraint}
+#'     scalars of the selected configuration.}
+#'   \item{trials}{data.frame of all successful trial results, one row per
+#'     evaluated configuration.}
+#'   \item{W}{Signature matrix \eqn{W} of the selected trial.}
+#'   \item{H}{Proportion matrix \eqn{H} of the selected trial
+#'     (samples \eqn{\times} cell types).}
+#'   \item{plot}{Interactive Plotly figure of the Pareto frontier.}
+#'   \item{plot_hyperopt}{Static \code{gtable} scatter-matrix of all
+#'     evaluated hyperparameter configurations.}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' data(BlueCode)
+#' data(CellMixtures)
+#'
+#' # Random search (default)
+#' out <- DICEPRO(
+#'   reference             = BlueCode,
+#'   bulk                  = CellMixtures,
+#'   methodDeconv          = "FARDEEP",
+#'   bulkName              = "CellMixtures",
+#'   refName               = "BlueCode",
+#'   hp_max_evals          = 100L,
+#'   output_path           = tempdir(),
+#'   hspaceTechniqueChoose = "all"
+#' )
+#'
+#' # TPE search — more efficient when budget >= 30 trials
+#' out_tpe <- DICEPRO(
+#'   reference             = BlueCode,
+#'   bulk                  = CellMixtures,
+#'   methodDeconv          = "FARDEEP",
+#'   hp_max_evals          = 50L,
+#'   algo_select           = "tpe",
+#'   hspaceTechniqueChoose = "restrictionEspace",
+#'   output_path           = tempdir()
+#' )
+#'
+#' # Skip normalisation when data are already z-scored
+#' out2 <- DICEPRO(
+#'   reference    = BlueCode,
+#'   bulk         = CellMixtures,
+#'   normalize    = FALSE,
+#'   methodDeconv = "FARDEEP"
+#' )
+#'
+#' # CIBERSORTx backend
+#' out3 <- DICEPRO(
+#'   reference        = BlueCode,
+#'   bulk             = CellMixtures,
+#'   methodDeconv     = "CSx",
+#'   cibersortx_email = "you@example.com",
+#'   cibersortx_token = "YOUR_TOKEN"
+#' )
+#' }
+#'
+#' @seealso
+#'   \code{\link{running_method}} for the supervised deconvolution step,
+#'   \code{\link{run_experiment}} for the hyperparameter search,
+#'   \code{\link{best_hyperParams}} for Pareto selection,
+#'   \code{\link{plot_hyperopt}} for the optimisation report plot.
+#'
+#' @importFrom grDevices cairo_pdf
+#' @importFrom ggplot2 ggsave
+#' @importFrom htmlwidgets saveWidget
+#' @export
+DICEPRO <- function(reference, bulk,
+                    methodDeconv          = "CSx",
+                    cibersortx_email      = NULL,
+                    cibersortx_token      = NULL,
+                    W_prime               = 0,
+                    bulkName              = "Bulk",
+                    refName               = "Reference",
+                    hp_max_evals          = 100,
+                    N_unknownCT           = 1,
+                    algo_select           = "random",
+                    output_path           = NULL,
+                    hspaceTechniqueChoose = "all",
+                    out_Decon             = NULL,
+                    normalize             = TRUE) {
+
+  # ---- Input validation ------------------------------------------------------
+  if (!is.logical(normalize) || length(normalize) != 1L)
+    stop("'normalize' must be a single logical value (TRUE or FALSE).")
+
+  # FIX: validate algo_select explicitly so the error is clear at the top
+  # rather than surfacing deep inside research_hyperOpt() / .parse_config().
+  algo_select <- match.arg(
+    tolower(algo_select),
+    c("random", "tpe", "atpe", "anneal")
+  )
+
+  hspaceTechniqueChoose <- match.arg(
+    hspaceTechniqueChoose,
+    c("restrictionEspace", "all")
+  )
+
+  # ---- Normalisation ---------------------------------------------------------
+  if (normalize) {
+    reference <- .normalize_zscore_per_gene(reference)
+    bulk      <- .normalize_zscore_per_gene(bulk)
+  } else {
+    reference <- as.matrix(reference)
+    bulk      <- as.matrix(bulk)
+    message("normalize = FALSE: matrices used as-is.")
+  }
+
+  # ---- Gene intersection -----------------------------------------------------
+  geneIntersect <- intersect(rownames(reference), rownames(bulk))
+  if (length(geneIntersect) == 0L)
+    stop("No common genes between 'reference' and 'bulk'.")
+
+  reference <- reference[geneIntersect, , drop = FALSE]
+  bulk      <- bulk[geneIntersect, , drop = FALSE]
+  rownames(reference) <- rownames(bulk) <- geneIntersect
+  message(sprintf("Gene intersection: %d genes retained.", length(geneIntersect)))
+
+  # ---- Supervised deconvolution ----------------------------------------------
+  if (is.null(out_Decon)) {
+    methodDeconv <- match.arg(methodDeconv, c("CSx", "DCQ", "CDSeq", "FARDEEP"))
+
+    if (methodDeconv == "CSx" &&
+        (is.null(cibersortx_token) || is.null(cibersortx_email))) {
+      stop("CIBERSORTx credentials are required for methodDeconv = 'CSx'. ",
+           "Please provide both 'cibersortx_email' and 'cibersortx_token'.")
+    }
+
+    out_Dec <- t(running_method(
+      bulk, reference, methodDeconv,
+      cibersortx_email, cibersortx_token
+    ))
+
+  } else {
+
+    out_Decon <- as.matrix(out_Decon)
+
+    # FIX: corrected stop() calls — paste() args were split across lines
+    # causing the extra parts to be silently dropped (treated as separate
+    # expressions, not concatenated).
+    if (ncol(out_Decon) != ncol(reference))
+      stop(sprintf(
+        "'out_Decon' has %d cell type(s) but 'reference' has %d. Both must have the same number of cell types (columns).",
+        ncol(out_Decon), ncol(reference)
+      ))
+
+    if (nrow(out_Decon) != ncol(bulk))
+      stop(sprintf(
+        "'out_Decon' has %d sample(s) but 'bulk' has %d columns. The number of rows in 'out_Decon' must match the number of samples (columns) in 'bulk'.",
+        nrow(out_Decon), ncol(bulk)
+      ))
+
+    # FIX: message() with sprintf() — extra string args after format are
+    # ignored; fold everything into the format string.
+    message(sprintf(
+      "Using provided 'out_Decon' -- skipping running_method(). Dimensions: %d samples x %d cell types.",
+      nrow(out_Decon), ncol(out_Decon)
+    ))
+
+    out_Dec <- t(out_Decon)
+  }
+
+  # ---- Build dataset list ----------------------------------------------------
+  dataset <- list(B = bulk, W = reference, P = out_Dec)
+
+  # ---- Output directory ------------------------------------------------------
+  dirName    <- paste0("DICEPRO_", bulkName, "_", refName)
+  if (is.null(output_path)) output_path <- getwd()
+  output_dir <- file.path(output_path, dirName)
+
+  # ---- Hyperparameter column names for the report plot ----------------------
+  # FIX: "restrictionEspace" uses gamma + lambda_factor (not lambda_ directly,
+  # since lambda_ is derived); "all" uses gamma + lambda_ independently.
+  hp_params <- switch(
+    hspaceTechniqueChoose,
+    all               = c("gamma", "lambda_",      "p_prime"),
+    restrictionEspace = c("gamma", "lambda_factor", "p_prime")
+  )
+
+  # ---- Hyperparameter optimisation -------------------------------------------
+  out <- run_experiment(
+    dataset               = dataset,
+    W_prime               = W_prime,
+    bulkName              = bulkName,
+    refName               = refName,
+    hp_max_evals          = hp_max_evals,
+    algo_select           = algo_select,
+    output_base_dir       = output_path,
+    hspaceTechniqueChoose = hspaceTechniqueChoose
+  ) |>
+    (\(res) best_hyperParams(
+      trials_df = res$trials,
+      W         = res$W,
+      H         = res$H,
+      savePaths = output_dir
+    ))()
+
+  # ---- Guard: all trials failed ----------------------------------------------
+  if (is.null(out)) {
+    warning(
+      "DICEPRO: no valid hyperparameter configuration found. ",
+      "Try increasing 'hp_max_evals' or checking dataset dimensions."
+    )
+    return(invisible(NULL))
+  }
+
+  # ---- Hyperparameter optimisation plot --------------------------------------
+  out$plot_hyperopt <- plot_hyperopt(
+    x      = structure(out, class = "DICEPRO"),
+    params = hp_params
+  )
+
+  # ---- Persist plots ---------------------------------------------------------
+  report_dir <- file.path(output_dir, "report")
+  if (!dir.exists(report_dir)) dir.create(report_dir, recursive = TRUE)
+
+  ggplot2::ggsave(
+    filename = file.path(report_dir, "hyperopt_report.pdf"),
+    plot     = out$plot_hyperopt,
+    width    = 4L * length(hp_params),
+    height   = 4L * length(hp_params) + 2L,
+    units    = "in",
+    device   = cairo_pdf
+  )
+
+  if (inherits(out$plot, "plotly")) {
+    htmlwidgets::saveWidget(
+      widget        = out$plot,
+      file          = file.path(report_dir, "pareto_frontier.html"),
+      libdir        = "lib",
+      selfcontained = FALSE
+    )
+  } else if (inherits(out$plot, "gg")) {
+    ggplot2::ggsave(
+      filename = file.path(report_dir, "pareto_frontier.pdf"),
+      plot     = out$plot,
+      width    = 8L,
+      height   = 6L,
+      units    = "in"
+    )
+  }
+
+  message(sprintf("Results saved to: %s", report_dir))
+
+  structure(out, class = "DICEPRO")
 }

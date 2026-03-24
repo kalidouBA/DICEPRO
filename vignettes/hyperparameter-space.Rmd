@@ -1,0 +1,239 @@
+---
+title: "DICEPRO — Hyperparameter Search Space Visualisation"
+author: "DICEPRO Team"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{DICEPRO — Hyperparameter Search Space Visualisation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  warning    = FALSE,
+  message    = FALSE,
+  eval       = FALSE
+)
+```
+
+> **Note:** All code chunks have `eval = FALSE` and are shown for
+> illustration only. To run them interactively:
+> ```r
+> library(DICEPRO)
+> # copy-paste the chunks below into your R session
+> ```
+
+# Overview
+
+This vignette explains the two **hyperparameter search space strategies**
+available in DICEPRO and shows how to visualise the resulting
+$(\gamma, \lambda)$ distributions with `create_gamma_lambda_plot()`.
+
+The `hspaceTechniqueChoose` argument controls which strategy is used, both
+in `run_experiment()` and in the plot function.
+
+---
+
+# The Two Strategies
+
+## `"all"` — Independent sampling
+
+$\lambda$ and $\gamma$ are each drawn independently from their own
+log-uniform distribution:
+
+| Parameter | Distribution | Range |
+|---|---|---|
+| `lambda_` | Log-uniform | $[1,\; 10^8]$ |
+| `gamma`   | Log-uniform | $[1,\; 10^8]$ |
+| `p_prime` | Log-uniform | $[10^{-6},\; 1]$ |
+
+No structural constraint links the two parameters. The resulting
+$(\gamma, \lambda)$ cloud fills the entire feasible rectangle uniformly
+on a log-log scale.
+
+## `"restrictionEspace"` — Linked sampling
+
+$\gamma$ is the **base variable**; $\lambda$ is **derived** via:
+
+$$\lambda = \gamma \times \lambda_\text{factor}, \quad
+  \lambda_\text{factor} \sim \text{LogUniform}(2,\; 100)$$
+
+| Parameter | Distribution | Range |
+|---|---|---|
+| `gamma`         | Log-uniform | $[1,\; 10^5]$ |
+| `lambda_factor` | Log-uniform | $[2,\; 100]$  |
+| `p_prime`       | Log-uniform | $[0.1,\; 1]$  |
+
+This guarantees $\lambda \geq 2\gamma$ at all times. The feasibility
+region is bounded by two diagonal lines in the log-log plane:
+
+- **Lower bound** (red dashed): $\lambda = 2\gamma$
+- **Upper bound** (green dashed): $\lambda = 100\gamma$
+
+---
+
+# Visualising the Search Space
+
+`create_gamma_lambda_plot()` samples 200 configurations (by default) and
+renders them as an interactive Plotly scatter plot on log-log axes.
+
+## `"all"` — Independent space
+
+```{r plot-all}
+library(DICEPRO)
+
+p_all <- create_gamma_lambda_plot(hspaceTechniqueChoose = "all")
+p_all
+```
+
+The cloud fills the square $[1, 10^8]^2$ uniformly, with no structural
+relationship between $\gamma$ and $\lambda$.
+
+## `"restrictionEspace"` — Restricted space
+
+```{r plot-restriction}
+p_restr <- create_gamma_lambda_plot(hspaceTechniqueChoose = "restrictionEspace")
+p_restr
+```
+
+All points fall within the diagonal band delimited by the two dashed lines.
+The log-log axes make the linear $\lambda = c \cdot \gamma$ relationship
+appear as parallel straight lines.
+
+---
+
+# Simulated Data
+
+Before running the optimisation, we simulate a self-consistent dataset
+using `simulation()`. The function returns a list with three elements:
+
+- **`$W`** — reference signature matrix (genes × cell types)
+- **`$p`** — true proportion matrix (samples × cell types)
+- **`$B`** — noisy bulk expression matrix (genes × samples)
+
+`run_experiment()` expects a `dataset` list with keys `$W`, `$P`, and
+`$B`. We therefore rename `$p` to `$P` after simulation.
+
+```{r simulate}
+library(DICEPRO)
+set.seed(2101L)
+
+sim <- simulation(
+  loi        = "gauss",
+  scenario   = "hierarchical",
+  nSample    = 30L,
+  nGenes     = 200L,
+  nCellsType = 10L,
+  sigma_bio  = 0.07,
+  sigma_tech = 0.07,
+  seed       = 2101L
+)
+
+my_dataset <- list(
+  W = sim$W,
+  P = sim$p,
+  B = sim$B
+)
+
+cat("W :", nrow(my_dataset$W), "genes x", ncol(my_dataset$W), "cell types\n")
+cat("P :", nrow(my_dataset$P), "samples x", ncol(my_dataset$P), "cell types\n")
+cat("B :", nrow(my_dataset$B), "genes x", ncol(my_dataset$B), "samples\n")
+cat("Row sums of P (range):", round(range(rowSums(my_dataset$P)), 4), "\n")
+```
+
+---
+
+# Running the Optimisation
+
+## Strategy `"all"` — independent sampling
+
+```{r run-all}
+results_all <- run_experiment(
+  dataset               = my_dataset,
+  W_prime               = 0,
+  bulkName              = "SimBulk",
+  refName               = "SimRef",
+  hp_max_evals          = 150L,
+  algo_select           = "random",
+  output_base_dir       = tempdir(),
+  hspaceTechniqueChoose = "all"
+)
+
+cat("Completed trials:", nrow(results_all$trials), "\n")
+head(results_all$trials[, c("lambda_", "gamma", "p_prime", "loss", "constraint")])
+```
+
+## Strategy `"restrictionEspace"` — linked sampling
+
+```{r run-restriction}
+results_restr <- run_experiment(
+  dataset               = my_dataset,
+  W_prime               = 0,
+  bulkName              = "SimBulk",
+  refName               = "SimRef",
+  hp_max_evals          = 150L,
+  algo_select           = "random",
+  output_base_dir       = tempdir(),
+  hspaceTechniqueChoose = "restrictionEspace"
+)
+
+cat("Completed trials:", nrow(results_restr$trials), "\n")
+head(results_restr$trials[, c("lambda_", "gamma", "p_prime", "loss", "constraint")])
+```
+
+---
+
+# Comparing the Two Strategies
+
+Once both runs are complete, we can overlay their $(\gamma, \lambda)$
+distributions to compare coverage:
+
+```{r compare-spaces, fig.height = 6}
+best_all   <- results_all$trials[which.min(results_all$trials$loss), ]
+best_restr <- results_restr$trials[which.min(results_restr$trials$loss), ]
+
+cat("--- all ---\n")
+cat(sprintf("  lambda = %.3g  |  gamma = %.3g  |  loss = %.4f\n",
+            best_all$lambda_, best_all$gamma, best_all$loss))
+
+cat("--- restrictionEspace ---\n")
+cat(sprintf("  lambda = %.3g  |  gamma = %.3g  |  loss = %.4f\n",
+            best_restr$lambda_, best_restr$gamma, best_restr$loss))
+
+plot(
+  results_all$trials$gamma,
+  results_all$trials$lambda_,
+  log  = "xy",
+  pch  = 19, cex = 0.5,
+  col  = adjustcolor("steelblue", 0.4),
+  xlab = expression(gamma), ylab = expression(lambda),
+  main = "Sampled configurations: all (blue) vs restrictionEspace (orange)"
+)
+points(
+  results_restr$trials$gamma,
+  results_restr$trials$lambda_,
+  pch = 19, cex = 0.5,
+  col = adjustcolor("darkorange", 0.4)
+)
+legend("topleft",
+       legend = c("all", "restrictionEspace"),
+       col    = c("steelblue", "darkorange"),
+       pch    = 19, pt.cex = 1.2)
+```
+
+---
+
+# Session Info
+
+```{r session-info}
+sessionInfo()
+```

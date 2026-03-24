@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulation.R
 \name{simulation}
 \alias{simulation}
-\title{Simulate bulk RNA-Seq Data}
+\title{Simulate Bulk RNA-seq Data with Biological and Technical Noise}
 \usage{
 simulation(
   W = NULL,
@@ -16,79 +16,118 @@ simulation(
   corr = NULL,
   method = "Polynomial",
   scenario = NULL,
-  loi = " ",
+  loi = "rpois",
   tpm = FALSE,
   bloc = FALSE,
   nGenesByCellType = 50,
-  missCellTypes = NA,
   sparse = FALSE,
   prob_sparse = 0.5,
-  bias = FALSE,
-  mu_bruit = 0,
-  sigma_bruit = 0.025
+  sigma_bio = 0.07,
+  sigma_tech = 0.07,
+  seed = 1234
 )
 }
 \arguments{
-\item{W}{A reference matrix, or NULL if you want to generate one.}
+\item{W}{Numeric matrix (genes x cell types) or \code{NULL}.
+If \code{NULL}, a reference matrix is generated
+internally via \code{\link{generate_ref_matrix}}.}
 
-\item{prop}{Cell type proportions, or NULL if you want to generate them.}
+\item{prop}{Numeric matrix (samples x cell types) or \code{NULL}.
+If \code{NULL}, proportions are generated via
+\code{\link{generateProp}}.}
 
-\item{nSample}{Number of samples to generate.}
+\item{nSample}{Integer. Number of samples. Default: \code{50}.}
 
-\item{nCell}{Total number of cells per sample.}
+\item{nCell}{Integer. Total cells per sample. Default: \code{500}.}
 
-\item{nCellsType}{Number of cell types.}
+\item{nCellsType}{Integer. Number of cell types. Default: \code{50}.}
 
-\item{nGenes}{Number of genes.}
+\item{nGenes}{Integer. Number of genes. Default: \code{500}.}
 
-\item{lam}{The lambda parameter for the Poisson distribution (used when loi = "rpois").}
+\item{lam}{Numeric. Lambda for Poisson model (see
+\code{\link{generate_ref_matrix}}).}
 
-\item{pois_eps}{The epsilon parameter for the Poisson distribution (used when loi = "rpois").}
+\item{pois_eps}{Numeric. Epsilon for Poisson model.}
 
-\item{corr}{The correlation matrix for generating gene expressions (used when loi = "rpois" is FALSE).}
+\item{corr}{Numeric matrix. Inter-cell-type correlation.}
 
-\item{method}{The method for generating data: "Polynomial" or other.}
+\item{method}{Character. Simulation method. Default:
+\code{"Polynomial"}.}
 
-\item{scenario}{The scenario for generating cell type proportions: "even," "uniform," or other.}
+\item{scenario}{Character. Proportion scenario passed to
+\code{\link{generateProp}}. Use
+\code{"hierarchical"} for realistic tissue
+composition (recommended).}
 
-\item{loi}{The law of integration to use: "rpois" for Poisson.}
+\item{loi}{Character. Expression law for reference generation.
+Default: \code{"rpois"}.}
 
-\item{tpm}{Logical indicating whether to convert the counts to transcripts per million (TPM).}
+\item{tpm}{Logical. TPM normalization of reference.}
 
-\item{bloc}{Logical indicating whether to introduce block sparsity.}
+\item{bloc}{Logical. Block sparsity in reference.}
 
-\item{nGenesByCellType}{Number of genes per cell type (used for block sparsity).}
+\item{nGenesByCellType}{Integer. Genes per block (when \code{bloc = TRUE}).}
 
-\item{missCellTypes}{Vector of cell types to exclude in the simulation.}
+\item{sparse}{Logical. Random sparsity in reference.}
 
-\item{sparse}{Logical indicating whether to introduce sparsity.}
+\item{prob_sparse}{Numeric. Sparsity probability.}
 
-\item{prob_sparse}{Probability of sparsity (used when sparse = TRUE).}
+\item{sigma_bio}{Numeric. Standard deviation of multiplicative
+biological noise. Default: \code{0.07}.}
 
-\item{bias}{Logical indicating whether to add bias to the generated data.}
+\item{sigma_tech}{Numeric. Standard deviation of additive technical
+noise (proportional to expression level).
+Default: \code{0.07}.}
 
-\item{mu_bruit}{Mean value for bias (used when bias = TRUE).}
-
-\item{sigma_bruit}{Standard deviation for bias (used when bias = TRUE).}
+\item{seed}{Integer. Random seed for noise reproducibility.
+Default: \code{1234}.}
 }
 \value{
-A list data simulated.
+A named list with three elements:
+\describe{
+\item{\code{prop}}{data.frame. True cell-type proportions
+(samples x cell types).}
+\item{\code{reference}}{data.frame. Reference signature matrix
+(genes x cell types).}
+\item{\code{bulk_noise}}{data.frame. Noisy bulk expression matrix
+(genes x samples), with biological and technical noise applied.}
+}
 }
 \description{
-This function simulates bulk RNA-seq data using a reference matrix and cell type proportions.
+Generates synthetic bulk RNA-seq expression matrices by linearly mixing
+reference cell-type profiles according to simulated proportions, with
+optional biological and technical noise. The noise model is consistent
+with the Gaussian likelihood framework underlying DicePro's objective
+function: biological noise is applied multiplicatively and technical
+noise additively, so that normalization to a Gaussian scale prior to
+deconvolution is a formal requirement.
 }
 \details{
-The function calculates and returns the simulations:
-\itemize{
-\item \code{prop}: A matrix representing proportions of different cell types in samples.
-\item \code{reference}: A reference matrix with cell types as columns and genes as rows.
-\item \code{bulk}: A bulk RnaSeq simulated
-}
+The bulk expression matrix is generated as:
+\deqn{\mathbf{B} = \mathbf{W} \cdot \mathbf{P}^\top}
+where \eqn{\mathbf{W}} is the reference matrix and \eqn{\mathbf{P}}
+the proportion matrix. Noise is then applied as:
+\deqn{B^*_{gn} = B_{gn}(1 + \varepsilon^{\text{bio}}_{gn}) +
+      \varepsilon^{\text{tech}}_{gn} \cdot B_{gn}}
+where \eqn{\varepsilon^{\text{bio}} \sim \mathcal{N}(0, \sigma^2_{\text{bio}})}
+and \eqn{\varepsilon^{\text{tech}} \sim \mathcal{N}(0, \sigma^2_{\text{tech}})}.
+Negative values are clipped to zero. This noise structure motivates
+Gaussian normalization of both bulk and reference inputs prior to
+deconvolution with DicePro.
 }
 \examples{
-if(interactive()){
-set.seed(2101)
-simulation <- simulation(loi = "gauss", scenario = " ", bias = TRUE, nSample = 10, prop = NULL,
-                         nGenes = 50, nCellsType = 5)
+if (interactive()) {
+  set.seed(2101)
+  sim <- simulation(
+    scenario   = "hierarchical",
+    nSample    = 20,
+    nGenes     = 100,
+    nCellsType = 10,
+    sigma_bio  = 0.07,
+    sigma_tech = 0.07,
+    seed       = 2101
+  )
+  dim(sim$prop)       # 20 x 10
+  dim(sim$bulk_noise) # 100 x 20
 }
 }

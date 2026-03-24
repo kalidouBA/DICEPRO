@@ -9,4 +9,12 @@
 library(testthat)
 library(DICEPRO)
 
+# ---- Global test options --------------------------------------------------
+# Suppress progress bars and messages during tests to keep output clean.
+options(
+  DICEPRO.verbose  = FALSE,
+  progress_enabled = FALSE
+)
+
+# ---- Run all tests --------------------------------------------------------
 test_check("DICEPRO")
