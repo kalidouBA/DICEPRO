@@ -71,13 +71,6 @@ install.packages("DICEPRO")
 # install.packages("remotes")
 remotes::install_github("kalidouBA/DICEPRO")
 ```
-
-### From Bioconductor
-
-```{r bioc-install, eval = FALSE}
-BiocManager::install("kalidouBA/DICEPRO")
-```
-
 ---
 
 ## Quick Start
