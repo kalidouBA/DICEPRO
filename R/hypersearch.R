@@ -256,7 +256,7 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
 #'
 #' @param space Named list. Each element is a named list with `type` and bounds.
 #' @return List of sampled parameter values.
-#' @keywords internal
+#' @noRd
 .sample_from_space <- function(space) {
 
   # FIX: capture original names BEFORE lapply so they are never lost
@@ -354,7 +354,7 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
 
 
 #' Custom progress bar
-#' @keywords internal
+#' @noRd
 .custom_progress_bar <- function(total, format = "Progress [:bar] :percent", width = 60) {
   current <- 0
   list(
@@ -479,7 +479,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
 #' @param gamma Quantile threshold (default 0.25).
 #' @param n_candidates Number of random candidates to score (default 24).
 #' @return Named list of sampled hyperparameter values.
-#' @keywords internal
+#' @noRd
 .tpe_sample <- function(search_space, history,
                         gamma        = 0.25,
                         n_candidates = 24L) {
@@ -537,7 +537,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
 #' @param x   Scalar query point.
 #' @param obs Numeric vector of observations.
 #' @return Numeric scalar (log density).
-#' @keywords internal
+#' @noRd
 .kde_log_density <- function(x, obs) {
   n      <- length(obs)
   sd_obs <- stats::sd(obs)
@@ -558,7 +558,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
 
 
 #' Parse configuration list
-#' @keywords internal
+#' @noRd
 .parse_config <- function(config) {
   required_args <- c("exp", "hp_max_evals", "hp_method")
   for (arg in required_args) {
@@ -574,7 +574,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
 
 
 #' Load and parse configuration from JSON file
-#' @keywords internal
+#' @noRd
 .get_conf_from_json <- function(confpath) {
   if (!file.exists(confpath))
     stop(paste("Training conf", confpath, "not found."))
@@ -584,7 +584,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
 
 
 #' Parse hyperopt search space specification
-#' @keywords internal
+#' @noRd
 .parse_hyperopt_searchspace <- function(arg, specs) {
   if (!is.list(specs)) specs <- as.list(specs)
   type <- specs[[1]]
@@ -612,7 +612,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
 
 
 #' Get report path
-#' @keywords internal
+#' @noRd
 .get_report_path <- function(exp_dir) {
   report_path <- file.path(exp_dir, "results")
   if (!dir.exists(report_path)) dir.create(report_path, recursive = TRUE)
