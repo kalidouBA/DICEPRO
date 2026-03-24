@@ -2,9 +2,7 @@
 # DICEPRO
 
 <!-- badges -->
-[![R-CMD-check](https://github.com/kalidouBA/DICEPRO/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/kalidouBA/DICEPRO/actions/workflows/R-CMD-check.yaml)
-[![CRAN status](https://www.r-pkg.org/badges/version/DICEPRO)](https://CRAN.R-project.org/package=DICEPRO)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 <!-- badges -->
 
 **D**econvolution with **I**terative **C**ompletion for **E**stimating
@@ -237,12 +235,8 @@ vignette("vignette-real-data",  package = "DICEPRO")
 
 If you use DICEPRO in your research, please cite:
 
-> Author et al. (2025). *DICEPRO: Deconvolution with Iterative
-> Completion for Estimating Cellular Proportions from RNA-seq Data.*
-> Journal Name. <doi:XXXX>
+> Author et al. (2025). *When Less Is Not More\]{When Less Is Not More:
+> Mitigates the Impact of Incomplete Reference Matrices on Cellular
+> Frequency Deconvolution* Bioinformatics. <doi:XXXX>
 
 ------------------------------------------------------------------------
-
-## License
-
-MIT © DICEPRO Team

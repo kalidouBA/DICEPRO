@@ -241,12 +241,9 @@ vignette("vignette-real-data",  package = "DICEPRO")
 
 If you use DICEPRO in your research, please cite:
 
-> Author et al. (2025). *DICEPRO: Deconvolution with Iterative Completion
-> for Estimating Cellular Proportions from RNA-seq Data.*
-> Journal Name. doi:XXXX
+> Author et al. (2025). *When Less Is Not More]{When Less Is Not More: 
+> \texttt{DICEPro} Mitigates the Impact of Incomplete Reference 
+> Matrices on Cellular Frequency Deconvolution*
+> Bioinformatics. doi:XXXX
 
 ---
-
-## License
-
-MIT © DICEPRO Team
