@@ -41,33 +41,30 @@
 #'   set.seed(2101)
 #'   # Equal proportions
 #'   prop_even <- generateProp(nSample = 20, n_cell_types = 10,
-#'                             scenario = "even")
+#'     scenario = "even")
 #'
 #'   # Hierarchical Dirichlet (recommended for realistic benchmarking)
 #'   prop_hier <- generateProp(nSample = 20, n_cell_types = 34,
-#'                             scenario = "hierarchical")
+#'     scenario = "hierarchical")
 #'   all(abs(rowSums(prop_hier) - 1) < 1e-8)  # TRUE
 #' }
-
 generateProp <- function(n_cell_types,
                          nSample,
                          nCell    = 500,
                          scenario = NULL) {
 
   if (scenario == "even") {
-
     # ── Near-equal proportions with small Gaussian perturbation ──────────
     m <- round(
       matrix(
         abs(rnorm(n_cell_types,
-                  mean = 1 / n_cell_types,
-                  sd   = 0.01)),
+          mean = 1 / n_cell_types,
+          sd   = 0.01)),
         ncol = n_cell_types
       ), 3
     )
 
   } else if (scenario == "uniform") {
-
     # ── Uniform random sampling with variable number of active cell types ─
     min.percentage <- 1
     max.percentage <- 99
@@ -81,8 +78,8 @@ generateProp <- function(n_cell_types,
       P <- runif(num.CT, min.percentage, max.percentage)
       P <- round(P / sum(P), digits = log10(nCell))
       P <- data.frame(CT       = selected.CT,
-                      expected = P,
-                      stringsAsFactors = FALSE)
+        expected = P,
+        stringsAsFactors = FALSE)
 
       missing.CT <- data.frame(
         CT       = CT[!CT %in% selected.CT],
@@ -95,13 +92,12 @@ generateProp <- function(n_cell_types,
 
     m <- matrix(
       aggregate(P_all$expected,
-                list(P_all$CT),
-                FUN = mean)$x,
+        list(P_all$CT),
+        FUN = mean)$x,
       ncol = n_cell_types
     )
 
   } else if (scenario == "hierarchical") {
-
     # ── Two-level hierarchical Dirichlet model ────────────────────────────
     # Level 1: major tissue compartments
     alpha_groups <- c(
@@ -160,7 +156,6 @@ generateProp <- function(n_cell_types,
     n_cell_types <- ncol(m)
 
   } else {
-
     # ── Flat Dirichlet draw (default fallback) ────────────────────────────
     m <- MCMCpack::rdirichlet(n = nSample, alpha = rep(1, n_cell_types))
 
@@ -217,7 +212,6 @@ generateProp <- function(n_cell_types,
 #'
 #' @export
 #'
-#' @importFrom matrixStats rowVars
 #' @importFrom dplyr group_by summarise across everything
 #' @importFrom SimMultiCorrData rcorrvar2 calc_theory
 #' @importFrom clusterGeneration rcorrmatrix
@@ -230,7 +224,6 @@ generateProp <- function(n_cell_types,
 #'   ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
 #'   dim(ref)  # 50 x 5
 #' }
-
 generate_ref_matrix <- function(loi            = "rpois",
                                 tpm            = FALSE,
                                 bloc           = FALSE,
@@ -249,7 +242,6 @@ generate_ref_matrix <- function(loi            = "rpois",
     corr <- clusterGeneration::rcorrmatrix(nCellsType)
 
   if (loi == "rpois") {
-
     # ── Poisson-based simulation via correlated variable generation ───────
     Dist   <- c("Logistic", "Weibull")
     Params <- list(c(0, 1), c(3, 5))
@@ -261,7 +253,9 @@ generate_ref_matrix <- function(loi            = "rpois",
     colnames(Stcum) <- c("mean", "sd", "skew", "skurtosis", "fifth", "sixth")
 
     Six  <- list(seq(1.7, 1.8, 0.01), seq(0.10, 0.25, 0.01))
-    size <- 2; prob <- 0.75; nb_eps <- 0.0001
+    size <- 2
+    prob <- 0.75
+    nb_eps <- 0.0001
 
     counts <- 40 * SimMultiCorrData::rcorrvar2(
       n        = nGenes,
@@ -285,7 +279,6 @@ generate_ref_matrix <- function(loi            = "rpois",
     )$Poisson_variables
 
   } else {
-
     # ── Log-normal simulation via multivariate normal ─────────────────────
     mu     <- runif(nCellsType, -1, 0.5)
     counts <- exp(
@@ -400,7 +393,6 @@ generate_ref_matrix <- function(loi            = "rpois",
 #'   dim(sim$prop)       # 20 x 10
 #'   dim(sim$bulk_noise) # 100 x 20
 #' }
-
 simulation <- function(W              = NULL,
                        prop           = NULL,
                        nSample        = 50,
