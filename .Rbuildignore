@@ -8,3 +8,4 @@ test_simulation.Rmd
 ^doc$
 ^Meta$
 ^README\.html$
+^DICEPro_article_reproducibility/*

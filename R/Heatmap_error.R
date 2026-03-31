@@ -86,7 +86,6 @@
 #' heatmap_abundances(df)
 #' }
 #'
-#' @importFrom tidyr pivot_longer
 #' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c labs
 #' @export
 heatmap_abundances <- function(res2plot, base_size = 9) {
@@ -150,7 +149,6 @@ heatmap_abundances <- function(res2plot, base_size = 9) {
 metric_plot <- function(perf2plot,
                         ylab      = "Error between folds",
                         base_size = 9) {
-
   # Silence R CMD CHECK notes for NSE column names
   Iterate <- metric <- NULL
 

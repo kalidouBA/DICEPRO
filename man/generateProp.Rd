@@ -48,11 +48,11 @@ if (interactive()) {
   set.seed(2101)
   # Equal proportions
   prop_even <- generateProp(nSample = 20, n_cell_types = 10,
-                            scenario = "even")
+    scenario = "even")
 
   # Hierarchical Dirichlet (recommended for realistic benchmarking)
   prop_hier <- generateProp(nSample = 20, n_cell_types = 34,
-                            scenario = "hierarchical")
+    scenario = "hierarchical")
   all(abs(rowSums(prop_hier) - 1) < 1e-8)  # TRUE
 }
 }

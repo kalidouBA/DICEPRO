@@ -30,7 +30,7 @@ contains_nan_or_inf <- function(value) {
   rn <- rownames(mat)
   cn <- colnames(mat)
   mat <- matrix(as.numeric(mat), nrow = nrow(mat), ncol = ncol(mat),
-                dimnames = list(rn, cn))
+    dimnames = list(rn, cn))
   mat
 }
 
@@ -138,9 +138,9 @@ objective_opt <- function(dataset, config = list(), lambda_ = NULL,
   }
 
   if (contains_nan_or_inf(.sc(result_dict$objectiveValue)) ||
-      contains_nan_or_inf(.sc(result_dict$constraint)) ||
-      any(is.na(c(.sc(result_dict$frob_H), .sc(result_dict$var_H),
-                  .sc(result_dict$frob_W), .sc(result_dict$var_W))))) {
+    contains_nan_or_inf(.sc(result_dict$constraint)) ||
+    any(is.na(c(.sc(result_dict$frob_H), .sc(result_dict$var_H),
+      .sc(result_dict$frob_W), .sc(result_dict$var_W))))) {
     return(NULL)
   }
 
@@ -181,74 +181,76 @@ objective_opt <- function(dataset, config = list(), lambda_ = NULL,
 #' @keywords internal
 objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = NULL) {
 
-  tryCatch({
+  tryCatch(
+    {
 
-    start_time <- Sys.time()
+      start_time <- Sys.time()
 
-    n_samples    <- ncol(dataset$B)
-    n_unknown_ct <- if (!is.null(W_prime) && is.matrix(W_prime) && ncol(W_prime) > 0L)
-      ncol(W_prime) else 1L
+      n_samples    <- ncol(dataset$B)
+      n_unknown_ct <- if (!is.null(W_prime) && is.matrix(W_prime) && ncol(W_prime) > 0L)
+        ncol(W_prime) else 1L
 
-    if (!is.matrix(params$p_prime)) {
-      params$p_prime <- matrix(params$p_prime, nrow = n_samples, ncol = n_unknown_ct)
-    }
+      if (!is.matrix(params$p_prime)) {
+        params$p_prime <- matrix(params$p_prime, nrow = n_samples, ncol = n_unknown_ct)
+      }
 
-    gamma_factor_arg <- params$gamma_factor   # NULL when not in space
+      gamma_factor_arg <- params$gamma_factor   # NULL when not in space
 
-    suppressMessages(
-      capture.output(
-        invisible(returned_dict <- objective_opt(
-          dataset      = dataset,
-          config       = config,
-          lambda_      = params$lambda_,
-          gamma_factor = gamma_factor_arg,
-          gamma        = params$gamma,
-          p_prime      = params$p_prime,
-          W_prime      = W_prime
-        )),
-        file = "/dev/null"
+      suppressMessages(
+        capture.output(
+          invisible(returned_dict <- objective_opt(
+            dataset      = dataset,
+            config       = config,
+            lambda_      = params$lambda_,
+            gamma_factor = gamma_factor_arg,
+            gamma        = params$gamma,
+            p_prime      = params$p_prime,
+            W_prime      = W_prime
+          )),
+          file = "/dev/null"
+        )
       )
-    )
 
-    if (is.null(returned_dict) ||
+      if (is.null(returned_dict) ||
         (!is.null(returned_dict$status) && returned_dict$status != "OK")) {
+        return(NULL)
+      }
+
+      duration <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+
+      row <- list(
+        lambda_      = params$lambda_,
+        gamma        = params$gamma,
+        gamma_factor = params$gamma_factor %||% NA_real_,
+        p_prime      = params$p_prime[1L, 1L],
+        loss         = returned_dict$loss,
+        constraint   = returned_dict$constraint,
+        status       = returned_dict$status,
+        duration     = duration
+      )
+
+      if (!is.null(returned_dict$current_params)) {
+        cp <- returned_dict$current_params
+        cp <- cp[!names(cp) %in% c("gamma", "lambda_", "p_prime")]
+        # FIX: ensure every cp field is a length-1 scalar so as.data.frame() works.
+        # NULL or length-0 fields from nmf_lbfgsb cause "differing number of rows".
+        cp <- lapply(cp, function(v) {
+          if (is.null(v) || length(v) == 0L) return(NA_real_)
+          if (length(v) == 1L) return(v)
+          v[[1L]]
+        })
+        row <- c(row, cp)
+      }
+
+      list(df = as.data.frame(row, check.names = FALSE),
+        W  = returned_dict$W,
+        H  = returned_dict$H)
+
+    },
+    error = function(e) {
+      message("objective_wrapper error: ", conditionMessage(e))
       return(NULL)
-    }
-
-    duration <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
-
-    row <- list(
-      lambda_      = params$lambda_,
-      gamma        = params$gamma,
-      gamma_factor = params$gamma_factor %||% NA_real_,
-      p_prime      = params$p_prime[1L, 1L],
-      loss         = returned_dict$loss,
-      constraint   = returned_dict$constraint,
-      status       = returned_dict$status,
-      duration     = duration
-    )
-
-    if (!is.null(returned_dict$current_params)) {
-      cp <- returned_dict$current_params
-      cp <- cp[!names(cp) %in% c("gamma", "lambda_", "p_prime")]
-      # FIX: ensure every cp field is a length-1 scalar so as.data.frame() works.
-      # NULL or length-0 fields from nmf_lbfgsb cause "differing number of rows".
-      cp <- lapply(cp, function(v) {
-        if (is.null(v) || length(v) == 0L) return(NA_real_)
-        if (length(v) == 1L) return(v)
-        v[[1L]]
-      })
-      row <- c(row, cp)
-    }
-
-    list(df = as.data.frame(row, check.names = FALSE),
-         W  = returned_dict$W,
-         H  = returned_dict$H)
-
-  }, error = function(e) {
-    message("objective_wrapper error: ", conditionMessage(e))
-    return(NULL)
-  })
+    })
 }
 
 
@@ -258,7 +260,6 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
 #' @return List of sampled parameter values.
 #' @noRd
 .sample_from_space <- function(space) {
-
   # FIX: capture original names BEFORE lapply so they are never lost
   space_names <- names(space)
   if (is.null(space_names) || length(space_names) == 0L)
@@ -273,39 +274,39 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
       # Unnamed positional vector/list — parse by position
       type <- spec[[1]]
       switch(type,
-             "choice"      = list(type = type, choices = spec[-1]),
-             "randint"     = list(type = type,
-                                  low  = as.integer(spec[[2]]),
-                                  high = as.integer(spec[[3]])),
-             "uniform"     = list(type = type,
-                                  low  = as.numeric(spec[[2]]),
-                                  high = as.numeric(spec[[3]])),
-             "quniform"    = list(type = type,
-                                  low  = as.numeric(spec[[2]]),
-                                  high = as.numeric(spec[[3]]),
-                                  q    = as.numeric(spec[[4]])),
-             "loguniform"  = list(type = type,
-                                  low  = as.numeric(spec[[2]]),
-                                  high = as.numeric(spec[[3]])),
-             "qloguniform" = list(type = type,
-                                  low  = as.numeric(spec[[2]]),
-                                  high = as.numeric(spec[[3]]),
-                                  q    = as.numeric(spec[[4]])),
-             "normal"      = list(type = type,
-                                  mu    = as.numeric(spec[[2]]),
-                                  sigma = as.numeric(spec[[3]])),
-             "qnormal"     = list(type = type,
-                                  mu    = as.numeric(spec[[2]]),
-                                  sigma = as.numeric(spec[[3]]),
-                                  q     = as.numeric(spec[[4]])),
-             "lognormal"   = list(type = type,
-                                  mu    = as.numeric(spec[[2]]),
-                                  sigma = as.numeric(spec[[3]])),
-             "qlognormal"  = list(type = type,
-                                  mu    = as.numeric(spec[[2]]),
-                                  sigma = as.numeric(spec[[3]]),
-                                  q     = as.numeric(spec[[4]])),
-             stop(sprintf("Unknown search space type: '%s'", type))
+        "choice"      = list(type = type, choices = spec[-1]),
+        "randint"     = list(type = type,
+          low  = as.integer(spec[[2]]),
+          high = as.integer(spec[[3]])),
+        "uniform"     = list(type = type,
+          low  = as.numeric(spec[[2]]),
+          high = as.numeric(spec[[3]])),
+        "quniform"    = list(type = type,
+          low  = as.numeric(spec[[2]]),
+          high = as.numeric(spec[[3]]),
+          q    = as.numeric(spec[[4]])),
+        "loguniform"  = list(type = type,
+          low  = as.numeric(spec[[2]]),
+          high = as.numeric(spec[[3]])),
+        "qloguniform" = list(type = type,
+          low  = as.numeric(spec[[2]]),
+          high = as.numeric(spec[[3]]),
+          q    = as.numeric(spec[[4]])),
+        "normal"      = list(type = type,
+          mu    = as.numeric(spec[[2]]),
+          sigma = as.numeric(spec[[3]])),
+        "qnormal"     = list(type = type,
+          mu    = as.numeric(spec[[2]]),
+          sigma = as.numeric(spec[[3]]),
+          q     = as.numeric(spec[[4]])),
+        "lognormal"   = list(type = type,
+          mu    = as.numeric(spec[[2]]),
+          sigma = as.numeric(spec[[3]])),
+        "qlognormal"  = list(type = type,
+          mu    = as.numeric(spec[[2]]),
+          sigma = as.numeric(spec[[3]]),
+          q     = as.numeric(spec[[4]])),
+        stop(sprintf("Unknown search space type: '%s'", type))
       )
     }),
     space_names   # <-- FIX: names explicitly restored
@@ -317,29 +318,29 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
     spec <- space[[param_name]]              # FIX: look up the normalised spec
 
     params[[param_name]] <- switch(spec$type,
-                                   "choice"      = sample(spec$choices, 1L)[[1L]],
-                                   "randint"     = sample(seq.int(spec$low, spec$high), 1L),
-                                   "uniform"     = runif(1L, spec$low, spec$high),
-                                   "quniform"    = {
-                                     v <- runif(1L, spec$low, spec$high)
-                                     round(v / spec$q) * spec$q
-                                   },
-                                   "loguniform"  = exp(runif(1L, log(spec$low), log(spec$high))),
-                                   "qloguniform" = {
-                                     v <- exp(runif(1L, log(spec$low), log(spec$high)))
-                                     round(v / spec$q) * spec$q
-                                   },
-                                   "normal"      = rnorm(1L, spec$mu, spec$sigma),
-                                   "qnormal"     = {
-                                     v <- rnorm(1L, spec$mu, spec$sigma)
-                                     round(v / spec$q) * spec$q
-                                   },
-                                   "lognormal"   = rlnorm(1L, spec$mu, spec$sigma),
-                                   "qlognormal"  = {
-                                     v <- rlnorm(1L, spec$mu, spec$sigma)
-                                     round(v / spec$q) * spec$q
-                                   },
-                                   stop(paste("Unknown search space type:", spec$type))
+      "choice"      = sample(spec$choices, 1L)[[1L]],
+      "randint"     = sample(seq.int(spec$low, spec$high), 1L),
+      "uniform"     = runif(1L, spec$low, spec$high),
+      "quniform"    = {
+        v <- runif(1L, spec$low, spec$high)
+        round(v / spec$q) * spec$q
+      },
+      "loguniform"  = exp(runif(1L, log(spec$low), log(spec$high))),
+      "qloguniform" = {
+        v <- exp(runif(1L, log(spec$low), log(spec$high)))
+        round(v / spec$q) * spec$q
+      },
+      "normal"      = rnorm(1L, spec$mu, spec$sigma),
+      "qnormal"     = {
+        v <- rnorm(1L, spec$mu, spec$sigma)
+        round(v / spec$q) * spec$q
+      },
+      "lognormal"   = rlnorm(1L, spec$mu, spec$sigma),
+      "qlognormal"  = {
+        v <- rlnorm(1L, spec$mu, spec$sigma)
+        round(v / spec$q) * spec$q
+      },
+      stop(paste("Unknown search space type:", spec$type))
     )
   }
 
@@ -364,8 +365,8 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
       bars     <- round(width * percent)
       spaces   <- width - bars
       bar_text <- paste0("[", paste(rep("=", bars), collapse = ""),
-                         paste(rep(" ", spaces), collapse = ""),
-                         "] ", sprintf("%3.0f%%", percent * 100))
+        paste(rep(" ", spaces), collapse = ""),
+        "] ", sprintf("%3.0f%%", percent * 100))
       message("\r", bar_text, appendLF = FALSE)
       if (current == total) message()
     }
@@ -504,9 +505,9 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
       if (is.null(x_val)) next
 
       good_vals <- vapply(history[good_idx], function(h) h$params[[pname]] %||% NA_real_,
-                          numeric(1L))
+        numeric(1L))
       bad_vals  <- vapply(history[bad_idx],  function(h) h$params[[pname]] %||% NA_real_,
-                          numeric(1L))
+        numeric(1L))
 
       good_vals <- good_vals[!is.na(good_vals)]
       bad_vals  <- bad_vals[!is.na(bad_vals)]
@@ -568,7 +569,7 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
   valid_methods <- c("tpe", "random", "atpe", "anneal")
   if (!config$hp_method %in% valid_methods)
     stop(paste("Unknown hyperopt algorithm:", config$hp_method,
-               "-- valid options:", paste(valid_methods, collapse = ", ")))
+      "-- valid options:", paste(valid_methods, collapse = ", ")))
   return(config)
 }
 
@@ -591,22 +592,22 @@ research_hyperOpt <- function(objective_opt, dataset, config_path,
   .n   <- function(x) as.numeric(x)
 
   switch(type,
-         "choice"      = list(type = "choice",      choices = lapply(specs[-1], .n)),
-         "randint"     = list(type = "randint",      low = as.integer(specs[[2]]),
-                              high = as.integer(specs[[3]])),
-         "uniform"     = list(type = "uniform",      low = .n(specs[[2]]), high = .n(specs[[3]])),
-         "quniform"    = list(type = "quniform",     low = .n(specs[[2]]), high = .n(specs[[3]]),
-                              q = .n(specs[[4]])),
-         "loguniform"  = list(type = "loguniform",   low = .n(specs[[2]]), high = .n(specs[[3]])),
-         "qloguniform" = list(type = "qloguniform",  low = .n(specs[[2]]), high = .n(specs[[3]]),
-                              q = .n(specs[[4]])),
-         "normal"      = list(type = "normal",       mu = .n(specs[[2]]), sigma = .n(specs[[3]])),
-         "qnormal"     = list(type = "qnormal",      mu = .n(specs[[2]]), sigma = .n(specs[[3]]),
-                              q = .n(specs[[4]])),
-         "lognormal"   = list(type = "lognormal",    mu = .n(specs[[2]]), sigma = .n(specs[[3]])),
-         "qlognormal"  = list(type = "qlognormal",   mu = .n(specs[[2]]), sigma = .n(specs[[3]]),
-                              q = .n(specs[[4]])),
-         stop(sprintf("Unknown search space type '%s' for parameter '%s'.", type, arg))
+    "choice"      = list(type = "choice",      choices = lapply(specs[-1], .n)),
+    "randint"     = list(type = "randint",      low = as.integer(specs[[2]]),
+      high = as.integer(specs[[3]])),
+    "uniform"     = list(type = "uniform",      low = .n(specs[[2]]), high = .n(specs[[3]])),
+    "quniform"    = list(type = "quniform",     low = .n(specs[[2]]), high = .n(specs[[3]]),
+      q = .n(specs[[4]])),
+    "loguniform"  = list(type = "loguniform",   low = .n(specs[[2]]), high = .n(specs[[3]])),
+    "qloguniform" = list(type = "qloguniform",  low = .n(specs[[2]]), high = .n(specs[[3]]),
+      q = .n(specs[[4]])),
+    "normal"      = list(type = "normal",       mu = .n(specs[[2]]), sigma = .n(specs[[3]])),
+    "qnormal"     = list(type = "qnormal",      mu = .n(specs[[2]]), sigma = .n(specs[[3]]),
+      q = .n(specs[[4]])),
+    "lognormal"   = list(type = "lognormal",    mu = .n(specs[[2]]), sigma = .n(specs[[3]])),
+    "qlognormal"  = list(type = "qlognormal",   mu = .n(specs[[2]]), sigma = .n(specs[[3]]),
+      q = .n(specs[[4]])),
+    stop(sprintf("Unknown search space type '%s' for parameter '%s'.", type, arg))
   )
 }
 
