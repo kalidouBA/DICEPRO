@@ -29,9 +29,6 @@
 #'   function. The regularization includes a penalty for the sum of cell type proportions and a scaling factor.
 #'   The optimization minimizes the objective function subject to constraints on the cell type proportions.
 #'
-#' @importFrom lbfgsb3c lbfgsb3
-#' @importFrom stats sd
-#'
 #' @export
 
 nmf_lbfgsb <- function(r_dataset, W_prime = 0, p_prime = 0, lambda_ = 10, gamma_par = 100, path2save = "",

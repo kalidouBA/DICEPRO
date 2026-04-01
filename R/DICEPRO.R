@@ -206,9 +206,6 @@
 #'   \code{\link{best_hyperParams}} for Pareto selection,
 #'   \code{\link{plot_hyperopt}} for the optimisation report plot.
 #'
-#' @importFrom grDevices cairo_pdf
-#' @importFrom ggplot2 ggsave
-#' @importFrom htmlwidgets saveWidget
 #' @export
 DICEPRO <- function(reference, bulk,
                     methodDeconv          = "CSx",
@@ -365,7 +362,7 @@ DICEPRO <- function(reference, bulk,
     width    = 4L * length(hp_params),
     height   = 4L * length(hp_params) + 2L,
     units    = "in",
-    device   = cairo_pdf
+    device   = grDevices::cairo_pdf
   )
 
   if (inherits(out$plot, "plotly")) {

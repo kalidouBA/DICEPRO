@@ -244,8 +244,6 @@
 #'   \item{plot}{Plotly figure of the Pareto frontier.}
 #' }
 #'
-#' @importFrom dplyr mutate filter
-#' @importFrom KraljicMatrix get_frontier
 #' @export
 best_hyperParams <- function(trials_df,
                              W,

@@ -17,42 +17,29 @@
 #' @param base_family Character. Font family (default \code{"Helvetica"}).
 #'
 #' @return A \code{ggplot2} theme object.
-#'
-#' @importFrom ggplot2 theme_bw theme element_text element_blank element_line
-#'   element_rect unit %+replace%
 #' @keywords internal
 #' @noRd
 .theme_dicepro <- function(base_size = 9, base_family = "Helvetica") {
 
   ggplot2::theme_bw(base_size = base_size, base_family = base_family) %+replace%
     ggplot2::theme(
-      # Strip labels
       strip.text.x     = ggplot2::element_text(size = base_size),
       strip.text.y     = ggplot2::element_text(size = base_size, angle = 90),
       strip.background = ggplot2::element_blank(),
-
-      # Axes
       axis.text.x      = ggplot2::element_text(size = base_size),
       axis.text.y      = ggplot2::element_text(size = base_size, hjust = 1),
       axis.ticks       = ggplot2::element_line(colour = "black"),
       axis.title.x     = ggplot2::element_text(size = base_size),
       axis.title.y     = ggplot2::element_text(size = base_size, angle = 90),
-      # FIX: size = 1 deprecated since ggplot2 3.4 → linewidth
       axis.line.x      = ggplot2::element_line(color = "black", linewidth = 0.5),
       axis.line.y      = ggplot2::element_line(color = "black", linewidth = 0.5),
-
-      # Panel
       panel.background = ggplot2::element_blank(),
       panel.border     = ggplot2::element_blank(),
       panel.grid.major = ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank(),
-
-      # Plot
       plot.background  = ggplot2::element_blank(),
       plot.margin      = ggplot2::unit(c(0.5, 1, 1, 1), "lines"),
       plot.title       = ggplot2::element_text(hjust = 0.5),
-
-      # Legend
       legend.text      = ggplot2::element_text(size = base_size),
       legend.key.size  = ggplot2::unit(0.5, "cm")
     )
@@ -86,7 +73,6 @@
 #' heatmap_abundances(df)
 #' }
 #'
-#' @importFrom ggplot2 ggplot aes geom_raster scale_fill_viridis_c labs
 #' @export
 heatmap_abundances <- function(res2plot, base_size = 9) {
 
@@ -144,7 +130,6 @@ heatmap_abundances <- function(res2plot, base_size = 9) {
 #' metric_plot(df, ylab = "NRMSE")
 #' }
 #'
-#' @importFrom ggplot2 ggplot aes geom_line labs
 #' @export
 metric_plot <- function(perf2plot,
                         ylab      = "Error between folds",

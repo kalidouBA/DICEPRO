@@ -13,9 +13,6 @@
 #' @details This function allows selection among different deconvolution algorithms. The output is a matrix with normalized estimated cell fractions per sample.
 #'
 #' @seealso \code{run_CSx}, \code{dcq}, \code{fardeep}
-#'
-#' @importFrom ComICS dcq
-#' @importFrom FARDEEP fardeep
 #' @export
 running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_email = NULL, cibersortx_token = NULL) {
   dimname_ <- dimnames(reference)
@@ -35,7 +32,7 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
   if (methodDeconv == "CSx") {
     out_Dec <- run_CSx(bulk, reference, cibersortx_email, cibersortx_token)
   } else if (methodDeconv == "DCQ") {
-    out_Dec <- t(dcq(
+    out_Dec <- t(ComICS::dcq(
       reference_data = refIntersect,
       mix_data = bulkIntersect,
       marker_set = as.data.frame(row.names(refIntersect)),
@@ -45,7 +42,7 @@ running_method <- function(bulk, reference, methodDeconv = "CSx", cibersortx_ema
     )$average)
     out_Dec <- apply(out_Dec, 2, function(x) ifelse(x < 0, 0, x))
   } else if (methodDeconv == "FARDEEP") {
-    out_Dec <- t(fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta)
+    out_Dec <- t(FARDEEP::fardeep(X = reference, Y = bulk, nn = TRUE, intercept = TRUE, permn = 100, QN = FALSE)$abs.beta)
   } else {
     stop("methodDeconv not supported")
   }

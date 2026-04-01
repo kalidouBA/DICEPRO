@@ -52,8 +52,4 @@ Imports:
 Suggests:
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0),
-    NMF,
-    ADAPTS,
-    insight,
-    Metrics
+    testthat (>= 3.0.0)
