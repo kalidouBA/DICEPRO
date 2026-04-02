@@ -1,7 +1,7 @@
 # =============================================================================
-# DICEPRO Main Function
+# dicepro Main Function
 #
-# Public API  : DICEPRO()
+# Public API  : dicepro()
 # Private fns : .normalize_zscore_per_gene()
 # =============================================================================
 
@@ -41,13 +41,13 @@
 
 
 # -----------------------------------------------------------------------------
-# DICEPRO  [public]
+# dicepro  [public]
 # -----------------------------------------------------------------------------
 
 #' Semi-supervised bulk RNA-seq deconvolution with NMF hyperparameter
 #' optimisation
 #'
-#' \code{DICEPRO} performs cell-type deconvolution of bulk RNA-seq data by
+#' \code{dicepro} performs cell-type deconvolution of bulk RNA-seq data by
 #' combining a supervised deconvolution step (estimating proportions of
 #' \emph{known} cell types) with an unsupervised NMF step (discovering and
 #' quantifying \emph{unknown} cell types). Hyperparameters
@@ -69,7 +69,7 @@
 #'   \item \strong{Best configuration}: \code{\link{best_hyperParams}}
 #'     selects the knee point on the Pareto frontier.
 #'   \item \strong{Report}: plots are saved under
-#'     \code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
+#'     \code{output_path/dicepro_<bulkName>_<refName>/report/}.
 #' }
 #'
 #' @param reference    Numeric matrix of reference gene expression profiles,
@@ -118,7 +118,7 @@
 #' @param normalize    Logical scalar. When \code{TRUE} (default), both
 #'   matrices are z-score normalised per gene before deconvolution.
 #'
-#' @return An object of class \code{"DICEPRO"} (a named list), or
+#' @return An object of class \code{"dicepro"} (a named list), or
 #'   \code{invisible(NULL)} when no valid hyperparameter configuration is
 #'   found. The list contains:
 #' \describe{
@@ -137,7 +137,7 @@
 #'   \code{\link{best_hyperParams}}, \code{\link{plot_hyperopt}}.
 #'
 #' @export
-DICEPRO <- function(reference, bulk,
+dicepro <- function(reference, bulk,
                     methodDeconv          = "CSx",
                     cibersortx_email      = NULL,
                     cibersortx_token      = NULL,
@@ -229,7 +229,7 @@ DICEPRO <- function(reference, bulk,
   dataset <- list(B = bulk, W = reference, P = out_Dec)
 
   # ---- Output directory ------------------------------------------------------
-  dirName    <- paste0("DICEPRO_", bulkName, "_", refName)
+  dirName    <- paste0("dicepro_", bulkName, "_", refName)
   if (is.null(output_path)) output_path <- getwd()
   output_dir <- file.path(output_path, dirName)
 
@@ -261,7 +261,7 @@ DICEPRO <- function(reference, bulk,
   # ---- Guard: all trials failed ----------------------------------------------
   if (is.null(out)) {
     warning(
-      "DICEPRO: no valid hyperparameter configuration found. ",
+      "dicepro: no valid hyperparameter configuration found. ",
       "Try increasing 'hp_max_evals' or checking dataset dimensions."
     )
     return(invisible(NULL))
@@ -269,7 +269,7 @@ DICEPRO <- function(reference, bulk,
 
   # ---- Hyperparameter optimisation plot --------------------------------------
   out$plot_hyperopt <- plot_hyperopt(
-    x      = structure(out, class = "DICEPRO"),
+    x      = structure(out, class = "dicepro"),
     params = hp_params
   )
 
@@ -296,5 +296,5 @@ DICEPRO <- function(reference, bulk,
 
   message(sprintf("Results saved to: %s", report_dir))
 
-  structure(out, class = "DICEPRO")
+  structure(out, class = "dicepro")
 }

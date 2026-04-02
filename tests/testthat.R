@@ -7,14 +7,14 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(DICEPRO)
+library(dicepro)
 
 # ---- Global test options --------------------------------------------------
 # Suppress progress bars and messages during tests to keep output clean.
 options(
-  DICEPRO.verbose  = FALSE,
+  dicepro.verbose  = FALSE,
   progress_enabled = FALSE
 )
 
 # ---- Run all tests --------------------------------------------------------
-test_check("DICEPRO")
+test_check("dicepro")

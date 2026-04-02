@@ -1,13 +1,13 @@
 # =============================================================================
-# Plot methods for DICEPRO objects
+# Plot methods for dicepro objects
 #
-# Public API : plot.DICEPRO(), plot_hyperopt(), plot_hyperopt.DICEPRO()
+# Public API : plot.dicepro(), plot_hyperopt(), plot_hyperopt.dicepro()
 # Private    : .param_labels, .loss_label, .get_label(), .make_plot()
 # =============================================================================
 
 
 # -----------------------------------------------------------------------------
-# plot.DICEPRO
+# plot.dicepro
 # -----------------------------------------------------------------------------
 
 #' Plot cell abundance heatmap and error plot
@@ -16,18 +16,18 @@
 #' \pkg{patchwork}. Requires at least two unique iterations in
 #' \code{x$Matrix_prediction}.
 #'
-#' @param x   A \code{DICEPRO} object as returned by
+#' @param x   A \code{dicepro} object as returned by
 #'   \code{best_hyperParams}.
 #' @param ... Additional arguments (currently unused; reserved for future use).
 #'
 #' @return A \pkg{patchwork} figure, or \code{invisible(NULL)} with a warning
 #'   when only one iteration is present.
 #'
-#' @method plot DICEPRO
+#' @method plot dicepro
 #' @importFrom patchwork wrap_plots
 #' @seealso \code{heatmap_abundances}, \code{metric_plot}
 #' @export
-plot.DICEPRO <- function(x, ...) {
+plot.dicepro <- function(x, ...) {
 
   if (length(unique(x$Matrix_prediction$Iterate)) > 1L) {
     patchwork::wrap_plots(
@@ -65,32 +65,32 @@ plot.DICEPRO <- function(x, ...) {
 #' Plot hyperparameter optimisation report
 #'
 #' Generic function for plotting the hyperparameter search report stored in a
-#' \code{DICEPRO} object. Dispatches to \code{plot_hyperopt.DICEPRO}.
+#' \code{dicepro} object. Dispatches to \code{plot_hyperopt.dicepro}.
 #'
 #' @param x   An object for which a \code{plot_hyperopt} method exists
-#'   (currently only \code{DICEPRO}).
+#'   (currently only \code{dicepro}).
 #' @param ... Arguments passed to the method; see
-#'   \code{plot_hyperopt.DICEPRO} for the full list.
+#'   \code{plot_hyperopt.dicepro} for the full list.
 #'
 #' @return Whatever the dispatched method returns (a \code{patchwork} figure
-#'   for \code{DICEPRO} objects).
+#'   for \code{dicepro} objects).
 #'
-#' @seealso \code{plot_hyperopt.DICEPRO}
+#' @seealso \code{plot_hyperopt.dicepro}
 #' @export
 plot_hyperopt <- function(x, ...) UseMethod("plot_hyperopt")
 
 
 # -----------------------------------------------------------------------------
-# plot_hyperopt.DICEPRO  method
+# plot_hyperopt.dicepro  method
 # -----------------------------------------------------------------------------
 
-#' Plot hyperparameter optimisation report for a DICEPRO object
+#' Plot hyperparameter optimisation report for a dicepro object
 #'
 #' Builds a scatter-matrix of all evaluated \eqn{(\lambda, \gamma, p')}
 #' configurations, colour-coded by loss value, with violin/bar marginals for
 #' the top 5\% of trials. Reads all data from \code{x$trials} -- no file I/O.
 #'
-#' @param x              A \code{DICEPRO} object. Trials are read from
+#' @param x              A \code{dicepro} object. Trials are read from
 #'   \code{x$trials}.
 #' @param params         Character vector of hyperparameter column names to
 #'   display (e.g. \code{c("lambda_", "gamma", "p_prime")}).
@@ -117,7 +117,7 @@ plot_hyperopt <- function(x, ...) UseMethod("plot_hyperopt")
 #'
 #' @examples
 #' \dontrun{
-#' out <- DICEPRO(reference = BlueCode, bulk = CellMixtures,
+#' out <- dicepro(reference = BlueCode, bulk = CellMixtures,
 #'                methodDeconv = "FARDEEP", hp_max_evals = 50L)
 #' plot_hyperopt(out, params = c("lambda_", "gamma", "p_prime"))
 #' }
@@ -126,7 +126,7 @@ plot_hyperopt <- function(x, ...) UseMethod("plot_hyperopt")
 #' @import  ggplot2
 #' @importFrom patchwork wrap_plots plot_layout plot_annotation
 #' @export
-plot_hyperopt.DICEPRO <- function(x,
+plot_hyperopt.dicepro <- function(x,
                                   params,
                                   metric         = "loss",
                                   loss_metric    = "loss",

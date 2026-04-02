@@ -35,7 +35,7 @@ reflecting realistic tissue compartment organization.
 }
 \details{
 The \code{"hierarchical"} scenario implements the two-level Dirichlet model
-described in the DicePro simulation framework. At the first level, samples
+described in the dicepro simulation framework. At the first level, samples
 are drawn from five major tissue compartments (Immune, Stromal, Endothelial,
 Epithelial, Muscle) using compartment-specific concentration parameters
 reflecting expected relative abundances. At the second level, each

@@ -1,7 +1,7 @@
-test_that("DICEPRO runs on simulated data with incomplete reference", {
+test_that("dicepro runs on simulated data with incomplete reference", {
   skip_on_cran()
 
-  library(DICEPRO)
+  library(dicepro)
   set.seed(42L)
 
   nCellsType <- 5L
@@ -33,8 +33,8 @@ test_that("DICEPRO runs on simulated data with incomplete reference", {
 
   expect_equal(ncol(ref_incomplete), nCellsType - 1L)
 
-  # ---- Run DICEPRO --------------------------------------------------------
-  out <- DICEPRO(
+  # ---- Run dicepro --------------------------------------------------------
+  out <- dicepro(
     reference             = ref_incomplete,
     bulk                  = as.matrix(sim$B),
     methodDeconv          = "FARDEEP",
@@ -53,7 +53,7 @@ test_that("DICEPRO runs on simulated data with incomplete reference", {
 
 
   # ---- Check output structure ---------------------------------------------
-  expect_s3_class(out, "DICEPRO")
+  expect_s3_class(out, "dicepro")
   expect_named(out, c("hyperparameters", "metrics", "trials",
                       "W", "H", "plot", "plot_hyperopt"),
                ignore.order = TRUE)

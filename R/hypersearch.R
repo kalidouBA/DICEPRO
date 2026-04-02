@@ -43,7 +43,7 @@ contains_nan_or_inf <- function(value) {
 #' @param gamma_par Numeric. Regularization parameter gamma.
 #' @param path2save Character. Path to save results.
 #' @return List. Output from `nmf_lbfgsb`.
-#' @import DICEPRO
+#' @import dicepro
 #' @export
 nmf_lbfgsb_hyperOpt <- function(dataset, W_prime = NULL, p_prime = NULL,
                                 lambda_ = 10, gamma_par = 100, path2save = "") {
@@ -362,7 +362,7 @@ objective_wrapper <- function(objective_opt, dataset, config, params, W_prime = 
 }
 
 
-#' Hyperparameter optimisation for DICEPRO
+#' Hyperparameter optimisation for dicepro
 #'
 #' @param objective_opt  Function passed verbatim to \code{objective_wrapper()}.
 #' @param dataset        List with \code{$B}, \code{$W}, \code{$P}.
@@ -377,8 +377,6 @@ research_hyperOpt <- function(objective_opt, dataset,
                               config,                # <-- plus config_path
                               hp_space = NULL,
                               W_prime = NULL) {
-
-  # MODIF: validation directe de l'objet config, sans passer par le disque.
   config <- .parse_config(config)
   set.seed(config$seed %||% 42L)
 
@@ -564,14 +562,6 @@ research_hyperOpt <- function(objective_opt, dataset,
                "-- valid options:", paste(valid_methods, collapse = ", ")))
   return(config)
 }
-
-
-# MODIF: .get_conf_from_json() supprimée — plus utilisée nulle part.
-# Si un jour tu dois persister la config sur disque, utilise :
-#   saveRDS(hyperopt_config, file = paths$config_path)   # écriture
-#   config <- readRDS(paths$config_path)                 # lecture
-# Ces deux fonctions font partie de R base, aucune dépendance requise.
-
 
 #' Parse hyperopt search space specification
 #' @noRd

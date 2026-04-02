@@ -1,5 +1,5 @@
 
-# DICEPRO
+# dicepro
 
 <!-- badges -->
 
@@ -18,7 +18,7 @@ the reference signature matrix is *complete* — i.e., that every cell
 population present in the bulk sample is represented. In practice this
 assumption rarely holds, leading to biased estimates.
 
-**DICEPRO** addresses this limitation through an iterative joint
+**dicepro** addresses this limitation through an iterative joint
 optimisation that simultaneously:
 
 - estimates cell-type proportions for *known* populations (supervised
@@ -53,14 +53,14 @@ knee-point procedure, so no manual tuning is required.
 ### From CRAN (stable)
 
 ``` r
-install.packages("DICEPRO")
+install.packages("dicepro")
 ```
 
 ### From GitHub (development)
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("kalidouBA/DICEPRO")
+remotes::install_github("kalidouBA/dicepro")
 ```
 
 ------------------------------------------------------------------------
@@ -70,7 +70,7 @@ remotes::install_github("kalidouBA/DICEPRO")
 ### Simulated Data
 
 ``` r
-library(DICEPRO)
+library(dicepro)
 set.seed(2101)
 
 # 1. Simulate reference, proportions, and noisy bulk
@@ -83,8 +83,8 @@ sim <- simulation(
   sigma_tech = 0.07
 )
 
-# 2. Run DICEPRO
-out <- DICEPRO(
+# 2. Run dicepro
+out <- dicepro(
   reference             = as.matrix(sim$W),
   bulk                  = as.matrix(sim$B),
   methodDeconv          = "FARDEEP",
@@ -106,12 +106,12 @@ out$plot_hyperopt      # hyperparameter scatter matrix
 ### Real Data (BlueCode + CellMixtures)
 
 ``` r
-library(DICEPRO)
+library(dicepro)
 
 data(BlueCode)      # 34-cell-type reference (G x 34)
 data(CellMixtures)  # 12 mixed bulk samples  (G x 12)
 
-out <- DICEPRO(
+out <- dicepro(
   reference             = BlueCode,
   bulk                  = CellMixtures,
   methodDeconv          = "FARDEEP",
@@ -147,10 +147,10 @@ Request a token at <https://cibersortx.stanford.edu/getoken.php>. Tokens
 are tied to your account and expire periodically; request a new one when
 the existing token has expired.
 
-**Step 3 — Run DICEPRO with CIBERSORTx**
+**Step 3 — Run dicepro with CIBERSORTx**
 
 ``` r
-out <- DICEPRO(
+out <- dicepro(
   reference        = BlueCode,
   bulk             = CellMixtures,
   methodDeconv     = "CSx",
@@ -169,7 +169,7 @@ Other supported deconvolution backends can be listed with
 
 ## Output Structure
 
-`DICEPRO()` returns an S3 object of class `"DICEPRO"` with the following
+`dicepro()` returns an S3 object of class `"dicepro"` with the following
 elements:
 
 | Element | Description |
@@ -218,15 +218,15 @@ See `?BlueCode` and `?CellMixtures` for full documentation.
 Two vignettes provide step-by-step walkthroughs:
 
 ``` r
-vignette("vignette-simulation", package = "DICEPRO")
-vignette("vignette-real-data",  package = "DICEPRO")
+vignette("vignette-simulation", package = "dicepro")
+vignette("vignette-real-data",  package = "dicepro")
 ```
 
 ------------------------------------------------------------------------
 
 ## Citation
 
-If you use DICEPRO in your research, please cite:
+If you use dicepro in your research, please cite:
 
 > *When Less Is Not More\]{When Less Is Not More: Mitigates the Impact
 > of Incomplete Reference Matrices on Cellular Frequency Deconvolution*

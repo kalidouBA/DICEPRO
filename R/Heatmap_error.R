@@ -7,7 +7,7 @@
 # .theme_dicepro  [private]
 # -----------------------------------------------------------------------------
 
-#' Shared ggplot2 Theme for DICEPRO Plots
+#' Shared ggplot2 Theme for dicepro Plots
 #'
 #' A clean, publication-ready theme based on \code{theme_bw}, with blank panels,
 #' visible axis lines, and consistent text sizing. Used internally by all

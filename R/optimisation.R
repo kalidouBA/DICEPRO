@@ -1,4 +1,4 @@
-#' Run a DICEPRO hyperparameter optimisation experiment
+#' Run a dicepro hyperparameter optimisation experiment
 #'
 #' Builds the hyperparameter search space from \code{hspaceTechniqueChoose},
 #' and runs \code{research_hyperOpt()}, returning the collected trials.

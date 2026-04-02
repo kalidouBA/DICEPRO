@@ -2,7 +2,7 @@
 % Please edit documentation in R/hypersearch.R
 \name{research_hyperOpt}
 \alias{research_hyperOpt}
-\title{Hyperparameter optimisation for DICEPRO}
+\title{Hyperparameter optimisation for dicepro}
 \usage{
 research_hyperOpt(
   objective_opt,
@@ -27,5 +27,5 @@ research_hyperOpt(
 list(trials, W, H).
 }
 \description{
-Hyperparameter optimisation for DICEPRO
+Hyperparameter optimisation for dicepro
 }

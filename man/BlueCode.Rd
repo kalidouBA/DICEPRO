@@ -13,7 +13,7 @@ are non-negative read counts prior to normalisation; apply
 downstream analyses.
 }
 \source{
-BlueCode reference matrix constructed for the DicePro benchmarking
+BlueCode reference matrix constructed for the dicepro benchmarking
 framework from ENCODE (\url{https://www.encodeproject.org}) and GEO
 (\url{https://www.ncbi.nlm.nih.gov/geo}) sorted RNA-seq profiles.
 See the accompanying manuscript for full details on data sources,
@@ -26,7 +26,7 @@ data(BlueCode)
 Gene expression reference matrix for bulk RNA-seq deconvolution,
 derived from sorted cell populations spanning immune, stromal, endothelial,
 epithelial, and muscle compartments. BlueCode serves as the default
-reference for DICEPRO and directly informs the hierarchical Dirichlet
+reference for dicepro and directly informs the hierarchical Dirichlet
 simulation framework.
 }
 \details{
@@ -122,8 +122,8 @@ are biologically realistic with respect to BlueCode's cell-type coverage.
 dim(BlueCode)          # G x 34
 colnames(BlueCode)     # 34 cell-type labels
 
-# Use directly in DICEPRO
-out <- DICEPRO(
+# Use directly in dicepro
+out <- dicepro(
   reference    = BlueCode,
   bulk         = my_bulk_matrix,
   methodDeconv = "FARDEEP"

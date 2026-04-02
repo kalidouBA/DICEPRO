@@ -2,7 +2,7 @@
 % Please edit documentation in R/optimisation.R
 \name{run_experiment}
 \alias{run_experiment}
-\title{Run a DICEPRO hyperparameter optimisation experiment}
+\title{Run a dicepro hyperparameter optimisation experiment}
 \usage{
 run_experiment(
   dataset,

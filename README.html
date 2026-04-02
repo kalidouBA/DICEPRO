@@ -635,7 +635,7 @@ Object.defineProperty(e,"__esModule",{value:!0}),e.mhchemParser=void 0;var r=fun
 
 <body>
 
-<h1 id="dicepro">DICEPRO</h1>
+<h1 id="dicepro">dicepro</h1>
 <!-- badges -->
 
 <!-- badges -->
@@ -650,7 +650,7 @@ types from a mixed gene expression profile. Most existing methods assume
 that the reference signature matrix is <em>complete</em> — i.e., that
 every cell population present in the bulk sample is represented. In
 practice this assumption rarely holds, leading to biased estimates.</p>
-<p><strong>DICEPRO</strong> addresses this limitation through an
+<p><strong>dicepro</strong> addresses this limitation through an
 iterative joint optimisation that simultaneously:</p>
 <ul>
 <li>estimates cell-type proportions for <em>known</em> populations
@@ -683,14 +683,14 @@ scatter matrix saved automatically to
 <hr />
 <h2 id="installation">Installation</h2>
 <h3 id="from-cran-stable">From CRAN (stable)</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;DICEPRO&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;dicepro&quot;</span>)</span></code></pre></div>
 <h3 id="from-github-development">From GitHub (development)</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># install.packages(&quot;remotes&quot;)</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;kalidouBA/DICEPRO&quot;</span>)</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;kalidouBA/dicepro&quot;</span>)</span></code></pre></div>
 <hr />
 <h2 id="quick-start">Quick Start</h2>
 <h3 id="simulated-data">Simulated Data</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(DICEPRO)</span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(dicepro)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2101</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># 1. Simulate reference, proportions, and noisy bulk</span></span>
@@ -703,8 +703,8 @@ scatter matrix saved automatically to
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">sigma_tech =</span> <span class="fl">0.07</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>)</span>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co"># 2. Run DICEPRO</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">DICEPRO</span>(</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co"># 2. Run dicepro</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">dicepro</span>(</span>
 <span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="at">reference             =</span> <span class="fu">as.matrix</span>(sim<span class="sc">$</span>W),</span>
 <span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="at">bulk                  =</span> <span class="fu">as.matrix</span>(sim<span class="sc">$</span>B),</span>
 <span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">methodDeconv          =</span> <span class="st">&quot;FARDEEP&quot;</span>,</span>
@@ -723,12 +723,12 @@ scatter matrix saved automatically to
 <span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>out<span class="sc">$</span>plot_hyperopt      <span class="co"># hyperparameter scatter matrix</span></span></code></pre></div>
 <h3 id="real-data-bluecode--cellmixtures">Real Data (BlueCode +
 CellMixtures)</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(DICEPRO)</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(dicepro)</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">data</span>(BlueCode)      <span class="co"># 34-cell-type reference (G x 34)</span></span>
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="fu">data</span>(CellMixtures)  <span class="co"># 12 mixed bulk samples  (G x 12)</span></span>
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">DICEPRO</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">dicepro</span>(</span>
 <span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">reference             =</span> BlueCode,</span>
 <span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">bulk                  =</span> CellMixtures,</span>
 <span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">methodDeconv          =</span> <span class="st">&quot;FARDEEP&quot;</span>,</span>
@@ -752,8 +752,8 @@ open it, log in, then pull the CIBERSORTx image from a terminal:</p>
 <p>Request a token at <a href="https://cibersortx.stanford.edu/getoken.php">https://cibersortx.stanford.edu/getoken.php</a>.
 Tokens are tied to your account and expire periodically; request a new
 one when the existing token has expired.</p>
-<p><strong>Step 3 — Run DICEPRO with CIBERSORTx</strong></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">DICEPRO</span>(</span>
+<p><strong>Step 3 — Run dicepro with CIBERSORTx</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">dicepro</span>(</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">reference        =</span> BlueCode,</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">bulk             =</span> CellMixtures,</span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">methodDeconv     =</span> <span class="st">&quot;CSx&quot;</span>,</span>
@@ -767,8 +767,8 @@ one when the existing token has expired.</p>
 <code>?running_method</code>.</p>
 <hr />
 <h2 id="output-structure">Output Structure</h2>
-<p><code>DICEPRO()</code> returns an S3 object of class
-<code>&quot;DICEPRO&quot;</code> with the following elements:</p>
+<p><code>dicepro()</code> returns an S3 object of class
+<code>&quot;dicepro&quot;</code> with the following elements:</p>
 <table>
 <thead>
 <tr>
@@ -827,11 +827,11 @@ documentation.</p>
 <hr />
 <h2 id="vignettes">Vignettes</h2>
 <p>Two vignettes provide step-by-step walkthroughs:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">&quot;vignette-simulation&quot;</span>, <span class="at">package =</span> <span class="st">&quot;DICEPRO&quot;</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">&quot;vignette-real-data&quot;</span>,  <span class="at">package =</span> <span class="st">&quot;DICEPRO&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">&quot;vignette-simulation&quot;</span>, <span class="at">package =</span> <span class="st">&quot;dicepro&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">vignette</span>(<span class="st">&quot;vignette-real-data&quot;</span>,  <span class="at">package =</span> <span class="st">&quot;dicepro&quot;</span>)</span></code></pre></div>
 <hr />
 <h2 id="citation">Citation</h2>
-<p>If you use DICEPRO in your research, please cite:</p>
+<p>If you use dicepro in your research, please cite:</p>
 <blockquote>
 <p><em>When Less Is Not More]{When Less Is Not More: Mitigates the
 Impact of Incomplete Reference Matrices on Cellular Frequency

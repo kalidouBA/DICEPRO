@@ -37,7 +37,7 @@ utils::globalVariables(c(
 .generate_experiment_paths <- function(output_dir, bulkName, refName) {
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
-  data_dir <- file.path(output_dir, paste0("DICEPRO_",bulkName, "_", refName))
+  data_dir <- file.path(output_dir, paste0("dicepro_",bulkName, "_", refName))
   dir.create(data_dir, showWarnings = FALSE, recursive = TRUE)
 
 

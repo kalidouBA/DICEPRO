@@ -73,7 +73,7 @@
 #'
 #' @details
 #' The \code{"hierarchical"} scenario implements the two-level Dirichlet model
-#' described in the DicePro simulation framework. At the first level, samples
+#' described in the dicepro simulation framework. At the first level, samples
 #' are drawn from five major tissue compartments (Immune, Stromal, Endothelial,
 #' Epithelial, Muscle) using compartment-specific concentration parameters
 #' reflecting expected relative abundances. At the second level, each
@@ -345,7 +345,7 @@ generate_ref_matrix <- function(loi              = "rpois",
 #' Generates synthetic bulk RNA-seq expression matrices by linearly mixing
 #' reference cell-type profiles according to simulated proportions, with
 #' optional biological and technical noise. The noise model is consistent
-#' with the Gaussian likelihood framework underlying DicePro's objective
+#' with the Gaussian likelihood framework underlying dicepro's objective
 #' function: biological noise is applied multiplicatively and technical
 #' noise additively, so that normalization to a Gaussian scale prior to
 #' deconvolution is a formal requirement.
@@ -413,7 +413,7 @@ generate_ref_matrix <- function(loi              = "rpois",
 #' and \eqn{\varepsilon^{\text{tech}} \sim \mathcal{N}(0, \sigma^2_{\text{tech}})}.
 #' Negative values are clipped to zero. This noise structure motivates
 #' Gaussian normalization of both bulk and reference inputs prior to
-#' deconvolution with DicePro.
+#' deconvolution with dicepro.
 #'
 #' @export
 #'

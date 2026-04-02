@@ -1,6 +1,6 @@
 ---
-title: "DICEPRO — Simulated Data Workflow"
-author: "DICEPRO Team"
+title: "dicepro — Simulated Data Workflow"
+author: "dicepro Team"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
@@ -8,7 +8,7 @@ output:
     toc_depth: 3
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{DICEPRO — Simulated Data Workflow}
+  %\VignetteIndexEntry{dicepro — Simulated Data Workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -28,13 +28,13 @@ knitr::opts_chunk$set(
 > **Note:** All code chunks have `eval = FALSE` and are shown for
 > illustration only. To run them interactively:
 > ```r
-> library(DICEPRO)
+> library(dicepro)
 > # copy-paste the chunks below into your R session
 > ```
 
 # Overview
 
-This vignette demonstrates a complete DICEPRO deconvolution workflow on
+This vignette demonstrates a complete dicepro deconvolution workflow on
 **fully synthetic data**, enabling end-to-end reproducibility without
 requiring access to proprietary datasets.
 
@@ -43,7 +43,7 @@ The pipeline proceeds in four stages:
 1. **Simulate** a reference signature matrix and ground-truth cell-type
    proportions using the built-in simulation framework.
 2. **Generate** a noisy bulk RNA-seq matrix from the simulated mixture.
-3. **Deconvolve** using the main `DICEPRO()` function with automated
+3. **Deconvolve** using the main `dicepro()` function with automated
    hyperparameter optimisation.
 4. **Evaluate** the recovered proportions against the ground truth.
 
@@ -56,7 +56,7 @@ The pipeline proceeds in four stages:
 call, guaranteeing column-name alignment across all three outputs.
 
 ```{r simulate}
-library(DICEPRO)
+library(dicepro)
 set.seed(2101L)
 
 sim_data <- simulation(
@@ -91,10 +91,10 @@ abline(0, 1, col = "firebrick", lwd = 1.5)
 ```
 
 
-# Deconvolution with `DICEPRO()`
+# Deconvolution with `dicepro()`
 
 ```{r run-dicepro}
-out <- DICEPRO(
+out <- dicepro(
   reference             = as.matrix(sim_data$W),
   bulk                  = as.matrix(sim_data$B),
   methodDeconv          = "FARDEEP",

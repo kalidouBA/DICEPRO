@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // compute_grad_eigen_fast
 Eigen::VectorXd compute_grad_eigen_fast(const Eigen::MatrixXd& W, const Eigen::MatrixXd& H, const Eigen::MatrixXd& B, double sigma, const Eigen::VectorXd& lambda, double gamma);
-RcppExport SEXP _DICEPRO_compute_grad_eigen_fast(SEXP WSEXP, SEXP HSEXP, SEXP BSEXP, SEXP sigmaSEXP, SEXP lambdaSEXP, SEXP gammaSEXP) {
+RcppExport SEXP _dicepro_compute_grad_eigen_fast(SEXP WSEXP, SEXP HSEXP, SEXP BSEXP, SEXP sigmaSEXP, SEXP lambdaSEXP, SEXP gammaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,7 +29,7 @@ END_RCPP
 }
 // compute_obj_term1_eigen_fast
 double compute_obj_term1_eigen_fast(const Eigen::MatrixXd& W, const Eigen::MatrixXd& H, const Eigen::MatrixXd& B, double sigma);
-RcppExport SEXP _DICEPRO_compute_obj_term1_eigen_fast(SEXP WSEXP, SEXP HSEXP, SEXP BSEXP, SEXP sigmaSEXP) {
+RcppExport SEXP _dicepro_compute_obj_term1_eigen_fast(SEXP WSEXP, SEXP HSEXP, SEXP BSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -43,12 +43,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_DICEPRO_compute_grad_eigen_fast", (DL_FUNC) &_DICEPRO_compute_grad_eigen_fast, 6},
-    {"_DICEPRO_compute_obj_term1_eigen_fast", (DL_FUNC) &_DICEPRO_compute_obj_term1_eigen_fast, 4},
+    {"_dicepro_compute_grad_eigen_fast", (DL_FUNC) &_dicepro_compute_grad_eigen_fast, 6},
+    {"_dicepro_compute_obj_term1_eigen_fast", (DL_FUNC) &_dicepro_compute_obj_term1_eigen_fast, 4},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_DICEPRO(DllInfo *dll) {
+RcppExport void R_init_dicepro(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

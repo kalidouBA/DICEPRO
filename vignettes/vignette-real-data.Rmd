@@ -1,6 +1,6 @@
 ---
-title: "DICEPRO — Real Data Workflow (BlueCode + CellMixtures)"
-author: "DICEPRO Team"
+title: "dicepro — Real Data Workflow (BlueCode + CellMixtures)"
+author: "dicepro Team"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
@@ -8,7 +8,7 @@ output:
     toc_depth: 3
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{DICEPRO — Real Data Workflow (BlueCode + CellMixtures)}
+  %\VignetteIndexEntry{dicepro — Real Data Workflow (BlueCode + CellMixtures)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -28,13 +28,13 @@ knitr::opts_chunk$set(
 > **Note:** All code chunks have `eval = FALSE` and are shown for
 > illustration only. To run them interactively:
 > ```r
-> library(DICEPRO)
+> library(dicepro)
 > # copy-paste the chunks below into your R session
 > ```
 
 # Overview
 
-This vignette demonstrates a complete DICEPRO deconvolution workflow on
+This vignette demonstrates a complete dicepro deconvolution workflow on
 **real RNA-seq data** using:
 
 - **BlueCode** -- the 34-cell-type reference signature matrix bundled with
@@ -50,7 +50,7 @@ This vignette demonstrates a complete DICEPRO deconvolution workflow on
 ## BlueCode Reference Signature Matrix
 
 ```{r load-bluecode}
-library(DICEPRO)
+library(dicepro)
 
 data(BlueCode)
 
@@ -118,10 +118,10 @@ boxplot(
 
 ---
 
-# Deconvolution with `DICEPRO()`
+# Deconvolution with `dicepro()`
 
 ```{r run-dicepro}
-out <- DICEPRO(
+out <- dicepro(
   reference             = as.matrix(BlueCode),
   bulk                  = as.matrix(CellMixtures),
   methodDeconv          = "FARDEEP",

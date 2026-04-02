@@ -1,6 +1,6 @@
 ## usethis namespace: start
 #' @importFrom Rcpp sourceCpp
 #' @import RcppEigen
-#' @useDynLib DICEPRO, .registration = TRUE
+#' @useDynLib dicepro, .registration = TRUE
 ## usethis namespace: end
 "_PACKAGE"

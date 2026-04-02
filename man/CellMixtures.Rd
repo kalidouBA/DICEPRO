@@ -12,7 +12,7 @@ labelled by HGNC gene symbol; columns are labelled \code{A} through
 raw read counts prior to normalisation.
 }
 \source{
-CellMixtures was constructed for the DicePro benchmarking framework.
+CellMixtures was constructed for the dicepro benchmarking framework.
 Sorted cell populations were obtained from ENCODE
 (\url{https://www.encodeproject.org}) and mixed \emph{in silico} at
 predefined proportions from experimentally validated RNA-seq profiles.
@@ -43,11 +43,11 @@ to stromal- or muscle-enriched configurations.
 \subsection{Gene coverage}{
 
 CellMixtures covers approximately 31 400 gene symbols, a superset of
-those present in BlueCode. DICEPRO automatically intersects the two
+those present in BlueCode. dicepro automatically intersects the two
 gene sets before deconvolution; the effective number of informative
 genes is therefore determined by the BlueCode reference (see
 \code{BlueCode} for details on its gene filtering criteria).
-A gene-overlap check prior to running \code{DICEPRO} is
+A gene-overlap check prior to running \code{dicepro} is
 recommended:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{data(BlueCode)
@@ -61,7 +61,7 @@ cat(sprintf("Common genes: \%d / \%d reference genes\\n",
 \subsection{Normalisation}{
 
 Raw counts should be normalised before deconvolution.
-\code{DICEPRO} applies \code{.normalize_zscore_per_gene}
+\code{dicepro} applies \code{.normalize_zscore_per_gene}
 internally; no pre-processing is required when using the main function.
 For exploratory analyses, log-CPM or TPM normalisation is recommended:
 
@@ -76,7 +76,7 @@ log2_cpm <- log2(cpm + 1)
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{data(BlueCode)
 data(CellMixtures)
 
-out <- DICEPRO(
+out <- dicepro(
   reference             = BlueCode,
   bulk                  = CellMixtures,
   methodDeconv          = "FARDEEP",
@@ -97,7 +97,7 @@ CellMixtures and BlueCode are designed as a paired benchmark: the
 reference matrix was derived from the same cell populations used to
 construct the mixtures, ensuring that all cell types in the bulk are
 represented in the reference. This controlled setting allows direct
-evaluation of DICEPRO's reconstruction accuracy
+evaluation of dicepro's reconstruction accuracy
 }
 }
 \keyword{data}

@@ -3,7 +3,7 @@
 #' @description Gene expression reference matrix for bulk RNA-seq deconvolution,
 #' derived from sorted cell populations spanning immune, stromal, endothelial,
 #' epithelial, and muscle compartments. BlueCode serves as the default
-#' reference for DICEPRO and directly informs the hierarchical Dirichlet
+#' reference for dicepro and directly informs the hierarchical Dirichlet
 #' simulation framework.
 #'
 #' @docType data
@@ -109,8 +109,8 @@
 #' dim(BlueCode)          # G x 34
 #' colnames(BlueCode)     # 34 cell-type labels
 #'
-#' # Use directly in DICEPRO
-#' out <- DICEPRO(
+#' # Use directly in dicepro
+#' out <- dicepro(
 #'   reference    = BlueCode,
 #'   bulk         = my_bulk_matrix,
 #'   methodDeconv = "FARDEEP"
@@ -118,7 +118,7 @@
 #' ```
 #'
 #' @source
-#' BlueCode reference matrix constructed for the DicePro benchmarking
+#' BlueCode reference matrix constructed for the dicepro benchmarking
 #' framework from ENCODE (\url{https://www.encodeproject.org}) and GEO
 #' (\url{https://www.ncbi.nlm.nih.gov/geo}) sorted RNA-seq profiles.
 #' See the accompanying manuscript for full details on data sources,
@@ -158,11 +158,11 @@
 #' ## Gene coverage
 #'
 #' CellMixtures covers approximately 31 400 gene symbols, a superset of
-#' those present in BlueCode. DICEPRO automatically intersects the two
+#' those present in BlueCode. dicepro automatically intersects the two
 #' gene sets before deconvolution; the effective number of informative
 #' genes is therefore determined by the BlueCode reference (see
 #' \code{BlueCode} for details on its gene filtering criteria).
-#' A gene-overlap check prior to running \code{DICEPRO} is
+#' A gene-overlap check prior to running \code{dicepro} is
 #' recommended:
 #'
 #' ```r
@@ -176,7 +176,7 @@
 #' ## Normalisation
 #'
 #' Raw counts should be normalised before deconvolution.
-#' \code{DICEPRO} applies \code{.normalize_zscore_per_gene}
+#' \code{dicepro} applies \code{.normalize_zscore_per_gene}
 #' internally; no pre-processing is required when using the main function.
 #' For exploratory analyses, log-CPM or TPM normalisation is recommended:
 #'
@@ -192,7 +192,7 @@
 #' data(BlueCode)
 #' data(CellMixtures)
 #'
-#' out <- DICEPRO(
+#' out <- dicepro(
 #'   reference             = BlueCode,
 #'   bulk                  = CellMixtures,
 #'   methodDeconv          = "FARDEEP",
@@ -212,10 +212,10 @@
 #' reference matrix was derived from the same cell populations used to
 #' construct the mixtures, ensuring that all cell types in the bulk are
 #' represented in the reference. This controlled setting allows direct
-#' evaluation of DICEPRO's reconstruction accuracy
+#' evaluation of dicepro's reconstruction accuracy
 #'
 #' @source
-#' CellMixtures was constructed for the DicePro benchmarking framework.
+#' CellMixtures was constructed for the dicepro benchmarking framework.
 #' Sorted cell populations were obtained from ENCODE
 #' (\url{https://www.encodeproject.org}) and mixed \emph{in silico} at
 #' predefined proportions from experimentally validated RNA-seq profiles.
