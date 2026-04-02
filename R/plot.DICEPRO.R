@@ -72,8 +72,8 @@ plot.DICEPRO <- function(x, ...) {
 #' @param ... Arguments passed to the method; see
 #'   \code{plot_hyperopt.DICEPRO} for the full list.
 #'
-#' @return Whatever the dispatched method returns (a \code{gtable} for
-#'   \code{DICEPRO} objects).
+#' @return Whatever the dispatched method returns (a \code{patchwork} figure
+#'   for \code{DICEPRO} objects).
 #'
 #' @seealso \code{plot_hyperopt.DICEPRO}
 #' @export
@@ -112,9 +112,8 @@ plot_hyperopt <- function(x, ...) UseMethod("plot_hyperopt")
 #'   combined figure (default \code{NULL}).
 #' @param ...            Currently unused. Reserved for future extensions.
 #'
-#' @return A \code{gtable} produced by \code{gridExtra::grid.arrange},
-#'   which can be printed, saved with \code{ggplot2::ggsave()}, or embedded
-#'   in R Markdown documents.
+#' @return A \code{patchwork} figure which can be printed, saved with
+#'   \code{ggplot2::ggsave()}, or embedded in R Markdown documents.
 #'
 #' @examples
 #' \dontrun{
@@ -125,7 +124,7 @@ plot_hyperopt <- function(x, ...) UseMethod("plot_hyperopt")
 #'
 #' @rdname plot_hyperopt
 #' @import  ggplot2
-#' @importFrom gridExtra grid.arrange
+#' @importFrom patchwork wrap_plots plot_layout plot_annotation
 #' @export
 plot_hyperopt.DICEPRO <- function(x,
                                   params,
@@ -159,7 +158,7 @@ plot_hyperopt.DICEPRO <- function(x,
   scores <- scores[keep]
   trials <- trials[keep, , drop = FALSE]
 
-  values <- lapply(stats::setNames(params, params), function(p) trials[[p]])
+  values <- lapply(setNames(params, params), function(p) trials[[p]])
 
   if (!is.null(max_deviation)) {
     ok     <- abs(loss - mean(loss, na.rm = TRUE)) < max_deviation
@@ -285,15 +284,15 @@ plot_hyperopt.DICEPRO <- function(x,
   })
 
   # ---- Combine --------------------------------------------------------------
-  gridExtra::grid.arrange(
-    gridExtra::grid.arrange(grobs = scatter_grobs,
-                            nrow  = length(params),
-                            ncol  = length(params)),
-    gridExtra::grid.arrange(grobs = violin_grobs,
-                            nrow  = 1L,
-                            ncol  = length(params)),
-    nrow    = 2L,
-    heights = c(3, 1),
-    top     = title
-  )
+  scatter_panel <- patchwork::wrap_plots(scatter_grobs,
+                                         nrow = length(params),
+                                         ncol = length(params))
+
+  violin_panel  <- patchwork::wrap_plots(violin_grobs,
+                                         nrow = 1L,
+                                         ncol = length(params))
+
+  (scatter_panel / violin_panel) +
+    patchwork::plot_layout(heights = c(3, 1)) +
+    patchwork::plot_annotation(title = title)
 }

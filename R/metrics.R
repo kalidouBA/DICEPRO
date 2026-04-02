@@ -123,7 +123,6 @@ samplewise_metrics <- function(obs_mat, pred_mat) {
 #' full_metrics(x, y)
 #' }
 #'
-#' @importFrom lme4 lmer lmerControl VarCorr
 #' @export
 full_metrics <- function(x, y) {
 

@@ -53,12 +53,11 @@ these are displayed as bar charts in the marginal row
 combined figure (default \code{NULL}).}
 }
 \value{
-Whatever the dispatched method returns (a \code{gtable} for
-\code{DICEPRO} objects).
+Whatever the dispatched method returns (a \code{patchwork} figure
+for \code{DICEPRO} objects).
 
-A \code{gtable} produced by \code{gridExtra::grid.arrange},
-which can be printed, saved with \code{ggplot2::ggsave()}, or embedded
-in R Markdown documents.
+A \code{patchwork} figure which can be printed, saved with
+\code{ggplot2::ggsave()}, or embedded in R Markdown documents.
 }
 \description{
 Generic function for plotting the hyperparameter search report stored in a

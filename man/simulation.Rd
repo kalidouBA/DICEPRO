@@ -11,10 +11,8 @@ simulation(
   nCell = 500,
   nCellsType = 50,
   nGenes = 500,
-  lam = NULL,
-  pois_eps = NULL,
+  lambda_vec = NULL,
   corr = NULL,
-  method = "Polynomial",
   scenario = NULL,
   loi = "rpois",
   tpm = FALSE,
@@ -44,15 +42,13 @@ If \code{NULL}, proportions are generated via
 
 \item{nGenes}{Integer. Number of genes. Default: \code{500}.}
 
-\item{lam}{Numeric. Lambda for Poisson model (see
-\code{\link{generate_ref_matrix}}).}
+\item{lambda_vec}{Numeric vector of length \code{nCellsType}. Per
+cell-type Poisson lambda parameters. If \code{NULL},
+drawn uniformly in \code{[20, 60]}. Passed to
+\code{\link{generate_ref_matrix}}.}
 
-\item{pois_eps}{Numeric. Epsilon for Poisson model.}
-
-\item{corr}{Numeric matrix. Inter-cell-type correlation.}
-
-\item{method}{Character. Simulation method. Default:
-\code{"Polynomial"}.}
+\item{corr}{Numeric matrix. Inter-cell-type correlation.
+If \code{NULL}, generated internally.}
 
 \item{scenario}{Character. Proportion scenario passed to
 \code{\link{generateProp}}. Use
@@ -60,17 +56,24 @@ If \code{NULL}, proportions are generated via
 composition (recommended).}
 
 \item{loi}{Character. Expression law for reference generation.
+\code{"rpois"} for Poisson via Gaussian copula,
+any other value for log-normal.
 Default: \code{"rpois"}.}
 
-\item{tpm}{Logical. TPM normalization of reference.}
+\item{tpm}{Logical. TPM normalization of reference.
+Default: \code{FALSE}.}
 
-\item{bloc}{Logical. Block sparsity in reference.}
+\item{bloc}{Logical. Block sparsity in reference.
+Default: \code{FALSE}.}
 
-\item{nGenesByCellType}{Integer. Genes per block (when \code{bloc = TRUE}).}
+\item{nGenesByCellType}{Integer. Genes per block (when \code{bloc = TRUE}).
+Default: \code{50}.}
 
-\item{sparse}{Logical. Random sparsity in reference.}
+\item{sparse}{Logical. Random sparsity in reference.
+Default: \code{FALSE}.}
 
-\item{prob_sparse}{Numeric. Sparsity probability.}
+\item{prob_sparse}{Numeric. Sparsity probability.
+Default: \code{0.5}.}
 
 \item{sigma_bio}{Numeric. Standard deviation of multiplicative
 biological noise. Default: \code{0.07}.}
@@ -85,11 +88,11 @@ Default: \code{1234}.}
 \value{
 A named list with three elements:
 \describe{
-\item{\code{prop}}{data.frame. True cell-type proportions
+\item{\code{p}}{data.frame. True cell-type proportions
 (samples x cell types).}
-\item{\code{reference}}{data.frame. Reference signature matrix
+\item{\code{W}}{data.frame. Reference signature matrix
 (genes x cell types).}
-\item{\code{bulk_noise}}{data.frame. Noisy bulk expression matrix
+\item{\code{B}}{data.frame. Noisy bulk expression matrix
 (genes x samples), with biological and technical noise applied.}
 }
 }
@@ -127,7 +130,7 @@ if (interactive()) {
     sigma_tech = 0.07,
     seed       = 2101
   )
-  dim(sim$prop)       # 20 x 10
-  dim(sim$bulk_noise) # 100 x 20
+  dim(sim$p)  # 20 x 10
+  dim(sim$B)  # 100 x 20
 }
 }

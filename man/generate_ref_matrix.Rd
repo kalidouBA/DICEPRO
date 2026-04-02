@@ -12,18 +12,17 @@ generate_ref_matrix(
   nCell = 500,
   nCellsType = 10,
   nGenes = 500,
-  lam = NULL,
-  pois_eps = NULL,
+  lambda_vec = NULL,
   corr = NULL,
-  method = "Polynomial",
   sparse = FALSE,
   prob_sparse = NULL
 )
 }
 \arguments{
 \item{loi}{Character. Expression model: \code{"rpois"} for
-Poisson-based simulation or any other value for
-log-normal simulation. Default: \code{"rpois"}.}
+Poisson-based simulation via Gaussian copula or any
+other value for log-normal simulation.
+Default: \code{"rpois"}.}
 
 \item{tpm}{Logical. If \code{TRUE}, columns are TPM-normalized.
 Default: \code{FALSE}.}
@@ -42,19 +41,14 @@ retained for API compatibility).}
 
 \item{nGenes}{Integer. Number of genes. Default: \code{500}.}
 
-\item{lam}{Numeric vector. Lambda parameters for Poisson
-simulation (passed to
-\code{SimMultiCorrData::rcorrvar2}).}
-
-\item{pois_eps}{Numeric vector. Epsilon parameters for Poisson
-simulation.}
+\item{lambda_vec}{Numeric vector of length \code{nCellsType}. Per
+cell-type Poisson lambda parameters. If \code{NULL},
+drawn uniformly in \code{[20, 60]}. Only used when
+\code{loi = "rpois"}.}
 
 \item{corr}{Numeric matrix. Inter-cell-type correlation matrix.
 If \code{NULL}, generated via
-\code{clusterGeneration::rcorrmatrix}.}
-
-\item{method}{Character. Simulation method passed to
-\code{rcorrvar2}. Default: \code{"Polynomial"}.}
+\code{.clusterGeneration}.}
 
 \item{sparse}{Logical. If \code{TRUE}, introduces random sparsity
 by zeroing entries with probability
@@ -70,13 +64,25 @@ column names are \code{CellType_1}, ..., \code{CellType_nCellsType}.
 }
 \description{
 Constructs a synthetic gene-by-cell-type reference matrix using either
-Poisson-based or log-normal gene expression models, with optional block
-sparsity and TPM normalization.
+Poisson-based (via Gaussian copula) or log-normal gene expression models,
+with optional block sparsity and TPM normalization.
+}
+\details{
+For \code{loi = "rpois"}, correlated Poisson counts are generated via a
+Gaussian copula: multivariate normal draws with covariance \code{corr} are
+mapped to uniform marginals via \code{pnorm}, then to Poisson quantiles via
+\code{qpois}. This preserves the inter-cell-type correlation structure
+without requiring \pkg{SimMultiCorrData}.
+
+For any other value of \code{loi}, a log-normal model is used: multivariate
+normal draws are exponentiated after a location shift of 6.
 }
 \examples{
 if (interactive()) {
   set.seed(2101)
-  ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
-  dim(ref)  # 50 x 5
+  ref_pois  <- generate_ref_matrix(loi = "rpois",  nGenes = 50, nCellsType = 5)
+  ref_gauss <- generate_ref_matrix(loi = "gauss",  nGenes = 50, nCellsType = 5)
+  dim(ref_pois)   # 50 x 5
+  dim(ref_gauss)  # 50 x 5
 }
 }

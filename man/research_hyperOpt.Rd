@@ -7,7 +7,7 @@
 research_hyperOpt(
   objective_opt,
   dataset,
-  config_path,
+  config,
   hp_space = NULL,
   W_prime = NULL
 )
@@ -17,7 +17,7 @@ research_hyperOpt(
 
 \item{dataset}{List with \code{$B}, \code{$W}, \code{$P}.}
 
-\item{config_path}{Path to JSON configuration file.}
+\item{config}{List. Configuration object (replaces config_path).}
 
 \item{hp_space}{Pre-built space list; if NULL, built from config$hp_space.}
 

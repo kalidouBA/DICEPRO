@@ -65,60 +65,38 @@ estimate when \code{W_prime = 0} (default \code{1}).}
 
 \item{algo_select}{Character scalar. Hyperparameter sampling strategy.
 \describe{
-\item{\code{"random"}}{Pure random search (default). Fast and robust
-for any budget.}
-\item{\code{"tpe"}}{Tree-structured Parzen Estimator. Uses past
-evaluations to guide the search; more sample-efficient than random
-search when \code{hp_max_evals} \eqn{\geq 30}. Implemented in pure
-base R with no additional dependencies.}
+\item{\code{"random"}}{Pure random search (default).}
+\item{\code{"tpe"}}{Tree-structured Parzen Estimator.}
 \item{\code{"atpe"}}{Accepted alias for \code{"tpe"}.}
 \item{\code{"anneal"}}{Accepted in config; currently falls back to
 \code{"random"}.}
 }}
 
 \item{output_path}{Character scalar. Root directory for all outputs.
-Results are saved under
-\code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
 Defaults to \code{getwd()} when \code{NULL}.}
 
 \item{hspaceTechniqueChoose}{Character scalar. Hyperparameter space
-parameterisation.
-\describe{
-\item{\code{"all"}}{Searches \eqn{\gamma} and \eqn{\lambda}
-independently, each loguniform on (1, 1e8).}
-\item{\code{"restrictionEspace"}}{(default) \eqn{\gamma} is the base
-variable; \eqn{\lambda} is derived as
-\eqn{\lambda = \gamma \times \lambda_{factor}} with
-\eqn{\lambda_{factor}} in (2, 100), ensuring
-\eqn{\lambda \geq 2\gamma}.}
-}}
+parameterisation (\code{"all"} or \code{"restrictionEspace"}).}
 
 \item{out_Decon}{Optional numeric matrix. Pre-computed deconvolution
-result (samples \eqn{\times} cell types). When provided,
-\code{\link{running_method}} is skipped entirely.}
+result. When provided, \code{\link{running_method}} is skipped.}
 
 \item{normalize}{Logical scalar. When \code{TRUE} (default), both
-\code{reference} and \code{bulk} are z-score normalised per gene
-before deconvolution. Set to \code{FALSE} when matrices have already
-been normalised upstream.}
+matrices are z-score normalised per gene before deconvolution.}
 }
 \value{
 An object of class \code{"DICEPRO"} (a named list), or
 \code{invisible(NULL)} when no valid hyperparameter configuration is
 found. The list contains:
 \describe{
-\item{hyperparameters}{Named list with \code{lambda} and \code{gamma}
-scalars of the selected configuration.}
-\item{metrics}{Named list with \code{loss} and \code{constraint}
-scalars of the selected configuration.}
-\item{trials}{data.frame of all successful trial results, one row per
-evaluated configuration.}
-\item{W}{Signature matrix \eqn{W} of the selected trial.}
-\item{H}{Proportion matrix \eqn{H} of the selected trial
-(samples \eqn{\times} cell types).}
-\item{plot}{Interactive Plotly figure of the Pareto frontier.}
-\item{plot_hyperopt}{Static \code{gtable} scatter-matrix of all
-evaluated hyperparameter configurations.}
+\item{hyperparameters}{Named list with \code{lambda} and \code{gamma}.}
+\item{metrics}{Named list with \code{loss} and \code{constraint}.}
+\item{trials}{data.frame of all successful trial results.}
+\item{W}{Signature matrix of the selected trial.}
+\item{H}{Proportion matrix of the selected trial.}
+\item{plot}{ggplot2 figure of the Pareto frontier.}
+\item{plot_hyperopt}{ggplot2 scatter-matrix of all hyperparameter
+configurations.}
 }
 }
 \description{
@@ -149,56 +127,7 @@ selects the knee point on the Pareto frontier.
 }
 }
 
-\examples{
-\dontrun{
-data(BlueCode)
-data(CellMixtures)
-
-# Random search (default)
-out <- DICEPRO(
-  reference             = BlueCode,
-  bulk                  = CellMixtures,
-  methodDeconv          = "FARDEEP",
-  bulkName              = "CellMixtures",
-  refName               = "BlueCode",
-  hp_max_evals          = 100L,
-  output_path           = tempdir(),
-  hspaceTechniqueChoose = "all"
-)
-
-# TPE search — more efficient when budget >= 30 trials
-out_tpe <- DICEPRO(
-  reference             = BlueCode,
-  bulk                  = CellMixtures,
-  methodDeconv          = "FARDEEP",
-  hp_max_evals          = 50L,
-  algo_select           = "tpe",
-  hspaceTechniqueChoose = "restrictionEspace",
-  output_path           = tempdir()
-)
-
-# Skip normalisation when data are already z-scored
-out2 <- DICEPRO(
-  reference    = BlueCode,
-  bulk         = CellMixtures,
-  normalize    = FALSE,
-  methodDeconv = "FARDEEP"
-)
-
-# CIBERSORTx backend
-out3 <- DICEPRO(
-  reference        = BlueCode,
-  bulk             = CellMixtures,
-  methodDeconv     = "CSx",
-  cibersortx_email = "you@example.com",
-  cibersortx_token = "YOUR_TOKEN"
-)
-}
-
-}
 \seealso{
-\code{\link{running_method}} for the supervised deconvolution step,
-\code{\link{run_experiment}} for the hyperparameter search,
-\code{\link{best_hyperParams}} for Pareto selection,
-\code{\link{plot_hyperopt}} for the optimisation report plot.
+\code{\link{running_method}}, \code{\link{run_experiment}},
+\code{\link{best_hyperParams}}, \code{\link{plot_hyperopt}}.
 }

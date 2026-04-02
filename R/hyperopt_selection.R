@@ -1,3 +1,9 @@
+# FIX: declare NSE symbols used in KraljicMatrix::get_frontier() to silence
+# R CMD CHECK "no visible binding for global variable" NOTEs.
+# These are column names of the data.frame passed to get_frontier(), not
+# actual R variables — globalVariables() is the standard pattern for this.
+utils::globalVariables(c("frob_H", "loss"))
+
 # =============================================================================
 # NMF Hyperparameter Selection -- Pareto Frontier & Knee Point
 #
@@ -11,7 +17,7 @@
 #   2. Compute constraint deviation
 #   3. Extract Pareto frontier
 #   4. Detect the knee point (best compromise)
-#   5. Optionally generate an interactive Plotly visualisation
+#   5. Generate a ggplot2 visualisation
 # =============================================================================
 
 
@@ -88,20 +94,25 @@
 }
 
 
-#' Generate an interactive Pareto frontier plot
+# -----------------------------------------------------------------------------
+# .plot_pareto_kraljic
+# -----------------------------------------------------------------------------
+
+#' Generate a Pareto frontier plot
 #'
-#' Builds a Plotly scatter plot showing all valid configurations, the Pareto
+#' Builds a ggplot2 scatter plot showing all valid configurations, the Pareto
 #' frontier, and the selected knee-point solution.
 #'
-#' @param data_all           data.frame of all valid trials.
-#' @param data_frontier      data.frame of Pareto-frontier points.
-#' @param bestPareto         One-row data.frame of the selected configuration.
+#' @param data_all             data.frame of all valid trials.
+#' @param data_frontier        data.frame of Pareto-frontier points.
+#' @param bestPareto           One-row data.frame of the selected configuration.
 #' @param constraint_threshold Numeric scalar. Constraint threshold shown in
 #'   plot title metadata.
 #'
-#' @return A Plotly figure object.
+#' @return A ggplot2 object.
 #'
-#' @importFrom plotly plot_ly add_trace layout config
+#' @importFrom ggplot2 ggplot aes geom_point geom_line scale_x_log10
+#'   scale_y_log10 labs theme_bw theme element_text
 #' @keywords internal
 #' @noRd
 .plot_pareto_kraljic <- function(data_all,
@@ -109,74 +120,56 @@
                                  bestPareto,
                                  constraint_threshold = 0.1) {
 
-  .hover <- function(df) {
-    with(df, paste0(
-      "<b>\u03BB:</b> ",     formatC(lambda_,       format = "e", digits = 2), "<br>",
-      "<b>\u03B3:</b> ",     formatC(gamma,         format = "e", digits = 2), "<br>",
-      "<b>Frobenius:</b> ",  formatC(frobNorm,      format = "e", digits = 2), "<br>",
-      "<b>Constraint:</b> ", round(constraint, 4),                             "<br>",
-      "<b>p_prime:</b> ",    signif(p_prime,   3),                             "<br>",
-      "<b>Duration:</b> ",   signif(duration,  3),                             "<br>",
-      "<b>Penalty:</b> ",    signif(penalty,   3),                             "<br>",
-      "<b>Objective:</b> ",  signif(objectiveValue, 3)
-    ))
-  }
-
   frontier_ordered <- data_frontier[order(data_frontier$frobNorm), ]
 
-  plotly::plot_ly(data = data_all, x = ~frobNorm, y = ~abs_constraint) |>
-    plotly::add_trace(
-      type      = "scatter",
-      mode      = "markers",
-      marker    = list(color = "gray", size = 6L, opacity = 0.6),
-      name      = "Valid solutions",
-      text      = .hover(data_all),
-      hoverinfo = "text"
-    ) |>
-    plotly::add_trace(
-      data      = frontier_ordered,
-      x         = ~frobNorm,
-      y         = ~abs_constraint,
-      type      = "scatter",
-      mode      = "markers+lines",
-      marker    = list(color = "red", size = 8L, symbol = "diamond"),
-      line      = list(color = "red", width = 2L),
-      name      = "Pareto frontier",
-      text      = .hover(frontier_ordered),
-      hoverinfo = "text"
-    ) |>
-    plotly::add_trace(
-      data      = bestPareto,
-      x         = ~frobNorm,
-      y         = ~abs_constraint,
-      type      = "scatter",
-      mode      = "markers",
-      marker    = list(color = "blue", size = 14L, symbol = "star",
-                       line = list(color = "white", width = 1L)),
-      name      = "Best pareto",
-      text      = .hover(bestPareto),
-      hoverinfo = "text"
-    ) |>
-    plotly::layout(
-      title  = "<b>Frobenius Norm vs Constraint Deviation \u2014 Pareto Frontier</b>",
-      xaxis  = list(title = "<b>Frobenius Norm</b>",        type = "log",
-                    autorange = "reversed"),
-      yaxis  = list(title = "<b>|1 \u2212 Constraint|</b>", type = "log",
-                    autorange = "reversed"),
-      legend = list(x = 0.02, y = 0.98)
-    ) |>
-    plotly::config(
-      toImageButtonOptions = list(
-        format   = "svg",
-        filename = "pareto_front_kraljic",
-        width    = 500L,
-        height   = 300L,
-        scale    = 1.5
-      ),
-      displaylogo            = FALSE,
-      modeBarButtonsToRemove = c("lasso2d", "select2d")
+  ggplot2::ggplot() +
+    # All valid solutions
+    ggplot2::geom_point(
+      data   = data_all,
+      mapping = ggplot2::aes(x = frobNorm, y = abs_constraint),
+      colour  = "grey60",
+      size    = 2,
+      alpha   = 0.6
+    ) +
+    # Pareto frontier line
+    ggplot2::geom_line(
+      data    = frontier_ordered,
+      mapping = ggplot2::aes(x = frobNorm, y = abs_constraint),
+      colour  = "red",
+      linewidth = 0.8
+    ) +
+    # Pareto frontier points
+    ggplot2::geom_point(
+      data    = frontier_ordered,
+      mapping = ggplot2::aes(x = frobNorm, y = abs_constraint),
+      colour  = "red",
+      shape   = 18,   # diamond
+      size    = 3
+    ) +
+    # Knee-point (best solution)
+    ggplot2::geom_point(
+      data    = bestPareto,
+      mapping = ggplot2::aes(x = frobNorm, y = abs_constraint),
+      colour  = "blue",
+      shape   = 8,    # star
+      size    = 5,
+      stroke  = 1.2
+    ) +
+    ggplot2::scale_x_log10() +
+    ggplot2::scale_y_log10() +
+    ggplot2::labs(
+      title = "Frobenius Norm vs Constraint Deviation \u2014 Pareto Frontier",
+      x     = "Frobenius Norm (log scale, reversed)",
+      y     = "|1 \u2212 Constraint| (log scale, reversed)"
+    ) +
+    ggplot2::scale_x_log10(trans = "reverse") +
+    ggplot2::scale_y_log10(trans = "reverse") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(face = "bold", size = 11)
     )
 }
+
 
 # -----------------------------------------------------------------------------
 # .make_preddata_fname
@@ -213,7 +206,7 @@
 #'   \item Computing constraint deviation (\code{abs_constraint}).
 #'   \item Extracting the Pareto frontier (Frobenius norm vs. loss).
 #'   \item Selecting the knee point -- the best loss/constraint trade-off.
-#'   \item Generating an interactive Pareto plot saved under
+#'   \item Generating a Pareto plot saved under
 #'         \code{savePaths/report/}.
 #' }
 #'
@@ -241,7 +234,7 @@
 #'   \item{metrics}{List with \code{loss} and \code{constraint} scalars.}
 #'   \item{W}{The \eqn{W} matrix of the selected trial.}
 #'   \item{H}{The \eqn{H} (deconvolution) matrix of the selected trial.}
-#'   \item{plot}{Plotly figure of the Pareto frontier.}
+#'   \item{plot}{ggplot2 figure of the Pareto frontier.}
 #' }
 #'
 #' @export
@@ -250,7 +243,6 @@ best_hyperParams <- function(trials_df,
                              H,
                              savePaths,
                              constraint_threshold = 0.1) {
-  frob_H <- loss <- abs_constraint <- lambda_ <- gamma <- NULL
 
   # ---- Guard: empty input --------------------------------------------------
   if (nrow(trials_df) == 0L) {
@@ -259,18 +251,14 @@ best_hyperParams <- function(trials_df,
   }
 
   # ---- Attach trial index before any filtering -----------------------------
-  # Preserves the link to the corresponding W / H list elements.
   trials_df$trial_index <- seq_len(nrow(trials_df))
 
-  # ---- Derive auxiliary columns and apply constraint filter ----------------
-  trials_df <- trials_df |>
-    dplyr::mutate(
-      log_lambda     = log10(lambda_ + 1),
-      log_gamma      = log10(gamma   + 1),
-      log_frob       = log10(frobNorm),
-      abs_constraint = abs(1 - constraint)
-    ) |>
-    dplyr::filter(abs_constraint <= constraint_threshold)
+  trials_df$log_lambda     <- log10(trials_df$lambda_ + 1)
+  trials_df$log_gamma      <- log10(trials_df$gamma   + 1)
+  trials_df$log_frob       <- log10(trials_df$frobNorm)
+  trials_df$abs_constraint <- abs(1 - trials_df$constraint)
+
+  trials_df <- trials_df[trials_df$abs_constraint <= constraint_threshold, , drop = FALSE]
 
   if (nrow(trials_df) == 0L) {
     warning(sprintf(
@@ -279,8 +267,6 @@ best_hyperParams <- function(trials_df,
     ))
     return(invisible(NULL))
   }
-
-  # ---- Pareto frontier -----------------------------------------------------
   frontier_result <- KraljicMatrix::get_frontier(
     data     = trials_df,
     x        = frob_H,
@@ -297,9 +283,9 @@ best_hyperParams <- function(trials_df,
   )
 
   best_row   <- knee_res$best_row
-  best_trial <- best_row$trial_index   # index into the original W / H lists
+  best_trial <- best_row$trial_index
 
-  # ---- Interactive plot ----------------------------------------------------
+  # ---- Plot ----------------------------------------------------------------
   plot_res <- .plot_pareto_kraljic(
     data_all             = trials_df,
     data_frontier        = frontier_df,
@@ -319,7 +305,7 @@ best_hyperParams <- function(trials_df,
     ),
     trials = trials_df,
     W      = W[[best_trial]],
-    H      = H[[best_trial]][,-1],
-    plot = plot_res
+    H      = H[[best_trial]][, -1],
+    plot   = plot_res
   )
 }

@@ -1,3 +1,53 @@
+.mvrnorm <- function(n, mu, Sigma, empirical = FALSE) {
+  p     <- length(mu)
+  eS    <- eigen(Sigma, symmetric = TRUE)
+  ev    <- eS$values
+  if (!all(ev >= -1e-06 * abs(ev[1L])))
+    stop("'Sigma' is not positive definite")
+  X <- matrix(rnorm(p * n), n)
+  if (empirical) {
+    X <- scale(X, scale = FALSE)
+    X <- X %*% svd(X, nu = 0)$v
+    X <- scale(X, scale = FALSE)
+  }
+  X <- drop(mu) + eS$vectors %*% diag(sqrt(pmax(ev, 0)), p) %*% t(X)
+  t(X)
+}
+
+.rdirichlet <- function(n, alpha) {
+  k     <- length(alpha)
+  draws <- matrix(stats::rgamma(n * k, shape = alpha, rate = 1L),
+                   nrow = n, ncol = k, byrow = TRUE)
+  draws / rowSums(draws)
+}
+
+
+.rcorrmatrix <- function(d) {
+  S <- diag(d)
+  P <- matrix(0, d, d)
+
+  for (i in seq_len(d - 1)) {
+    for (j in seq(i + 1, d)) {
+      P[i, j] <- runif(1, -1, 1)
+      p <- P[i, j]
+      if (i > 1) {
+        for (k in seq_len(i - 1)) {
+          p <- p * sqrt((1 - P[k, j]^2) * (1 - P[k, i]^2)) + P[k, i] * P[k, j]
+        }
+      }
+      S[i, j] <- p
+      S[j, i] <- p
+    }
+  }
+
+  eS <- eigen(S, symmetric = TRUE)
+  ev <- pmax(eS$values, 1e-8)
+  S  <- eS$vectors %*% diag(ev) %*% t(eS$vectors)
+  D  <- diag(1 / sqrt(diag(S)))
+  D %*% S %*% D
+}
+
+
 #' Generate Cell-Type Proportion Matrix
 #'
 #' Simulates cell-type proportion matrices for bulk RNA-seq deconvolution
@@ -32,8 +82,6 @@
 #' cell types that are absent from flat Dirichlet draws.
 #'
 #' @export
-#'
-#' @importFrom MCMCpack rdirichlet
 #' @importFrom stats rnorm runif aggregate
 #'
 #' @examples
@@ -107,7 +155,7 @@ generateProp <- function(n_cell_types,
       Epithelial  = 1.5,
       Muscle      = 1.0
     )
-    groups <- MCMCpack::rdirichlet(nSample, alpha_groups)
+    groups <- .rdirichlet(nSample, alpha_groups)
     colnames(groups) <- names(alpha_groups)
 
     # Level 2: immune sub-populations
@@ -122,34 +170,32 @@ generateProp <- function(n_cell_types,
       Macrophage        = 1.0,
       Mature_neutrophil = 1.0
     )
-    immune <- MCMCpack::rdirichlet(nSample, alpha_immune) *
+    immune <- .rdirichlet(nSample, alpha_immune) *
       groups[, "Immune"]
 
     # Level 2: stromal sub-populations
-    stromal <- MCMCpack::rdirichlet(nSample, rep(2, 8)) *
+    stromal <- .rdirichlet(nSample, rep(2, 8)) *
       groups[, "Stromal"]
 
     # Level 2: endothelial sub-populations
-    endothelial <- MCMCpack::rdirichlet(nSample, rep(2, 3)) *
+    endothelial <- .rdirichlet(nSample, rep(2, 3)) *
       groups[, "Endothelial"]
 
     # Level 2: epithelial sub-populations
-    epithelial <- MCMCpack::rdirichlet(nSample, c(2, 2, 2, 1.5, 1.5)) *
+    epithelial <- .rdirichlet(nSample, c(2, 2, 2, 1.5, 1.5)) *
       groups[, "Epithelial"]
 
     # Level 2: muscle sub-populations
-    muscle <- MCMCpack::rdirichlet(nSample, rep(1, 9)) *
+    muscle <- .rdirichlet(nSample, rep(1, 9)) *
       groups[, "Muscle"]
 
     m <- cbind(immune, stromal, endothelial, epithelial, muscle)
-
-    # adapter au nombre demandé
     if (ncol(m) > n_cell_types) {
       m <- m[, seq_len(n_cell_types), drop = FALSE]
     }
 
     if (ncol(m) < n_cell_types) {
-      extra <- MCMCpack::rdirichlet(nSample, rep(1, n_cell_types - ncol(m)))
+      extra <- .rdirichlet(nSample, rep(1, n_cell_types - ncol(m)))
       m <- cbind(m, extra)
     }
     # Override column naming to match generic CellType_k convention
@@ -157,7 +203,7 @@ generateProp <- function(n_cell_types,
 
   } else {
     # ── Flat Dirichlet draw (default fallback) ────────────────────────────
-    m <- MCMCpack::rdirichlet(n = nSample, alpha = rep(1, n_cell_types))
+    m <- .rdirichlet(n = nSample, alpha = rep(1, n_cell_types))
 
   }
 
@@ -173,12 +219,13 @@ generateProp <- function(n_cell_types,
 #' Generate a Reference Signature Matrix
 #'
 #' Constructs a synthetic gene-by-cell-type reference matrix using either
-#' Poisson-based or log-normal gene expression models, with optional block
-#' sparsity and TPM normalization.
+#' Poisson-based (via Gaussian copula) or log-normal gene expression models,
+#' with optional block sparsity and TPM normalization.
 #'
 #' @param loi             Character. Expression model: \code{"rpois"} for
-#'                        Poisson-based simulation or any other value for
-#'                        log-normal simulation. Default: \code{"rpois"}.
+#'                        Poisson-based simulation via Gaussian copula or any
+#'                        other value for log-normal simulation.
+#'                        Default: \code{"rpois"}.
 #' @param tpm             Logical. If \code{TRUE}, columns are TPM-normalized.
 #'                        Default: \code{FALSE}.
 #' @param bloc            Logical. If \code{TRUE}, introduces block sparsity
@@ -190,16 +237,13 @@ generateProp <- function(n_cell_types,
 #'                        retained for API compatibility).
 #' @param nCellsType      Integer. Number of cell types. Default: \code{10}.
 #' @param nGenes          Integer. Number of genes. Default: \code{500}.
-#' @param lam             Numeric vector. Lambda parameters for Poisson
-#'                        simulation (passed to
-#'                        \code{SimMultiCorrData::rcorrvar2}).
-#' @param pois_eps        Numeric vector. Epsilon parameters for Poisson
-#'                        simulation.
+#' @param lambda_vec      Numeric vector of length \code{nCellsType}. Per
+#'                        cell-type Poisson lambda parameters. If \code{NULL},
+#'                        drawn uniformly in \code{[20, 60]}. Only used when
+#'                        \code{loi = "rpois"}.
 #' @param corr            Numeric matrix. Inter-cell-type correlation matrix.
 #'                        If \code{NULL}, generated via
-#'                        \code{clusterGeneration::rcorrmatrix}.
-#' @param method          Character. Simulation method passed to
-#'                        \code{rcorrvar2}. Default: \code{"Polynomial"}.
+#'                        \code{.clusterGeneration}.
 #' @param sparse          Logical. If \code{TRUE}, introduces random sparsity
 #'                        by zeroing entries with probability
 #'                        \code{1 - prob_sparse}. Default: \code{FALSE}.
@@ -210,79 +254,69 @@ generateProp <- function(n_cell_types,
 #'         Row names are \code{Gene_1}, ..., \code{Gene_nGenes};
 #'         column names are \code{CellType_1}, ..., \code{CellType_nCellsType}.
 #'
+#' @details
+#' For \code{loi = "rpois"}, correlated Poisson counts are generated via a
+#' Gaussian copula: multivariate normal draws with covariance \code{corr} are
+#' mapped to uniform marginals via \code{pnorm}, then to Poisson quantiles via
+#' \code{qpois}. This preserves the inter-cell-type correlation structure
+#' without requiring \pkg{SimMultiCorrData}.
+#'
+#' For any other value of \code{loi}, a log-normal model is used: multivariate
+#' normal draws are exponentiated after a location shift of 6.
+#'
 #' @export
 #'
-#' @importFrom dplyr group_by summarise across everything
-#' @importFrom SimMultiCorrData rcorrvar2 calc_theory
-#' @importFrom clusterGeneration rcorrmatrix
-#' @importFrom MASS mvrnorm
-#' @importFrom stats runif rbinom
+#' @importFrom stats runif rbinom rnorm pnorm qpois
 #'
 #' @examples
 #' if (interactive()) {
 #'   set.seed(2101)
-#'   ref <- generate_ref_matrix(loi = "gauss", nGenes = 50, nCellsType = 5)
-#'   dim(ref)  # 50 x 5
+#'   ref_pois  <- generate_ref_matrix(loi = "rpois",  nGenes = 50, nCellsType = 5)
+#'   ref_gauss <- generate_ref_matrix(loi = "gauss",  nGenes = 50, nCellsType = 5)
+#'   dim(ref_pois)   # 50 x 5
+#'   dim(ref_gauss)  # 50 x 5
 #' }
-generate_ref_matrix <- function(loi            = "rpois",
-                                tpm            = FALSE,
-                                bloc           = FALSE,
+generate_ref_matrix <- function(loi              = "rpois",
+                                tpm              = FALSE,
+                                bloc             = FALSE,
                                 nGenesByCellType = 50,
-                                nCell          = 500,
-                                nCellsType     = 10,
-                                nGenes         = 500,
-                                lam            = NULL,
-                                pois_eps       = NULL,
-                                corr           = NULL,
-                                method         = "Polynomial",
-                                sparse         = FALSE,
-                                prob_sparse    = NULL) {
+                                nCell            = 500,
+                                nCellsType       = 10,
+                                nGenes           = 500,
+                                lambda_vec       = NULL,
+                                corr             = NULL,
+                                sparse           = FALSE,
+                                prob_sparse      = NULL) {
 
   if (is.null(corr))
-    corr <- clusterGeneration::rcorrmatrix(nCellsType)
+    corr <- .rcorrmatrix(nCellsType)
 
   if (loi == "rpois") {
-    # ── Poisson-based simulation via correlated variable generation ───────
-    Dist   <- c("Logistic", "Weibull")
-    Params <- list(c(0, 1), c(3, 5))
-    Stcum  <- do.call(rbind, mapply(
-      SimMultiCorrData::calc_theory,
-      Dist, Params, SIMPLIFY = FALSE
-    ))
-    rownames(Stcum) <- Dist
-    colnames(Stcum) <- c("mean", "sd", "skew", "skurtosis", "fifth", "sixth")
+    eS <- eigen(corr, symmetric = TRUE)
+    ev <- pmax(eS$values, 0)
+    Z  <- matrix(rnorm(nGenes * nCellsType), nrow = nGenes) %*%
+      t(eS$vectors %*% diag(sqrt(ev), nCellsType))
+    U <- pnorm(Z)
+    if (is.null(lambda_vec))
+      lambda_vec <- runif(nCellsType, min = 20, max = 60)
 
-    Six  <- list(seq(1.7, 1.8, 0.01), seq(0.10, 0.25, 0.01))
-    size <- 2
-    prob <- 0.75
-    nb_eps <- 0.0001
+    if (length(lambda_vec) != nCellsType)
+      stop("'lambda_vec' must have length equal to 'nCellsType'.")
 
-    counts <- 40 * SimMultiCorrData::rcorrvar2(
-      n        = nGenes,
-      k_pois   = nCellsType,
-      method   = method,
-      means    = Stcum[, 1],
-      vars     = Stcum[, 2]^2,
-      skews    = Stcum[, 3],
-      skurts   = Stcum[, 4],
-      fifths   = Stcum[, 5],
-      sixths   = Stcum[, 6],
-      Six      = Six,
-      lam      = lam,
-      pois_eps = pois_eps,
-      size     = size,
-      prob     = prob,
-      nb_eps   = nb_eps,
-      rho      = corr,
-      seed     = 1234,
-      errorloop = TRUE
-    )$Poisson_variables
+    counts <- matrix(
+      mapply(
+        function(u, lam) qpois(u, lambda = lam),
+        as.vector(U),
+        rep(lambda_vec, each = nGenes)
+      ),
+      nrow = nGenes,
+      ncol = nCellsType
+    )
 
   } else {
-    # ── Log-normal simulation via multivariate normal ─────────────────────
     mu     <- runif(nCellsType, -1, 0.5)
     counts <- exp(
-      MASS::mvrnorm(n = nGenes, mu = mu, Sigma = corr, empirical = TRUE) + 6
+      .mvrnorm(n = nGenes, mu = mu, Sigma = corr, empirical = TRUE) + 6
     )
   }
 
@@ -326,23 +360,30 @@ generate_ref_matrix <- function(loi            = "rpois",
 #' @param nCell           Integer. Total cells per sample. Default: \code{500}.
 #' @param nCellsType      Integer. Number of cell types. Default: \code{50}.
 #' @param nGenes          Integer. Number of genes. Default: \code{500}.
-#' @param lam             Numeric. Lambda for Poisson model (see
-#'                        \code{\link{generate_ref_matrix}}).
-#' @param pois_eps        Numeric. Epsilon for Poisson model.
+#' @param lambda_vec      Numeric vector of length \code{nCellsType}. Per
+#'                        cell-type Poisson lambda parameters. If \code{NULL},
+#'                        drawn uniformly in \code{[20, 60]}. Passed to
+#'                        \code{\link{generate_ref_matrix}}.
 #' @param corr            Numeric matrix. Inter-cell-type correlation.
-#' @param method          Character. Simulation method. Default:
-#'                        \code{"Polynomial"}.
+#'                        If \code{NULL}, generated internally.
 #' @param scenario        Character. Proportion scenario passed to
 #'                        \code{\link{generateProp}}. Use
 #'                        \code{"hierarchical"} for realistic tissue
 #'                        composition (recommended).
 #' @param loi             Character. Expression law for reference generation.
+#'                        \code{"rpois"} for Poisson via Gaussian copula,
+#'                        any other value for log-normal.
 #'                        Default: \code{"rpois"}.
 #' @param tpm             Logical. TPM normalization of reference.
+#'                        Default: \code{FALSE}.
 #' @param bloc            Logical. Block sparsity in reference.
+#'                        Default: \code{FALSE}.
 #' @param nGenesByCellType Integer. Genes per block (when \code{bloc = TRUE}).
+#'                        Default: \code{50}.
 #' @param sparse          Logical. Random sparsity in reference.
+#'                        Default: \code{FALSE}.
 #' @param prob_sparse     Numeric. Sparsity probability.
+#'                        Default: \code{0.5}.
 #' @param sigma_bio       Numeric. Standard deviation of multiplicative
 #'                        biological noise. Default: \code{0.07}.
 #' @param sigma_tech      Numeric. Standard deviation of additive technical
@@ -353,11 +394,11 @@ generate_ref_matrix <- function(loi            = "rpois",
 #'
 #' @return A named list with three elements:
 #' \describe{
-#'   \item{\code{prop}}{data.frame. True cell-type proportions
+#'   \item{\code{p}}{data.frame. True cell-type proportions
 #'         (samples x cell types).}
-#'   \item{\code{reference}}{data.frame. Reference signature matrix
+#'   \item{\code{W}}{data.frame. Reference signature matrix
 #'         (genes x cell types).}
-#'   \item{\code{bulk_noise}}{data.frame. Noisy bulk expression matrix
+#'   \item{\code{B}}{data.frame. Noisy bulk expression matrix
 #'         (genes x samples), with biological and technical noise applied.}
 #' }
 #'
@@ -376,7 +417,7 @@ generate_ref_matrix <- function(loi            = "rpois",
 #'
 #' @export
 #'
-#' @importFrom stats rpois rnorm
+#' @importFrom stats rnorm
 #'
 #' @examples
 #' if (interactive()) {
@@ -390,36 +431,34 @@ generate_ref_matrix <- function(loi            = "rpois",
 #'     sigma_tech = 0.07,
 #'     seed       = 2101
 #'   )
-#'   dim(sim$prop)       # 20 x 10
-#'   dim(sim$bulk_noise) # 100 x 20
+#'   dim(sim$p)  # 20 x 10
+#'   dim(sim$B)  # 100 x 20
 #' }
-simulation <- function(W              = NULL,
-                       prop           = NULL,
-                       nSample        = 50,
-                       nCell          = 500,
-                       nCellsType     = 50,
-                       nGenes         = 500,
-                       lam            = NULL,
-                       pois_eps       = NULL,
-                       corr           = NULL,
-                       method         = "Polynomial",
-                       scenario       = NULL,
-                       loi            = "rpois",
-                       tpm            = FALSE,
-                       bloc           = FALSE,
+simulation <- function(W                = NULL,
+                       prop             = NULL,
+                       nSample          = 50,
+                       nCell            = 500,
+                       nCellsType       = 50,
+                       nGenes           = 500,
+                       lambda_vec       = NULL,
+                       corr             = NULL,
+                       scenario         = NULL,
+                       loi              = "rpois",
+                       tpm              = FALSE,
+                       bloc             = FALSE,
                        nGenesByCellType = 50,
-                       sparse         = FALSE,
-                       prob_sparse    = 0.5,
-                       sigma_bio      = 0.07,
-                       sigma_tech     = 0.07,
-                       seed           = 1234) {
+                       sparse           = FALSE,
+                       prob_sparse      = 0.5,
+                       sigma_bio        = 0.07,
+                       sigma_tech       = 0.07,
+                       seed             = 1234) {
+
   if (is.null(W)) {
     W <- generate_ref_matrix(
       loi              = loi,
       nCellsType       = nCellsType,
       nGenes           = nGenes,
-      lam              = lam,
-      pois_eps         = pois_eps,
+      lambda_vec       = lambda_vec,
       corr             = corr,
       tpm              = tpm,
       bloc             = bloc,
@@ -430,7 +469,7 @@ simulation <- function(W              = NULL,
   } else {
     nGenes     <- nrow(W)
     nCellsType <- ncol(W)
-    dimnames_ <- dimnames(W)
+    dimnames_  <- dimnames(W)
     W          <- apply(W, 2, as.numeric)
     dimnames(W) <- dimnames_
   }
@@ -465,11 +504,12 @@ simulation <- function(W              = NULL,
 
   rownames(bulk_noisy) <- rownames(bulk)
   colnames(bulk_noisy) <- colnames(bulk)
-  colnames(prop) <- colnames(W)
-  rownames(prop) <- colnames(bulk_noisy) <- paste("sample_", 1:nSample)
+  colnames(prop)       <- colnames(W)
+  rownames(prop)       <- colnames(bulk_noisy) <- paste0("sample_", seq_len(nSample))
+
   return(list(
-    p       = prop,
-    W  = as.data.frame(W),
+    p = prop,
+    W = as.data.frame(W),
     B = as.data.frame(bulk_noisy)
   ))
 }

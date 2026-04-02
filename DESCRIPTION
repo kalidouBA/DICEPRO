@@ -31,24 +31,13 @@ LinkingTo:
 Imports:
     Rcpp,
     RcppEigen,
-    lme4,
     lbfgsb3c,
     KraljicMatrix,
-    jsonlite,
     ggplot2,
-    dplyr,
-    plotly,
-    htmlwidgets,
-    gridExtra,
-    MASS,
-    stats,
-    utils,
     patchwork,
-    MCMCpack,
-    SimMultiCorrData,
-    clusterGeneration,
     FARDEEP,
-    ComICS
+    ComICS,
+    lme4
 Suggests:
     knitr,
     rmarkdown,

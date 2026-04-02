@@ -53,6 +53,5 @@ The list returned by \code{\link{research_hyperOpt}}: \code{trials},
 }
 \description{
 Builds the hyperparameter search space from \code{hspaceTechniqueChoose},
-writes the configuration to disk, runs \code{research_hyperOpt()}, and returns
-the collected trials.
+and runs \code{research_hyperOpt()}, returning the collected trials.
 }

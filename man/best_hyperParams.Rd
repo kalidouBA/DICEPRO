@@ -32,7 +32,7 @@ survives filtering:
 \item{metrics}{List with \code{loss} and \code{constraint} scalars.}
 \item{W}{The \eqn{W} matrix of the selected trial.}
 \item{H}{The \eqn{H} (deconvolution) matrix of the selected trial.}
-\item{plot}{Plotly figure of the Pareto frontier.}
+\item{plot}{ggplot2 figure of the Pareto frontier.}
 }
 }
 \description{
@@ -43,7 +43,7 @@ optimisation trials by:
 \item Computing constraint deviation (\code{abs_constraint}).
 \item Extracting the Pareto frontier (Frobenius norm vs. loss).
 \item Selecting the knee point -- the best loss/constraint trade-off.
-\item Generating an interactive Pareto plot saved under
+\item Generating a Pareto plot saved under
 \code{savePaths/report/}.
 }
 }

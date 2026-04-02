@@ -103,108 +103,38 @@
 #'   estimate when \code{W_prime = 0} (default \code{1}).
 #' @param algo_select  Character scalar. Hyperparameter sampling strategy.
 #'   \describe{
-#'     \item{\code{"random"}}{Pure random search (default). Fast and robust
-#'       for any budget.}
-#'     \item{\code{"tpe"}}{Tree-structured Parzen Estimator. Uses past
-#'       evaluations to guide the search; more sample-efficient than random
-#'       search when \code{hp_max_evals} \eqn{\geq 30}. Implemented in pure
-#'       base R with no additional dependencies.}
+#'     \item{\code{"random"}}{Pure random search (default).}
+#'     \item{\code{"tpe"}}{Tree-structured Parzen Estimator.}
 #'     \item{\code{"atpe"}}{Accepted alias for \code{"tpe"}.}
 #'     \item{\code{"anneal"}}{Accepted in config; currently falls back to
 #'       \code{"random"}.}
 #'   }
 #' @param output_path  Character scalar. Root directory for all outputs.
-#'   Results are saved under
-#'   \code{output_path/DICEPRO_<bulkName>_<refName>/report/}.
 #'   Defaults to \code{getwd()} when \code{NULL}.
 #' @param hspaceTechniqueChoose Character scalar. Hyperparameter space
-#'   parameterisation.
-#'   \describe{
-#'     \item{\code{"all"}}{Searches \eqn{\gamma} and \eqn{\lambda}
-#'       independently, each loguniform on (1, 1e8).}
-#'     \item{\code{"restrictionEspace"}}{(default) \eqn{\gamma} is the base
-#'       variable; \eqn{\lambda} is derived as
-#'       \eqn{\lambda = \gamma \times \lambda_{factor}} with
-#'       \eqn{\lambda_{factor}} in (2, 100), ensuring
-#'       \eqn{\lambda \geq 2\gamma}.}
-#'   }
+#'   parameterisation (\code{"all"} or \code{"restrictionEspace"}).
 #' @param out_Decon    Optional numeric matrix. Pre-computed deconvolution
-#'   result (samples \eqn{\times} cell types). When provided,
-#'   \code{\link{running_method}} is skipped entirely.
+#'   result. When provided, \code{\link{running_method}} is skipped.
 #' @param normalize    Logical scalar. When \code{TRUE} (default), both
-#'   \code{reference} and \code{bulk} are z-score normalised per gene
-#'   before deconvolution. Set to \code{FALSE} when matrices have already
-#'   been normalised upstream.
+#'   matrices are z-score normalised per gene before deconvolution.
 #'
 #' @return An object of class \code{"DICEPRO"} (a named list), or
 #'   \code{invisible(NULL)} when no valid hyperparameter configuration is
 #'   found. The list contains:
 #' \describe{
-#'   \item{hyperparameters}{Named list with \code{lambda} and \code{gamma}
-#'     scalars of the selected configuration.}
-#'   \item{metrics}{Named list with \code{loss} and \code{constraint}
-#'     scalars of the selected configuration.}
-#'   \item{trials}{data.frame of all successful trial results, one row per
-#'     evaluated configuration.}
-#'   \item{W}{Signature matrix \eqn{W} of the selected trial.}
-#'   \item{H}{Proportion matrix \eqn{H} of the selected trial
-#'     (samples \eqn{\times} cell types).}
-#'   \item{plot}{Interactive Plotly figure of the Pareto frontier.}
-#'   \item{plot_hyperopt}{Static \code{gtable} scatter-matrix of all
-#'     evaluated hyperparameter configurations.}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' data(BlueCode)
-#' data(CellMixtures)
-#'
-#' # Random search (default)
-#' out <- DICEPRO(
-#'   reference             = BlueCode,
-#'   bulk                  = CellMixtures,
-#'   methodDeconv          = "FARDEEP",
-#'   bulkName              = "CellMixtures",
-#'   refName               = "BlueCode",
-#'   hp_max_evals          = 100L,
-#'   output_path           = tempdir(),
-#'   hspaceTechniqueChoose = "all"
-#' )
-#'
-#' # TPE search — more efficient when budget >= 30 trials
-#' out_tpe <- DICEPRO(
-#'   reference             = BlueCode,
-#'   bulk                  = CellMixtures,
-#'   methodDeconv          = "FARDEEP",
-#'   hp_max_evals          = 50L,
-#'   algo_select           = "tpe",
-#'   hspaceTechniqueChoose = "restrictionEspace",
-#'   output_path           = tempdir()
-#' )
-#'
-#' # Skip normalisation when data are already z-scored
-#' out2 <- DICEPRO(
-#'   reference    = BlueCode,
-#'   bulk         = CellMixtures,
-#'   normalize    = FALSE,
-#'   methodDeconv = "FARDEEP"
-#' )
-#'
-#' # CIBERSORTx backend
-#' out3 <- DICEPRO(
-#'   reference        = BlueCode,
-#'   bulk             = CellMixtures,
-#'   methodDeconv     = "CSx",
-#'   cibersortx_email = "you@example.com",
-#'   cibersortx_token = "YOUR_TOKEN"
-#' )
+#'   \item{hyperparameters}{Named list with \code{lambda} and \code{gamma}.}
+#'   \item{metrics}{Named list with \code{loss} and \code{constraint}.}
+#'   \item{trials}{data.frame of all successful trial results.}
+#'   \item{W}{Signature matrix of the selected trial.}
+#'   \item{H}{Proportion matrix of the selected trial.}
+#'   \item{plot}{ggplot2 figure of the Pareto frontier.}
+#'   \item{plot_hyperopt}{ggplot2 scatter-matrix of all hyperparameter
+#'     configurations.}
 #' }
 #'
 #' @seealso
-#'   \code{\link{running_method}} for the supervised deconvolution step,
-#'   \code{\link{run_experiment}} for the hyperparameter search,
-#'   \code{\link{best_hyperParams}} for Pareto selection,
-#'   \code{\link{plot_hyperopt}} for the optimisation report plot.
+#'   \code{\link{running_method}}, \code{\link{run_experiment}},
+#'   \code{\link{best_hyperParams}}, \code{\link{plot_hyperopt}}.
 #'
 #' @export
 DICEPRO <- function(reference, bulk,
@@ -226,8 +156,6 @@ DICEPRO <- function(reference, bulk,
   if (!is.logical(normalize) || length(normalize) != 1L)
     stop("'normalize' must be a single logical value (TRUE or FALSE).")
 
-  # FIX: validate algo_select explicitly so the error is clear at the top
-  # rather than surfacing deep inside research_hyperOpt() / .parse_config().
   algo_select <- match.arg(
     tolower(algo_select),
     c("random", "tpe", "atpe", "anneal")
@@ -277,23 +205,18 @@ DICEPRO <- function(reference, bulk,
 
     out_Decon <- as.matrix(out_Decon)
 
-    # FIX: corrected stop() calls — paste() args were split across lines
-    # causing the extra parts to be silently dropped (treated as separate
-    # expressions, not concatenated).
     if (ncol(out_Decon) != ncol(reference))
       stop(sprintf(
-        "'out_Decon' has %d cell type(s) but 'reference' has %d. Both must have the same number of cell types (columns).",
+        "'out_Decon' has %d cell type(s) but 'reference' has %d.",
         ncol(out_Decon), ncol(reference)
       ))
 
     if (nrow(out_Decon) != ncol(bulk))
       stop(sprintf(
-        "'out_Decon' has %d sample(s) but 'bulk' has %d columns. The number of rows in 'out_Decon' must match the number of samples (columns) in 'bulk'.",
+        "'out_Decon' has %d sample(s) but 'bulk' has %d columns.",
         nrow(out_Decon), ncol(bulk)
       ))
 
-    # FIX: message() with sprintf() — extra string args after format are
-    # ignored; fold everything into the format string.
     message(sprintf(
       "Using provided 'out_Decon' -- skipping running_method(). Dimensions: %d samples x %d cell types.",
       nrow(out_Decon), ncol(out_Decon)
@@ -311,8 +234,6 @@ DICEPRO <- function(reference, bulk,
   output_dir <- file.path(output_path, dirName)
 
   # ---- Hyperparameter column names for the report plot ----------------------
-  # FIX: "restrictionEspace" uses gamma + lambda_factor (not lambda_ directly,
-  # since lambda_ is derived); "all" uses gamma + lambda_ independently.
   hp_params <- switch(
     hspaceTechniqueChoose,
     all               = c("gamma", "lambda_",      "p_prime"),
@@ -364,23 +285,14 @@ DICEPRO <- function(reference, bulk,
     units    = "in",
     device   = grDevices::cairo_pdf
   )
-
-  if (inherits(out$plot, "plotly")) {
-    htmlwidgets::saveWidget(
-      widget        = out$plot,
-      file          = file.path(report_dir, "pareto_frontier.html"),
-      libdir        = "lib",
-      selfcontained = FALSE
-    )
-  } else if (inherits(out$plot, "gg")) {
-    ggplot2::ggsave(
-      filename = file.path(report_dir, "pareto_frontier.pdf"),
-      plot     = out$plot,
-      width    = 8L,
-      height   = 6L,
-      units    = "in"
-    )
-  }
+  ggplot2::ggsave(
+    filename = file.path(report_dir, "pareto_frontier.pdf"),
+    plot     = out$plot,
+    width    = 8L,
+    height   = 6L,
+    units    = "in",
+    device   = grDevices::cairo_pdf
+  )
 
   message(sprintf("Results saved to: %s", report_dir))
 

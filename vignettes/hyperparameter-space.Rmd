@@ -84,7 +84,7 @@ region is bounded by two diagonal lines in the log-log plane:
 # Visualising the Search Space
 
 `create_gamma_lambda_plot()` samples 200 configurations (by default) and
-renders them as an interactive Plotly scatter plot on log-log axes.
+renders them as scatter plot on log-log axes.
 
 ## `"all"` — Independent space
 

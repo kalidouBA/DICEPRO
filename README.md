@@ -43,9 +43,8 @@ knee-point procedure, so no manual tuning is required.
   grid with Pareto-optimal selection.
 - **Bundled benchmark data** — `BlueCode` (34-cell-type reference) and
   `CellMixtures` (12 experimentally mixed bulk samples) included.
-- **Rich diagnostics** — interactive Pareto plot (Plotly) and
-  hyperparameter scatter matrix saved automatically to
-  `output_path/report/`.
+- **Rich diagnostics** — Pareto plot and hyperparameter scatter matrix
+  saved automatically to `output_path/report/`.
 
 ------------------------------------------------------------------------
 
@@ -180,8 +179,8 @@ elements:
 | `$trials` | data.frame of all evaluated hyperparameter configurations |
 | `$W` | Optimised reference matrix (including unknown cell types) |
 | `$H` | Estimated cell-type proportions (samples x cell types) |
-| `$plot` | Interactive Pareto frontier (Plotly) |
-| `$plot_hyperopt` | Hyperparameter scatter matrix (ggplot2 / gridExtra) |
+| `$plot` | Pareto frontier |
+| `$plot_hyperopt` | Hyperparameter scatter matrix (ggplot2) |
 
 ------------------------------------------------------------------------
 

@@ -14,13 +14,4 @@ Returns the \code{restrictionEspace} search space where \code{gamma} is
 the base variable and \code{lambda_} is derived as
 \code{lambda_ = gamma * lambda_factor}.
 }
-\details{
-Compatible with both:
-\itemize{
-\item \code{.sample_from_space()} in \code{lambda_gamma_initialize.R}
-(expects atomic vectors).
-\item \code{run_experiment()} which converts these to named lists before
-passing to \code{research_hyperOpt()}.
-}
-}
 \keyword{internal}
