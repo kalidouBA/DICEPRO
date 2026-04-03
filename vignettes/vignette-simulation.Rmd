@@ -1,5 +1,5 @@
 ---
-title: "dicepro — Simulated Data Workflow"
+title: "dicepro - Simulated Data Workflow"
 author: "dicepro Team"
 date: "`r Sys.Date()`"
 output:
@@ -8,7 +8,7 @@ output:
     toc_depth: 3
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{dicepro — Simulated Data Workflow}
+  %\VignetteIndexEntry{dicepro - Simulated Data Workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

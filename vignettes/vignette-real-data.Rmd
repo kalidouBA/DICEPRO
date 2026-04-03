@@ -1,5 +1,5 @@
 ---
-title: "dicepro — Real Data Workflow (BlueCode + CellMixtures)"
+title: "dicepro - Real Data Workflow (BlueCode + CellMixtures)"
 author: "dicepro Team"
 date: "`r Sys.Date()`"
 output:
@@ -8,7 +8,7 @@ output:
     toc_depth: 3
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{dicepro — Real Data Workflow (BlueCode + CellMixtures)}
+  %\VignetteIndexEntry{dicepro - Real Data Workflow (BlueCode + CellMixtures)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
