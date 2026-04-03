@@ -133,13 +133,13 @@ create_gamma_lambda_plot <- function(hspaceTechniqueChoose = c("all", "restricti
   p <- p +
     ggplot2::labs(
       title = title_str,
-      x     = "\u03b3 (gamma, log scale)",
-      y     = "\u03bb (lambda_, log scale)"
+      x = expression(gamma ~ "(log scale)"),
+      y = expression(lambda ~ "(log scale)")
     ) +
     ggplot2::theme_bw()
 
   ggplot2::ggsave("gamma_lambda_plot.pdf", plot = p, width = 7, height = 5)
-  invisible(p)
+  p
 }
 
 
