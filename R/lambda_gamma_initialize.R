@@ -22,6 +22,41 @@ utils::globalVariables("bound_label")
   )
 }
 
+#' Sample hyperparameters from a defined search space
+#'
+#' Each hyperparameter is defined as an atomic vector \code{c(type, low, high)}.
+#' When \code{lambda_factor} is present, \code{lambda_} is automatically
+#' derived as \code{lambda_ = gamma * lambda_factor}.
+#'
+#' @param space Named list. Each element is \code{c(type, low, high)}.
+#' @return Named list of sampled values, including derived \code{lambda_}.
+#' @keywords internal
+#' @importFrom stats runif
+.sample_from_space <- function(space) {
+  params <- list()
+
+  for (param_name in names(space)) {
+    spec <- space[[param_name]]
+    type <- spec[1]
+    low  <- as.numeric(spec[2])
+    high <- as.numeric(spec[3])
+
+    params[[param_name]] <- switch(type,
+                                   "randint"    = sample(seq.int(low, high - 1L), 1L),
+                                   "uniform"    = runif(1, low, high),
+                                   "loguniform" = exp(runif(1, log(low), log(high))),
+                                   stop(paste("Unknown type:", type))
+    )
+  }
+
+  # gamma is the base variable — lambda_ is derived, not sampled
+  if ("lambda_factor" %in% names(params) && "gamma" %in% names(params)) {
+    params$lambda_ <- params$gamma * params$lambda_factor
+  }
+
+  return(params)
+}
+
 
 # -----------------------------------------------------------------------------
 # create_gamma_lambda_plot  [public]
@@ -70,7 +105,6 @@ create_gamma_lambda_plot <- function(hspaceTechniqueChoose = c("all", "restricti
 
   hspaceTechniqueChoose <- match.arg(hspaceTechniqueChoose)
 
-  # ---- Build the raw space (same logic as run_experiment) ------------------
   raw_space <- switch(
     hspaceTechniqueChoose,
     all = list(
@@ -81,7 +115,6 @@ create_gamma_lambda_plot <- function(hspaceTechniqueChoose = c("all", "restricti
     restrictionEspace = .custom_space()
   )
 
-  # ---- Sample n_samples configurations ------------------------------------
   samples <- lapply(seq_len(n_samples), function(i) .sample_from_space(raw_space))
 
   plot_df <- data.frame(
@@ -89,20 +122,22 @@ create_gamma_lambda_plot <- function(hspaceTechniqueChoose = c("all", "restricti
     lambda_ = vapply(samples, function(s) as.numeric(s$lambda_), numeric(1L))
   )
 
-  # ---- Build the plot -------------------------------------------------------
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = gamma, y = lambda_)) +
     ggplot2::geom_point(colour = "royalblue", size = 1.5, alpha = 0.45) +
     ggplot2::scale_x_log10() +
     ggplot2::scale_y_log10()
 
   if (hspaceTechniqueChoose == "restrictionEspace") {
+
     gamma_range <- exp(seq(log(min(plot_df$gamma)), log(max(plot_df$gamma)),
                            length.out = 100L))
+
     bounds_df <- data.frame(
       gamma       = rep(gamma_range, 2L),
       lambda_     = c(2 * gamma_range, 100 * gamma_range),
       bound_label = rep(
-        c("\u03bb = 2\u03b3  (lower bound)", "\u03bb = 100\u03b3  (upper bound)"),
+        c("lambda = 2 * gamma (lower bound)",
+          "lambda = 100 * gamma (upper bound)"),
         each = 100L
       )
     )
@@ -116,18 +151,20 @@ create_gamma_lambda_plot <- function(hspaceTechniqueChoose = c("all", "restricti
       ) +
       ggplot2::scale_colour_manual(
         values = c(
-          "\u03bb = 2\u03b3  (lower bound)"   = "red",
-          "\u03bb = 100\u03b3  (upper bound)" = "green4"
+          "lambda = 2 * gamma (lower bound)"   = "red",
+          "lambda = 100 * gamma (upper bound)" = "green4"
         ),
         name = NULL
       )
 
     title_str <- paste0(
-      "\u03b3 vs \u03bb  \u2014  restrictionEspace  ",
-      "(\u03bb = \u03b3 \u00d7 \u03bb_factor,  \u03bb_factor \u2208 [2, 100])"
+      "gamma vs lambda - restrictionEspace ",
+      "(lambda = gamma * lambda_factor, lambda_factor in [2, 100])"
     )
+
   } else {
-    title_str <- "\u03b3 vs \u03bb  \u2014  all  (independent log-uniform sampling)"
+
+    title_str <- "gamma vs lambda - all (independent log-uniform sampling)"
   }
 
   p <- p +
@@ -138,42 +175,5 @@ create_gamma_lambda_plot <- function(hspaceTechniqueChoose = c("all", "restricti
     ) +
     ggplot2::theme_bw()
 
-  ggplot2::ggsave("gamma_lambda_plot.pdf", plot = p, width = 7, height = 5)
-  p
-}
-
-
-#' Sample hyperparameters from a defined search space
-#'
-#' Each hyperparameter is defined as an atomic vector \code{c(type, low, high)}.
-#' When \code{lambda_factor} is present, \code{lambda_} is automatically
-#' derived as \code{lambda_ = gamma * lambda_factor}.
-#'
-#' @param space Named list. Each element is \code{c(type, low, high)}.
-#' @return Named list of sampled values, including derived \code{lambda_}.
-#' @keywords internal
-#' @importFrom stats runif
-.sample_from_space <- function(space) {
-  params <- list()
-
-  for (param_name in names(space)) {
-    spec <- space[[param_name]]
-    type <- spec[1]
-    low  <- as.numeric(spec[2])
-    high <- as.numeric(spec[3])
-
-    params[[param_name]] <- switch(type,
-                                   "randint"    = sample(seq.int(low, high - 1L), 1L),
-                                   "uniform"    = runif(1, low, high),
-                                   "loguniform" = exp(runif(1, log(low), log(high))),
-                                   stop(paste("Unknown type:", type))
-    )
-  }
-
-  # gamma is the base variable — lambda_ is derived, not sampled
-  if ("lambda_factor" %in% names(params) && "gamma" %in% names(params)) {
-    params$lambda_ <- params$gamma * params$lambda_factor
-  }
-
-  return(params)
+  return(p)
 }
