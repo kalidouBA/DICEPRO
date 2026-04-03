@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
   fig.height = 5,
   warning    = FALSE,
   message    = FALSE,
-  eval       = FALSE   # never executed during R CMD check / CRAN build
+  eval       = FALSE
 )
 ```
 
@@ -49,7 +49,7 @@ This vignette demonstrates a complete dicepro deconvolution workflow on
 
 ## BlueCode Reference Signature Matrix
 
-```{r load-bluecode}
+```{r load-bluecode, eval=FALSE}
 library(dicepro)
 
 data(BlueCode)
@@ -60,7 +60,7 @@ cat("Number of genes         :", nrow(BlueCode), "\n")
 print(head(colnames(BlueCode), 5L))
 ```
 
-```{r bluecode-compartments}
+```{r bluecode-compartments, eval=FALSE}
 compartments <- list(
   Immune      = colnames(BlueCode)[1:9],
   Stromal     = colnames(BlueCode)[10:17],
@@ -78,7 +78,7 @@ for (comp in names(compartments)) {
 
 ## CellMixtures Bulk Dataset
 
-```{r load-cellmixtures}
+```{r load-cellmixtures, eval=FALSE}
 data(CellMixtures)
 
 cat("CellMixtures dimensions :", dim(CellMixtures), "\n")
@@ -92,7 +92,7 @@ cat("First 5 gene names      :", head(rownames(CellMixtures), 5L), "\n")
 
 ## Gene Overlap
 
-```{r gene-overlap}
+```{r gene-overlap, eval=FALSE}
 n_ref    <- nrow(BlueCode)
 n_bulk   <- nrow(CellMixtures)
 n_common <- length(intersect(rownames(BlueCode), rownames(CellMixtures)))
@@ -105,7 +105,7 @@ cat(sprintf(
 
 ## Expression Distribution
 
-```{r expr-dist}
+```{r expr-dist, eval=FALSE}
 log2_bulk <- log2(as.matrix(CellMixtures) + 1)
 boxplot(
   log2_bulk,
@@ -120,7 +120,7 @@ boxplot(
 
 # Deconvolution with `dicepro()`
 
-```{r run-dicepro}
+```{r run-dicepro, eval=FALSE}
 out <- dicepro(
   reference             = as.matrix(BlueCode),
   bulk                  = as.matrix(CellMixtures),
@@ -141,7 +141,7 @@ out <- dicepro(
 
 ## Optimal Hyperparameters
 
-```{r best-hp}
+```{r best-hp, eval=FALSE}
 cat("Best lambda :", out$hyperparameters$lambda, "\n")
 cat("Best gamma  :", out$hyperparameters$gamma,  "\n")
 cat("Loss        :", out$metrics$loss,            "\n")
@@ -150,19 +150,19 @@ cat("Constraint  :", out$metrics$constraint,      "\n")
 
 ## Hyperparameter Optimisation Report
 
-```{r plot-hyperopt, fig.height = 9}
+```{r plot-hyperopt, eval=FALSE, fig.height=9}
 out$plot_hyperopt
 ```
 
 ## Pareto Frontier
 
-```{r plot-pareto}
+```{r plot-pareto, eval=FALSE}
 out$plot
 ```
 
 ## Estimated Cell-Type Proportions
 
-```{r proportion-heatmap, fig.height = 6}
+```{r proportion-heatmap, eval=FALSE, fig.height=6}
 prop_mat    <- as.matrix(out$H)
 prop_sorted <- prop_mat[, order(colMeans(prop_mat), decreasing = TRUE)]
 
@@ -181,7 +181,7 @@ heatmap(
 
 ## Top Contributing Cell Types
 
-```{r top-ct, fig.height = 4}
+```{r top-ct, eval=FALSE, fig.height=4}
 mean_props <- sort(colMeans(prop_mat), decreasing = TRUE)
 
 par(mar = c(10, 4, 3, 1))
@@ -197,7 +197,7 @@ barplot(
 
 ## Per-Sample Composition
 
-```{r stacked-bar, fig.height = 5}
+```{r stacked-bar, eval=FALSE, fig.height=5}
 top10      <- names(sort(colMeans(prop_mat), decreasing = TRUE))[seq_len(10L)]
 prop_top10 <- prop_mat[, top10, drop = FALSE]
 
@@ -221,7 +221,7 @@ barplot(
 
 ## Compartment-Level Summary
 
-```{r compartment-summary, fig.height = 4}
+```{r compartment-summary, eval=FALSE, fig.height=4}
 ct_to_comp <- c(
   setNames(rep("Immune",      9L), compartments$Immune),
   setNames(rep("Stromal",     8L), compartments$Stromal),
@@ -263,6 +263,6 @@ barplot(
 
 # Session Info
 
-```{r session-info}
+```{r session-info, eval=FALSE}
 sessionInfo()
 ```

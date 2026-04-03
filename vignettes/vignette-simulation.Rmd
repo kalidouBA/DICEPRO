@@ -55,7 +55,7 @@ The pipeline proceeds in four stages:
 `$W`, proportion matrix `$p`, and noisy bulk matrix `$B` -- in a single
 call, guaranteeing column-name alignment across all three outputs.
 
-```{r simulate}
+```{r simulate, eval=FALSE}
 library(dicepro)
 set.seed(2101L)
 
@@ -76,7 +76,7 @@ cat("Bulk       :", dim(sim_data$B), "\n")
 cat("Row sums   :", round(range(rowSums(sim_data$p)), 4), "\n")
 ```
 
-```{r sanity-check}
+```{r sanity-check, eval=FALSE}
 bulk_clean <- as.matrix(sim_data$W) %*% t(as.matrix(sim_data$p))
 
 plot(
@@ -90,10 +90,11 @@ plot(
 abline(0, 1, col = "firebrick", lwd = 1.5)
 ```
 
+---
 
 # Deconvolution with `dicepro()`
 
-```{r run-dicepro}
+```{r run-dicepro, eval=FALSE}
 out <- dicepro(
   reference             = as.matrix(sim_data$W),
   bulk                  = as.matrix(sim_data$B),
@@ -105,7 +106,7 @@ out <- dicepro(
   algo_select           = "random",
   output_path           = tempdir(),
   hspaceTechniqueChoose = "all",
-  normalize = FALSE
+  normalize             = FALSE
 )
 ```
 
@@ -115,7 +116,7 @@ out <- dicepro(
 
 ## Optimal Hyperparameters
 
-```{r best-hp}
+```{r best-hp, eval=FALSE}
 cat("Best lambda :", out$hyperparameters$lambda, "\n")
 cat("Best gamma  :", out$hyperparameters$gamma,  "\n")
 cat("Loss        :", out$metrics$loss,            "\n")
@@ -124,19 +125,19 @@ cat("Constraint  :", out$metrics$constraint,      "\n")
 
 ## Hyperparameter Optimisation Report
 
-```{r plot-hyperopt, fig.height = 9}
+```{r plot-hyperopt, eval=FALSE, fig.height=9}
 out$plot_hyperopt
 ```
 
 ## Pareto Frontier
 
-```{r plot-pareto}
+```{r plot-pareto, eval=FALSE}
 out$plot
 ```
 
 ## Recovered vs True Proportions
 
-```{r compare-props}
+```{r compare-props, eval=FALSE}
 true_prop <- as.matrix(sim_data$p)
 pred_prop <- as.matrix(out$H)
 
@@ -160,7 +161,7 @@ abline(0, 1, col = "firebrick", lwd = 1.5)
 
 ## Per-Cell-Type Correlation
 
-```{r per-ct-cor, fig.height = 4}
+```{r per-ct-cor, eval=FALSE, fig.height=4}
 ct_cors <- vapply(common_ct, function(ct) {
   cor(true_common[, ct], pred_common[, ct])
 }, numeric(1L))
@@ -179,7 +180,7 @@ abline(v = 0.7, lty = 2, col = "gray40")
 
 ## Quantitative Performance Metrics
 
-```{r perf-metrics}
+```{r perf-metrics, eval=FALSE}
 perf <- MakeTable1Tool(pred_mat = pred_common, obs_mat = true_common)
 knitr::kable(perf$Perf, digits = 3,
              caption = "Performance metrics -- simulated data")
@@ -189,6 +190,6 @@ knitr::kable(perf$Perf, digits = 3,
 
 # Session Info
 
-```{r session-info}
+```{r session-info, eval=FALSE}
 sessionInfo()
 ```
